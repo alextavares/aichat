@@ -94,6 +94,15 @@ export default function Dashboard() {
                 </Button>
               </li>
               <li>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  onClick={() => router.push('/profile')}
+                >
+                  👤 Perfil
+                </Button>
+              </li>
+              <li>
                 <Button variant="ghost" className="w-full justify-start">
                   🎓 Cursos
                 </Button>

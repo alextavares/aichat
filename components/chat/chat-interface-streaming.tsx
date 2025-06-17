@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useSession } from "next-auth/react"
+import TemplateSelector from "./template-selector"
 
 interface Message {
   id: string
@@ -31,6 +32,8 @@ export default function ChatInterfaceStreaming({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [loadingMessages, setLoadingMessages] = useState(false)
+  const [showTemplates, setShowTemplates] = useState(false)
+  const [showExportMenu, setShowExportMenu] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { data: session } = useSession()
 
@@ -192,11 +195,79 @@ export default function ChatInterfaceStreaming({
     }
   }
 
+  const handleUseTemplate = (templateContent: string) => {
+    setInput(templateContent)
+    setShowTemplates(false)
+  }
+
+  const handleExport = async (format: string) => {
+    if (!conversationId) return
+    
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}/export?format=${format}`)
+      if (response.ok) {
+        const blob = await response.blob()
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `conversa-${new Date().toISOString().split('T')[0]}.${format}`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        document.body.removeChild(a)
+      }
+    } catch (error) {
+      console.error('Error exporting conversation:', error)
+    }
+    setShowExportMenu(false)
+  }
+
   return (
     <div className="flex flex-col h-full">
-      {/* Model Selector */}
+      {/* Model Selector & Export */}
       {onModelChange && (
-        <div className="border-b border-border p-2 flex items-center justify-end">
+        <div className="border-b border-border p-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {conversationId && messages.length > 0 && (
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowExportMenu(!showExportMenu)}
+                >
+                  📥 Exportar
+                </Button>
+                {showExportMenu && (
+                  <div className="absolute top-full left-0 mt-1 bg-card border border-border rounded-lg shadow-lg z-50">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => handleExport('json')}
+                    >
+                      📄 JSON
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => handleExport('md')}
+                    >
+                      📝 Markdown
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start"
+                      onClick={() => handleExport('txt')}
+                    >
+                      📃 Texto
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <select
             value={model}
             onChange={(e) => onModelChange(e.target.value)}
@@ -267,6 +338,13 @@ export default function ChatInterfaceStreaming({
       <div className="border-t border-border p-4">
         <div className="flex items-center space-x-2 mb-2">
           <span className="text-sm text-muted-foreground">Pergunte para Inner AI</span>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setShowTemplates(true)}
+          >
+            📝 Templates
+          </Button>
           <Button variant="ghost" size="sm" disabled>📎 Adicionar</Button>
           <Button variant="ghost" size="sm" disabled>🔍 Pesquisa na web</Button>
           <Button variant="ghost" size="sm" disabled>🧠 Conhecimento</Button>
@@ -291,6 +369,14 @@ export default function ChatInterfaceStreaming({
           Pressione Enter para enviar, Shift+Enter para nova linha
         </p>
       </div>
+
+      {/* Template Selector Modal */}
+      {showTemplates && (
+        <TemplateSelector
+          onUseTemplate={handleUseTemplate}
+          onClose={() => setShowTemplates(false)}
+        />
+      )}
     </div>
   )
 }

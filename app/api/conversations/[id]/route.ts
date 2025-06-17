@@ -95,3 +95,57 @@ export async function GET(
     )
   }
 }
+
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { message: "Não autorizado" },
+        { status: 401 }
+      )
+    }
+
+    const body = await request.json()
+    const { title, isArchived } = body
+
+    // Verificar se a conversa pertence ao usuário
+    const conversation = await prisma.conversation.findFirst({
+      where: {
+        id: params.id,
+        userId: session.user.id
+      }
+    })
+
+    if (!conversation) {
+      return NextResponse.json(
+        { message: "Conversa não encontrada" },
+        { status: 404 }
+      )
+    }
+
+    // Atualizar a conversa
+    const updatedConversation = await prisma.conversation.update({
+      where: {
+        id: params.id
+      },
+      data: {
+        ...(title !== undefined && { title }),
+        ...(isArchived !== undefined && { isArchived })
+      }
+    })
+
+    return NextResponse.json({ conversation: updatedConversation })
+
+  } catch (error) {
+    console.error("Update conversation error:", error)
+    return NextResponse.json(
+      { message: "Erro interno do servidor" },
+      { status: 500 }
+    )
+  }
+}

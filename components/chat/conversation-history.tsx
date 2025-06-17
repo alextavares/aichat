@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { format } from "date-fns"
 import { ptBR } from "date-fns/locale"
@@ -27,6 +28,8 @@ export default function ConversationHistory({
 }: ConversationHistoryProps) {
   const [conversations, setConversations] = useState<Conversation[]>([])
   const [loading, setLoading] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingTitle, setEditingTitle] = useState("")
 
   useEffect(() => {
     loadConversations()
@@ -52,6 +55,8 @@ export default function ConversationHistory({
   }
 
   const deleteConversation = async (conversationId: string) => {
+    if (!confirm("Tem certeza que deseja deletar esta conversa?")) return
+    
     try {
       const response = await fetch(`/api/conversations/${conversationId}`, {
         method: "DELETE"
@@ -64,6 +69,44 @@ export default function ConversationHistory({
       }
     } catch (error) {
       console.error("Error deleting conversation:", error)
+    }
+  }
+
+  const startRenaming = (conv: Conversation) => {
+    setEditingId(conv.id)
+    setEditingTitle(conv.title)
+  }
+
+  const cancelRenaming = () => {
+    setEditingId(null)
+    setEditingTitle("")
+  }
+
+  const saveRenaming = async (conversationId: string) => {
+    if (!editingTitle.trim()) {
+      cancelRenaming()
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ title: editingTitle })
+      })
+      
+      if (response.ok) {
+        setConversations(prev => prev.map(conv => 
+          conv.id === conversationId 
+            ? { ...conv, title: editingTitle }
+            : conv
+        ))
+        cancelRenaming()
+      }
+    } catch (error) {
+      console.error("Error renaming conversation:", error)
     }
   }
 
@@ -133,34 +176,96 @@ export default function ConversationHistory({
                     <div
                       key={conv.id}
                       className={`
-                        p-3 rounded-lg cursor-pointer transition-colors
+                        p-3 rounded-lg cursor-pointer transition-colors group
                         ${currentConversationId === conv.id 
                           ? 'bg-accent' 
                           : 'hover:bg-accent/50'
                         }
                       `}
-                      onClick={() => onSelectConversation(conv.id)}
+                      onClick={() => editingId !== conv.id && onSelectConversation(conv.id)}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1 mr-2">
-                          <p className="text-sm font-medium line-clamp-1">
-                            {conv.title}
-                          </p>
+                          {editingId === conv.id ? (
+                            <Input
+                              value={editingTitle}
+                              onChange={(e) => setEditingTitle(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  saveRenaming(conv.id)
+                                } else if (e.key === "Escape") {
+                                  cancelRenaming()
+                                }
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-sm h-6 px-1"
+                              autoFocus
+                            />
+                          ) : (
+                            <p 
+                              className="text-sm font-medium line-clamp-1"
+                              onDoubleClick={() => startRenaming(conv)}
+                            >
+                              {conv.title}
+                            </p>
+                          )}
                           <p className="text-xs text-muted-foreground mt-1">
                             {conv.modelUsed} • {format(conv.updatedAt, "HH:mm", { locale: ptBR })}
                           </p>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="opacity-0 hover:opacity-100 transition-opacity"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            deleteConversation(conv.id)
-                          }}
-                        >
-                          🗑️
-                        </Button>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {editingId === conv.id ? (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  saveRenaming(conv.id)
+                                }}
+                              >
+                                ✓
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  cancelRenaming()
+                                }}
+                              >
+                                ✕
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  startRenaming(conv)
+                                }}
+                              >
+                                ✏️
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  deleteConversation(conv.id)
+                                }}
+                              >
+                                🗑️
+                              </Button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))}
