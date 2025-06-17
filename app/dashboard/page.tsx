@@ -13,12 +13,32 @@ export default function Dashboard() {
   const router = useRouter()
   const [currentConversationId, setCurrentConversationId] = useState<string | undefined>()
   const [selectedModel, setSelectedModel] = useState("gpt-3.5-turbo")
+  const [popularTemplates, setPopularTemplates] = useState<any[]>([])
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/auth/signin")
     }
   }, [status, router])
+
+  useEffect(() => {
+    // Fetch popular templates
+    const fetchTemplates = async () => {
+      try {
+        const response = await fetch('/api/templates')
+        if (response.ok) {
+          const templates = await response.json()
+          setPopularTemplates(templates.slice(0, 6)) // Get top 6
+        }
+      } catch (error) {
+        console.error('Error fetching templates:', error)
+      }
+    }
+
+    if (session) {
+      fetchTemplates()
+    }
+  }, [session])
 
   if (status === "loading") {
     return (
@@ -62,6 +82,15 @@ export default function Dashboard() {
               <li>
                 <Button variant="ghost" className="w-full justify-start">
                   🏠 Início
+                </Button>
+              </li>
+              <li>
+                <Button 
+                  variant="ghost" 
+                  className="w-full justify-start"
+                  onClick={() => router.push('/analytics')}
+                >
+                  📊 Analytics
                 </Button>
               </li>
               <li>
@@ -123,26 +152,53 @@ export default function Dashboard() {
               </p>
             </div>
 
-            {/* Quick Actions */}
+            {/* Quick Actions - Popular Templates */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-              {[
-                "Resumo Executivo",
-                "Comunicado de Imprensa", 
-                "Artigo de Suporte",
-                "Perguntas Frequentes (FAQs)",
-                "Resumo",
-                "Publicação no LinkedIn"
-              ].map((template) => (
-                <div
-                  key={template}
-                  className="p-4 border border-border rounded-lg bg-card hover:bg-accent transition-colors cursor-pointer"
-                >
-                  <h3 className="font-medium text-foreground mb-2">{template}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Crie um {template.toLowerCase()} profissional
-                  </p>
-                </div>
-              ))}
+              {popularTemplates.length > 0 ? (
+                popularTemplates.map((template) => (
+                  <div
+                    key={template.id}
+                    className="p-4 border border-border rounded-lg bg-card hover:bg-accent transition-colors cursor-pointer"
+                    onClick={async () => {
+                      // Track usage and set template content
+                      try {
+                        await fetch(`/api/templates/${template.id}/use`, {
+                          method: 'POST'
+                        })
+                        // You can set this in the chat interface or open template modal
+                        // For now, we'll just log it
+                        console.log('Template selected:', template.name)
+                      } catch (error) {
+                        console.error('Error using template:', error)
+                      }
+                    }}
+                  >
+                    <h3 className="font-medium text-foreground mb-2">{template.name}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {template.description || `Use o template ${template.name.toLowerCase()}`}
+                    </p>
+                    <div className="flex justify-between items-center mt-3">
+                      <span className="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">
+                        {template.category}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        {template.usageCount} usos
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                // Fallback content while loading
+                Array.from({ length: 6 }).map((_, index) => (
+                  <div
+                    key={index}
+                    className="p-4 border border-border rounded-lg bg-card animate-pulse"
+                  >
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+                  </div>
+                ))
+              )}
             </div>
 
             {/* Chat Interface */}

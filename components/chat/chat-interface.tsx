@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useSession } from "next-auth/react"
+import TemplateSelector from "./template-selector"
 
 interface Message {
   id: string
@@ -22,6 +23,7 @@ export default function ChatInterface({ conversationId, onNewConversation }: Cha
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+  const [showTemplates, setShowTemplates] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const { data: session } = useSession()
 
@@ -100,6 +102,11 @@ export default function ChatInterface({ conversationId, onNewConversation }: Cha
     }
   }
 
+  const handleUseTemplate = (templateContent: string) => {
+    setInput(templateContent)
+    setShowTemplates(false)
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Messages Area */}
@@ -154,6 +161,13 @@ export default function ChatInterface({ conversationId, onNewConversation }: Cha
       <div className="border-t border-border p-4">
         <div className="flex items-center space-x-2 mb-2">
           <span className="text-sm text-muted-foreground">Pergunte para Inner AI</span>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setShowTemplates(true)}
+          >
+            📝 Templates
+          </Button>
           <Button variant="ghost" size="sm" disabled>📎 Adicionar</Button>
           <Button variant="ghost" size="sm" disabled>🔍 Pesquisa na web</Button>
           <Button variant="ghost" size="sm" disabled>🧠 Conhecimento</Button>
@@ -178,6 +192,14 @@ export default function ChatInterface({ conversationId, onNewConversation }: Cha
           Pressione Enter para enviar, Shift+Enter para nova linha
         </p>
       </div>
+
+      {/* Template Selector Modal */}
+      {showTemplates && (
+        <TemplateSelector
+          onUseTemplate={handleUseTemplate}
+          onClose={() => setShowTemplates(false)}
+        />
+      )}
     </div>
   )
 }
