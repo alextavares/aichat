@@ -26,3 +26,10 @@ node_modules/
 # Ignore IDE files
 .vscode/
 .idea/
+
+# Selenium and JDK
+selenium/
+*.jar
+
+# Package lock
+package-lock.json
