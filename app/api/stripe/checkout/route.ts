@@ -1,15 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma-fix'
-
-// Mock Stripe for development
-const createMockCheckoutSession = async (params: any) => {
-  return {
-    id: `cs_test_${Date.now()}`,
-    url: `/api/stripe/mock-checkout?session_id=cs_test_${Date.now()}&plan=${params.metadata.planType}`
-  }
-}
+import { prisma } from '@/lib/prisma'
+import { createCheckoutSession } from '@/lib/payment-service'
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,41 +21,39 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { planId } = body
+    const { planId, paymentMethod = 'card', installments } = body
 
     if (!planId || !['pro', 'enterprise'].includes(planId)) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     }
 
-    const prices = {
-      pro: process.env.STRIPE_PRICE_PRO || 'price_pro_mock',
-      enterprise: process.env.STRIPE_PRICE_ENTERPRISE || 'price_enterprise_mock'
+    // Check if we have real payment credentials
+    const isProduction = process.env.STRIPE_SECRET_KEY && process.env.MERCADOPAGO_ACCESS_TOKEN
+
+    if (!isProduction) {
+      // Use mock checkout for development
+      const mockSession = {
+        id: `cs_test_${Date.now()}`,
+        url: `/api/stripe/mock-checkout?session_id=cs_test_${Date.now()}&plan=${planId}`
+      }
+      return NextResponse.json({ 
+        url: mockSession.url,
+        sessionId: mockSession.id 
+      })
     }
 
-    // In production, use real Stripe
-    // const session = await stripe.checkout.sessions.create({...})
-    
-    // For development, use mock
-    const checkoutSession = await createMockCheckoutSession({
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      line_items: [{
-        price: prices[planId as keyof typeof prices],
-        quantity: 1,
-      }],
-      success_url: `${process.env.NEXTAUTH_URL}/dashboard?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXTAUTH_URL}/pricing?payment=cancelled`,
-      customer_email: user.email,
-      metadata: {
-        userId: user.id,
-        planType: planId.toUpperCase()
-      }
+    // Use real payment service
+    const checkoutResult = await createCheckoutSession({
+      planId,
+      userId: user.id,
+      email: user.email,
+      paymentMethod,
+      installments,
+      successUrl: `${process.env.NEXTAUTH_URL}/dashboard?payment=success`,
+      cancelUrl: `${process.env.NEXTAUTH_URL}/pricing?payment=cancelled`
     })
 
-    return NextResponse.json({ 
-      url: checkoutSession.url,
-      sessionId: checkoutSession.id 
-    })
+    return NextResponse.json(checkoutResult)
   } catch (error) {
     console.error('Error creating checkout session:', error)
     return NextResponse.json(

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import bcrypt from "bcryptjs"
-import { prisma } from "@/lib/db"
+import { prisma } from "@/lib/prisma"
 
 export async function POST(request: NextRequest) {
   console.log("=== REGISTER API CALLED ===")
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Retornar dados do usuário (sem senha)
-    const { passwordHash: _, ...userWithoutPassword } = user
+    const { passwordHash: _password, ...userWithoutPassword } = user
 
     return NextResponse.json(
       { message: "Usuário criado com sucesso", user: userWithoutPassword },

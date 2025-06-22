@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,33 +8,34 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// Core User Model
 model User {
-  id           String    @id @default(cuid())
-  email        String    @unique
-  name         String?
-  passwordHash String?   @map("password_hash")
-  planType     PlanType  @default(FREE) @map("plan_type")
-  profileImage String?   @map("profile_image")
-  profession   String?
-  organization String?
-  isActive     Boolean   @default(true) @map("is_active")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-
-  // Relations
-  conversations    Conversation[]
-  userUsage        UserUsage[]
-  subscriptions    Subscription[]
-  payments         Payment[]
-  promptTemplates  PromptTemplate[]
-  toolUsage        ToolUsage[]
-  messageFeedback  MessageFeedback[]
+  id              String            @id @default(cuid())
+  email           String            @unique
+  name            String?
+  passwordHash    String?           @map("password_hash")
+  planType        PlanType          @default(FREE) @map("plan_type")
+  profileImage    String?           @map("profile_image")
+  profession      String?
+  organization    String?
+  usageType       UsageType?        @map("usage_type")
+  professionCategory String?        @map("profession_category")
+  phone           String?
+  onboardingCompleted Boolean       @default(false) @map("onboarding_completed")
+  isActive        Boolean           @default(true) @map("is_active")
+  createdAt       DateTime          @default(now()) @map("created_at")
+  updatedAt       DateTime          @updatedAt @map("updated_at")
+  conversations   Conversation[]
+  payments        Payment[]
+  promptTemplates PromptTemplate[]
+  subscriptions   Subscription[]
+  toolUsage       ToolUsage[]
+  messageFeedback MessageFeedback[]
+  userUsage       UserUsage[]
+  templateFavorites TemplateFavorite[]
 
   @@map("users")
 }
 
-// User Sessions for auth
 model UserSession {
   id        String   @id @default(cuid())
   userId    String   @map("user_id")
@@ -48,29 +46,25 @@ model UserSession {
   @@map("user_sessions")
 }
 
-// AI Models Available
 model AIModel {
-  id                 String   @id @default(cuid())
-  name               String   @unique
+  id                 String            @id @default(cuid())
+  name               String            @unique
   provider           AIProvider
-  costPerInputToken  Decimal  @map("cost_per_input_token") @db.Decimal(10, 6)
-  costPerOutputToken Decimal  @map("cost_per_output_token") @db.Decimal(10, 6)
-  maxContextLength   Int      @map("max_context_length")
-  isActive           Boolean  @default(true) @map("is_active")
-  planRequired       PlanType @map("plan_required")
-  createdAt          DateTime @default(now()) @map("created_at")
-
-  // Relations
-  conversations Conversation[]
-  messages      Message[]
-  userUsage     UserUsage[]
-  errorLogs     AIErrorLog[]
-  responseCache AIResponseCache[]
+  costPerInputToken  Decimal           @map("cost_per_input_token") @db.Decimal(10, 6)
+  costPerOutputToken Decimal           @map("cost_per_output_token") @db.Decimal(10, 6)
+  maxContextLength   Int               @map("max_context_length")
+  isActive           Boolean           @default(true) @map("is_active")
+  planRequired       PlanType          @map("plan_required")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  errorLogs          AIErrorLog[]
+  responseCache      AIResponseCache[]
+  conversations      Conversation[]
+  messages           Message[]
+  userUsage          UserUsage[]
 
   @@map("ai_models")
 }
 
-// User Usage Tracking
 model UserUsage {
   id               String   @id @default(cuid())
   userId           String   @map("user_id")
@@ -81,30 +75,26 @@ model UserUsage {
   outputTokensUsed Int      @default(0) @map("output_tokens_used")
   costIncurred     Decimal  @default(0) @map("cost_incurred") @db.Decimal(10, 4)
   createdAt        DateTime @default(now()) @map("created_at")
-
-  // Relations
-  user  User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  model AIModel @relation(fields: [modelId], references: [id])
+  model            AIModel  @relation(fields: [modelId], references: [id])
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, modelId, date])
   @@map("user_usage")
 }
 
-// Plan Limits Configuration
 model PlanLimit {
-  id                   String   @id @default(cuid())
-  planType             PlanType @unique @map("plan_type")
-  dailyMessagesLimit   Int?     @map("daily_messages_limit")
-  monthlyTokensLimit   Int?     @map("monthly_tokens_limit")
-  modelsAllowed        Json     @map("models_allowed") // Array of model IDs
-  featuresEnabled      Json     @map("features_enabled") // Features like voice, image, etc
-  createdAt            DateTime @default(now()) @map("created_at")
-  updatedAt            DateTime @updatedAt @map("updated_at")
+  id                 String   @id @default(cuid())
+  planType           PlanType @unique @map("plan_type")
+  dailyMessagesLimit Int?     @map("daily_messages_limit")
+  monthlyTokensLimit Int?     @map("monthly_tokens_limit")
+  modelsAllowed      Json     @map("models_allowed")
+  featuresEnabled    Json     @map("features_enabled")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
 
   @@map("plan_limits")
 }
 
-// Conversations/Chats
 model Conversation {
   id         String    @id @default(cuid())
   userId     String    @map("user_id")
@@ -113,27 +103,22 @@ model Conversation {
   isArchived Boolean   @default(false) @map("is_archived")
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")
-
-  // Relations
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  model    AIModel?  @relation(fields: [modelUsed], references: [id])
-  messages Message[]
+  model      AIModel?  @relation(fields: [modelUsed], references: [id])
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages   Message[]
 
   @@map("conversations")
 }
 
-// Individual Messages
 model Message {
-  id             String   @id @default(cuid())
-  conversationId String   @map("conversation_id")
-  role           MessageRole
-  content        String   @db.Text
-  tokensUsed     Int?     @map("tokens_used")
-  modelUsed      String?  @map("model_used")
-  metadata       Json?    // Prompt templates, attachments, etc
-  createdAt      DateTime @default(now()) @map("created_at")
-
-  // Relations
+  id              String            @id @default(cuid())
+  conversationId  String            @map("conversation_id")
+  role            MessageRole
+  content         String
+  tokensUsed      Int?              @map("tokens_used")
+  modelUsed       String?           @map("model_used")
+  metadata        Json?
+  createdAt       DateTime          @default(now()) @map("created_at")
   conversation    Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   model           AIModel?          @relation(fields: [modelUsed], references: [id])
   messageFeedback MessageFeedback[]
@@ -141,43 +126,42 @@ model Message {
   @@map("messages")
 }
 
-// Prompt Templates
 model PromptTemplate {
-  id              String            @id @default(cuid())
+  id              String         @id @default(cuid())
   name            String
-  description     String?           @db.Text
+  description     String?
   category        PromptCategory
-  templateContent String            @map("template_content") @db.Text
-  variables       Json?             // Fields user can fill
-  isPublic        Boolean           @default(true) @map("is_public")
-  createdBy       String?           @map("created_by")
-  usageCount      Int               @default(0) @map("usage_count")
-  createdAt       DateTime          @default(now()) @map("created_at")
-
-  // Relations
-  creator User? @relation(fields: [createdBy], references: [id])
+  templateContent String         @map("template_content")
+  variables       Json?
+  icon            String?
+  gradient        String?
+  tags            String[]       @default([])
+  isPublic        Boolean        @default(true) @map("is_public")
+  isFeatured      Boolean        @default(false) @map("is_featured")
+  createdBy       String?        @map("created_by")
+  usageCount      Int            @default(0) @map("usage_count")
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @default(now()) @updatedAt @map("updated_at")
+  creator         User?          @relation(fields: [createdBy], references: [id])
+  favorites       TemplateFavorite[]
 
   @@map("prompt_templates")
 }
 
-// Tools (Voice, Transcription, etc)
 model Tool {
-  id           String   @id @default(cuid())
+  id           String      @id @default(cuid())
   name         String
   type         ToolType
-  apiEndpoint  String?  @map("api_endpoint")
-  costPerUse   Decimal  @map("cost_per_use") @db.Decimal(8, 4)
-  planRequired PlanType @map("plan_required")
-  isActive     Boolean  @default(true) @map("is_active")
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  // Relations
-  toolUsage ToolUsage[]
+  apiEndpoint  String?     @map("api_endpoint")
+  costPerUse   Decimal     @map("cost_per_use") @db.Decimal(8, 4)
+  planRequired PlanType    @map("plan_required")
+  isActive     Boolean     @default(true) @map("is_active")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  toolUsage    ToolUsage[]
 
   @@map("tools")
 }
 
-// Tool Usage Tracking
 model ToolUsage {
   id           String   @id @default(cuid())
   userId       String   @map("user_id")
@@ -186,96 +170,81 @@ model ToolUsage {
   usesCount    Int      @default(0) @map("uses_count")
   costIncurred Decimal  @default(0) @map("cost_incurred") @db.Decimal(10, 4)
   createdAt    DateTime @default(now()) @map("created_at")
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tool Tool @relation(fields: [toolId], references: [id])
+  tool         Tool     @relation(fields: [toolId], references: [id])
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, toolId, date])
   @@map("tool_usage")
 }
 
-// Subscriptions
 model Subscription {
-  id                   String           @id @default(cuid())
-  userId               String           @map("user_id")
-  planType             PlanType         @map("plan_type")
+  id                   String             @id @default(cuid())
+  userId               String             @map("user_id")
+  planType             PlanType           @map("plan_type")
   status               SubscriptionStatus
-  stripeSubscriptionId String?          @unique @map("stripe_subscription_id")
-  startedAt            DateTime         @map("started_at")
-  expiresAt            DateTime?        @map("expires_at")
-  createdAt            DateTime         @default(now()) @map("created_at")
-  updatedAt            DateTime         @updatedAt @map("updated_at")
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeSubscriptionId String?            @unique @map("stripe_subscription_id")
+  stripeCustomerId     String?            @map("stripe_customer_id")
+  mercadoPagoPaymentId String?            @map("mercado_pago_payment_id")
+  startedAt            DateTime           @map("started_at")
+  expiresAt            DateTime?          @map("expires_at")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("subscriptions")
 }
 
-// Payment History
 model Payment {
-  id              String        @id @default(cuid())
-  userId          String        @map("user_id")
-  amount          Decimal       @db.Decimal(10, 2)
-  currency        String        @default("BRL") @db.VarChar(3)
-  status          PaymentStatus
-  stripePaymentId String?       @unique @map("stripe_payment_id")
-  createdAt       DateTime      @default(now()) @map("created_at")
-
-  // Relations
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id                   String        @id @default(cuid())
+  userId               String        @map("user_id")
+  amount               Decimal       @db.Decimal(10, 2)
+  currency             String        @default("BRL") @db.VarChar(3)
+  status               PaymentStatus
+  stripePaymentId      String?       @unique @map("stripe_payment_id")
+  mercadoPagoPaymentId String?       @unique @map("mercado_pago_payment_id")
+  createdAt            DateTime      @default(now()) @map("created_at")
+  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("payments")
 }
 
-// AI Response Cache
 model AIResponseCache {
-  id           String   @id @default(cuid())
-  requestHash  String   @unique @map("request_hash")
-  responseContent String @map("response_content") @db.Text
-  modelId      String   @map("model_id")
-  createdAt    DateTime @default(now()) @map("created_at")
-
-  // Relations
-  model AIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  id              String   @id @default(cuid())
+  requestHash     String   @unique @map("request_hash")
+  responseContent String   @map("response_content")
+  modelId         String   @map("model_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+  model           AIModel  @relation(fields: [modelId], references: [id], onDelete: Cascade)
 
   @@map("ai_response_cache")
 }
 
-// AI Error Logs
 model AIErrorLog {
   id             String   @id @default(cuid())
   userId         String   @map("user_id")
   modelId        String   @map("model_id")
-  errorMessage   String   @map("error_message") @db.Text
+  errorMessage   String   @map("error_message")
   requestPayload Json?    @map("request_payload")
   createdAt      DateTime @default(now()) @map("created_at")
-
-  // Relations
-  model AIModel @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  model          AIModel  @relation(fields: [modelId], references: [id], onDelete: Cascade)
 
   @@map("ai_error_logs")
 }
 
-// User Feedback on Messages
 model MessageFeedback {
   id        String   @id @default(cuid())
   messageId String   @map("message_id")
   userId    String   @map("user_id")
-  rating    Int?     // 1-5 star rating
-  comment   String?  @db.Text
+  rating    Int?
+  comment   String?
   createdAt DateTime @default(now()) @map("created_at")
-
-  // Relations
-  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId])
   @@map("user_feedback")
 }
 
-// Enums
 enum PlanType {
   FREE
   PRO
@@ -326,4 +295,22 @@ enum PaymentStatus {
   COMPLETED
   FAILED
   REFUNDED
+}
+
+enum UsageType {
+  TRABALHO
+  USO_PESSOAL
+  ESCOLA
+}
+
+model TemplateFavorite {
+  id         String          @id @default(cuid())
+  userId     String          @map("user_id")
+  templateId String          @map("template_id")
+  createdAt  DateTime        @default(now()) @map("created_at")
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template   PromptTemplate  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, templateId])
+  @@map("template_favorites")
 }

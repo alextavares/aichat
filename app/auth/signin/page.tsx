@@ -5,19 +5,25 @@ import { signIn, getSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
+import { Github, Mail, AlertCircle, Loader2, CheckCircle } from "lucide-react"
 
 export default function SignIn() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError("")
+    setSuccess(false)
 
     try {
       const result = await signIn("credentials", {
@@ -27,79 +33,153 @@ export default function SignIn() {
       })
 
       if (result?.error) {
-        setError("Credenciais inválidas")
+        // Mensagens de erro mais específicas
+        if (result.error === "CredentialsSignin") {
+          setError("Email ou senha incorretos. Verifique suas credenciais.")
+        } else {
+          setError("Erro ao fazer login. Tente novamente.")
+        }
       } else {
-        router.push("/dashboard")
+        // Sucesso
+        setSuccess(true)
+        setTimeout(() => {
+          router.push("/dashboard")
+        }, 1000) // Aguarda 1 segundo para mostrar sucesso
       }
     } catch (error) {
-      setError("Erro ao fazer login")
+      console.error("Login error:", error)
+      setError("Erro de conexão. Verifique sua internet e tente novamente.")
     } finally {
-      setLoading(false)
+      if (!success) {
+        setLoading(false)
+      }
     }
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="max-w-md w-full space-y-8 p-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-foreground">
-            Entrar na sua conta
-          </h2>
-          <p className="mt-2 text-center text-sm text-muted-foreground">
-            Ou{" "}
-            <Link
-              href="/auth/signup"
-              className="font-medium text-primary hover:underline"
-            >
-              criar uma nova conta
-            </Link>
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-lg">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl text-center">Entrar na sua conta</CardTitle>
+          <CardDescription className="text-center">
+            Entre com sua conta para acessar o InnerAI
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* OAuth Providers - temporarily disabled */}
+          {false && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                  disabled={loading}
+                >
+                  <Mail className="mr-2 h-4 w-4" />
+                  Google
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
+                  disabled={loading}
+                >
+                  <Github className="mr-2 h-4 w-4" />
+                  GitHub
+                </Button>
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <Separator className="w-full" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Ou continue com
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Email/Password Form */}
+          <form data-testid="login-form" onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="email" className="text-sm font-medium">
                 Email
               </label>
               <Input
-                id="email"
+                id="email" data-testid="email-input"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="mt-1"
                 placeholder="seu@email.com"
+                disabled={loading || success}
               />
             </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium">
+            <div className="space-y-2">
+              <label htmlFor="password" className="text-sm font-medium">
                 Senha
               </label>
               <Input
-                id="password"
+                id="password" data-testid="password-input"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="mt-1"
                 placeholder="••••••••"
+                disabled={loading || success}
               />
             </div>
+
+            {error && (
+              <Alert variant="destructive" className="mt-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+
+            {success && (
+              <Alert className="mt-4 border-green-200 bg-green-50">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <AlertDescription className="text-green-600">
+                  Login realizado com sucesso! Redirecionando...
+                </AlertDescription>
+              </Alert>
+            )}
+
+            <Button
+              type="submit" data-testid="login-button"
+              disabled={loading || success}
+              className="w-full"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Aguarde fazendo login...
+                </>
+              ) : success ? (
+                <>
+                  <CheckCircle className="mr-2 h-4 w-4" />
+                  Login com sucesso
+                </>
+              ) : (
+                "Entrar"
+              )}
+            </Button>
+          </form>
+
+          <div className="text-center text-sm">
+            <span className="text-muted-foreground">Não tem uma conta? </span>
+            <Link
+              href="/auth/signup"
+              className="font-medium text-primary hover:underline"
+            >
+              Criar conta
+            </Link>
           </div>
-
-          {error && (
-            <div className="text-red-500 text-sm text-center">{error}</div>
-          )}
-
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full"
-          >
-            {loading ? "Entrando..." : "Entrar"}
-          </Button>
-        </form>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

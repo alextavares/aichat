@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/db"
+import { prisma } from "@/lib/prisma"
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions)
     
@@ -20,7 +21,7 @@ export async function DELETE(
     // Verificar se a conversa pertence ao usuário
     const conversation = await prisma.conversation.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: session.user.id
       }
     })
@@ -35,7 +36,7 @@ export async function DELETE(
     // Deletar a conversa (mensagens serão deletadas em cascata)
     await prisma.conversation.delete({
       where: {
-        id: params.id
+        id: id
       }
     })
 
@@ -52,8 +53,9 @@ export async function DELETE(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions)
     
@@ -66,7 +68,7 @@ export async function GET(
 
     const conversation = await prisma.conversation.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: session.user.id
       },
       include: {
@@ -85,7 +87,7 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({ conversation })
+    return NextResponse.json(conversation)
 
   } catch (error) {
     console.error("Get conversation error:", error)
@@ -98,8 +100,9 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions)
     
@@ -116,7 +119,7 @@ export async function PATCH(
     // Verificar se a conversa pertence ao usuário
     const conversation = await prisma.conversation.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: session.user.id
       }
     })
@@ -131,7 +134,7 @@ export async function PATCH(
     // Atualizar a conversa
     const updatedConversation = await prisma.conversation.update({
       where: {
-        id: params.id
+        id: id
       },
       data: {
         ...(title !== undefined && { title }),

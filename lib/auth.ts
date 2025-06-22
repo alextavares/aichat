@@ -1,19 +1,39 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
+import GoogleProvider from "next-auth/providers/google"
+import GitHubProvider from "next-auth/providers/github"
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
-import { prisma } from "@/lib/db"
+import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 
-export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
-  providers: [
-    CredentialsProvider({
-      name: "credentials",
-      credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
-      },
-      async authorize(credentials) {
+const providers = []
+
+// Only add OAuth providers if credentials are configured
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && 
+    process.env.GOOGLE_CLIENT_ID !== "your-google-client-id" &&
+    process.env.GOOGLE_CLIENT_ID !== "your_google_client_id_here") {
+  providers.push(GoogleProvider({
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  }))
+}
+
+if (process.env.GITHUB_ID && process.env.GITHUB_SECRET &&
+    process.env.GITHUB_ID !== "your-github-client-id") {
+  providers.push(GitHubProvider({
+    clientId: process.env.GITHUB_ID,
+    clientSecret: process.env.GITHUB_SECRET,
+  }))
+}
+
+// Always include credentials provider
+providers.push(CredentialsProvider({
+  name: "credentials",
+  credentials: {
+    email: { label: "Email", type: "email" },
+    password: { label: "Password", type: "password" }
+  },
+  async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           return null
         }
@@ -44,13 +64,16 @@ export const authOptions: NextAuthOptions = {
         }
       }
     })
-  ],
+)
+
+export const authOptions: NextAuthOptions = {
+  adapter: PrismaAdapter(prisma),
+  providers,
   session: {
     strategy: "jwt"
   },
   pages: {
     signIn: "/auth/signin",
-    signUp: "/auth/signup",
   },
   callbacks: {
     async jwt({ token, user }) {

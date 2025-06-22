@@ -71,5 +71,5 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Export the mock users for use in other mock endpoints
-export { mockUsers }
+// Mock users storage (internal only)
+// Export moved to separate file if needed for testing

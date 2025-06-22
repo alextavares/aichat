@@ -2,9 +2,14 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { signIn } from "next-auth/react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
+import { Github, Mail, AlertCircle, CheckCircle2, Loader2 } from "lucide-react"
 
 export default function SignUp() {
   const [formData, setFormData] = useState({
@@ -16,6 +21,7 @@ export default function SignUp() {
     organization: "",
   })
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
@@ -28,6 +34,7 @@ export default function SignUp() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    console.log("Form submitted", formData)
     setLoading(true)
     setError("")
 
@@ -38,6 +45,7 @@ export default function SignUp() {
     }
 
     try {
+      console.log("Sending POST to /api/auth/register")
       const response = await fetch("/api/auth/register", {
         method: "POST",
         headers: {
@@ -55,13 +63,16 @@ export default function SignUp() {
       const data = await response.json()
       
       if (response.ok) {
-        router.push("/auth/signin?message=account-created")
+        setSuccess("Conta criada com sucesso! Redirecionando...")
+        setTimeout(() => {
+          router.push("/auth/signin?message=account-created")
+        }, 2000)
       } else {
         // Check if it's a database connection error
         if (response.status === 503 || data.error?.includes("connect") || data.error?.includes("timed out")) {
           setError(`${data.message || "Erro de conexão com o banco de dados"}\n\nTente o modo de teste sem banco.`)
         } else {
-          setError(data.message || "Erro ao criar conta")
+          setError(data.message || "Erro ao criar conta. Verifique os dados informados.")
         }
       }
     } catch (error) {
@@ -73,141 +84,192 @@ export default function SignUp() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background py-12">
-      <div className="max-w-md w-full space-y-8 p-8">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-bold text-foreground">
-            Criar sua conta
-          </h2>
-          <p className="mt-2 text-center text-sm text-muted-foreground">
-            Ou{" "}
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-lg">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl text-center">Criar sua conta</CardTitle>
+          <CardDescription className="text-center">
+            Junte-se ao InnerAI e comece sua jornada
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* OAuth Providers - temporarily disabled */}
+          {false && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <Button
+                  variant="outline"
+                  onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                  disabled={loading}
+                >
+                  <Mail className="mr-2 h-4 w-4" />
+                  Google
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
+                  disabled={loading}
+                >
+                  <Github className="mr-2 h-4 w-4" />
+                  GitHub
+                </Button>
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <Separator className="w-full" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">
+                    Ou continue com email
+                  </span>
+                </div>
+              </div>
+            </>
+          )}
+          {/* Email/Password Form */}
+          <form data-testid="signup-form" onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="name" className="text-sm font-medium">
+                  Nome completo
+                </label>
+                <Input
+                  id="name" data-testid="name-input"
+                  name="name"
+                  type="text"
+                  value={formData.name}
+                  onChange={handleChange}
+                  required
+                  placeholder="Seu nome"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium">
+                  Email
+                </label>
+                <Input
+                  id="email" data-testid="email-input"
+                  name="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  required
+                  placeholder="seu@email.com"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="profession" className="text-sm font-medium">
+                  Profissão
+                </label>
+                <Input
+                  id="profession"
+                  name="profession"
+                  type="text"
+                  value={formData.profession}
+                  onChange={handleChange}
+                  placeholder="Marketing, Dev..."
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="organization" className="text-sm font-medium">
+                  Organização
+                </label>
+                <Input
+                  id="organization"
+                  name="organization"
+                  type="text"
+                  value={formData.organization}
+                  onChange={handleChange}
+                  placeholder="Empresa"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label htmlFor="password" className="text-sm font-medium">
+                  Senha
+                </label>
+                <Input
+                  id="password" data-testid="password-input"
+                  name="password"
+                  type="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  required
+                  placeholder="••••••••"
+                />
+              </div>
+              <div className="space-y-2">
+                <label htmlFor="confirmPassword" className="text-sm font-medium">
+                  Confirmar senha
+                </label>
+                <Input
+                  id="confirmPassword" data-testid="confirm-password-input"
+                  name="confirmPassword"
+                  type="password"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  required
+                  placeholder="••••••••"
+                />
+              </div>
+            </div>
+
+            {error && (
+              <div className="space-y-3">
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription className="whitespace-pre-line">{error}</AlertDescription>
+                </Alert>
+                {error.includes("banco") && (
+                  <Link href="/auth/signup-mock">
+                    <Button type="button" variant="outline" className="w-full">
+                      🧪 Usar Modo de Teste (sem banco de dados)
+                    </Button>
+                  </Link>
+                )}
+              </div>
+            )}
+
+            {success && (
+              <Alert className="border-green-500 text-green-600">
+                <CheckCircle2 className="h-4 w-4" />
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            )}
+
+            <Button
+              type="submit" data-testid="signup-button"
+              disabled={loading}
+              className="w-full"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Criando conta...
+                </>
+              ) : (
+                "Criar conta"
+              )}
+            </Button>
+          </form>
+
+          <div className="text-center text-sm">
+            <span className="text-muted-foreground">Já tem uma conta? </span>
             <Link
               href="/auth/signin"
               className="font-medium text-primary hover:underline"
             >
-              entrar na sua conta existente
+              Entrar
             </Link>
-          </p>
-        </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium">
-                Nome completo
-              </label>
-              <Input
-                id="name"
-                name="name"
-                type="text"
-                value={formData.name}
-                onChange={handleChange}
-                required
-                className="mt-1"
-                placeholder="Seu nome completo"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium">
-                Email
-              </label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                className="mt-1"
-                placeholder="seu@email.com"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="profession" className="block text-sm font-medium">
-                Profissão
-              </label>
-              <Input
-                id="profession"
-                name="profession"
-                type="text"
-                value={formData.profession}
-                onChange={handleChange}
-                className="mt-1"
-                placeholder="Ex: Marketing, Desenvolvedor"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="organization" className="block text-sm font-medium">
-                Organização
-              </label>
-              <Input
-                id="organization"
-                name="organization"
-                type="text"
-                value={formData.organization}
-                onChange={handleChange}
-                className="mt-1"
-                placeholder="Nome da empresa"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium">
-                Senha
-              </label>
-              <Input
-                id="password"
-                name="password"
-                type="password"
-                value={formData.password}
-                onChange={handleChange}
-                required
-                className="mt-1"
-                placeholder="••••••••"
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium">
-                Confirmar senha
-              </label>
-              <Input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                required
-                className="mt-1"
-                placeholder="••••••••"
-              />
-            </div>
           </div>
-
-          {error && (
-            <div className="space-y-3">
-              <div className="text-red-500 text-sm text-center whitespace-pre-line">{error}</div>
-              {error.includes("banco") && (
-                <Link href="/auth/signup-mock">
-                  <Button type="button" variant="outline" className="w-full">
-                    🧪 Usar Modo de Teste (sem banco de dados)
-                  </Button>
-                </Link>
-              )}
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            disabled={loading}
-            className="w-full"
-          >
-            {loading ? "Criando conta..." : "Criar conta"}
-          </Button>
-        </form>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

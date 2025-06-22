@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/prisma-fix'
+import { prisma } from '@/lib/prisma'
+import { PromptCategory } from '@prisma/client'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,9 +15,12 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
 
-    const whereClause = {
-      isPublic: true,
-      ...(category && { category: category.toUpperCase() })
+    const whereClause: any = {
+      isPublic: true
+    }
+    
+    if (category) {
+      whereClause.category = category.toUpperCase() as PromptCategory
     }
 
     const templates = await prisma.promptTemplate.findMany({
@@ -75,7 +79,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         description,
-        category: category.toUpperCase(),
+        category: category.toUpperCase() as PromptCategory,
         templateContent,
         variables: variables || [],
         isPublic: isPublic ?? true,

@@ -1,9 +1,10 @@
 import { NextRequest } from "next/server"
 import { getServerSession } from "next-auth/next"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/db"
+import { prisma } from "@/lib/prisma"
 import { aiService } from "@/lib/ai/ai-service"
 import { AIMessage } from "@/lib/ai/types"
+import { checkUsageLimits, trackUsage } from "@/lib/usage-limits"
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,7 +27,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Buscar usuário e verificar plano
+    // Verificar limites de uso
+    const limitsCheck = await checkUsageLimits(session.user.id, model)
+    
+    if (!limitsCheck.allowed) {
+      return new Response(
+        JSON.stringify({ 
+          message: limitsCheck.reason,
+          usage: limitsCheck.usage,
+          planType: limitsCheck.planType
+        }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // Buscar usuário
     const user = await prisma.user.findUnique({
       where: { id: session.user.id }
     })
@@ -36,38 +51,6 @@ export async function POST(request: NextRequest) {
         JSON.stringify({ message: "Usuário não encontrado" }),
         { status: 404, headers: { 'Content-Type': 'application/json' } }
       )
-    }
-
-    // Verificar se o modelo está disponível para o plano do usuário
-    const availableModels = aiService.getModelsForPlan(user.planType)
-    const modelAvailable = availableModels.some(m => m.id === model)
-
-    if (!modelAvailable) {
-      return new Response(
-        JSON.stringify({ message: "Modelo não disponível para seu plano" }),
-        { status: 403, headers: { 'Content-Type': 'application/json' } }
-      )
-    }
-
-    // Verificar limites de uso (para usuários FREE)
-    if (user.planType === 'FREE') {
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-
-      const todayUsage = await prisma.userUsage.findFirst({
-        where: {
-          userId: user.id,
-          date: today
-        }
-      })
-
-      const dailyMessageLimit = 10
-      if (todayUsage && todayUsage.messagesCount >= dailyMessageLimit) {
-        return new Response(
-          JSON.stringify({ message: "Limite diário de mensagens atingido. Faça upgrade para o plano Pro." }),
-          { status: 429, headers: { 'Content-Type': 'application/json' } }
-        )
-      }
     }
 
     // Criar ou buscar conversa
@@ -118,12 +101,12 @@ export async function POST(request: NextRequest) {
 
         try {
           // Usar o método de streaming do AI service
-          await aiService.streamResponse(aiMessages, model, {
+          await aiService.streamResponseWithCallbacks(aiMessages, model, {
             onToken: (token: string) => {
               fullContent += token
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`))
             },
-            onComplete: async (response) => {
+            onComplete: async (response: any) => {
               tokensUsed = response.tokensUsed
               cost = response.cost
 
@@ -139,40 +122,7 @@ export async function POST(request: NextRequest) {
               })
 
               // Atualizar estatísticas de uso
-              const today = new Date()
-              today.setHours(0, 0, 0, 0)
-
-              const existingUsage = await prisma.userUsage.findFirst({
-                where: {
-                  userId: user.id,
-                  modelId: model,
-                  date: today
-                }
-              })
-
-              if (existingUsage) {
-                await prisma.userUsage.update({
-                  where: { id: existingUsage.id },
-                  data: {
-                    messagesCount: { increment: 1 },
-                    inputTokensUsed: { increment: tokensUsed.input },
-                    outputTokensUsed: { increment: tokensUsed.output },
-                    costIncurred: { increment: cost }
-                  }
-                })
-              } else {
-                await prisma.userUsage.create({
-                  data: {
-                    userId: user.id,
-                    modelId: model,
-                    date: today,
-                    messagesCount: 1,
-                    inputTokensUsed: tokensUsed.input,
-                    outputTokensUsed: tokensUsed.output,
-                    costIncurred: cost
-                  }
-                })
-              }
+              await trackUsage(user.id, model, tokensUsed, cost)
 
               // Enviar dados finais
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 

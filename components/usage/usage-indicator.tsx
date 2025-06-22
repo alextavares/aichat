@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useSession } from "next-auth/react"
 
 interface UsageData {
@@ -14,13 +14,7 @@ export default function UsageIndicator() {
   const [usage, setUsage] = useState<UsageData | null>(null)
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    if (session?.user) {
-      fetchUsage()
-    }
-  }, [session])
-
-  const fetchUsage = async () => {
+  const fetchUsage = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch("/api/usage/today")
@@ -35,7 +29,13 @@ export default function UsageIndicator() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (session?.user) {
+      fetchUsage()
+    }
+  }, [session, fetchUsage])
 
   if (loading || !usage) {
     return null

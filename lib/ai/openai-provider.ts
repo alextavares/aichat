@@ -12,6 +12,8 @@ function estimateTokens(text: string): number {
 }
 
 export class OpenAIProvider implements AIProvider {
+  readonly id = 'openai'
+  private apiKey: string | undefined
   private models: AIModel[] = [
     {
       id: 'gpt-3.5-turbo',
@@ -38,6 +40,10 @@ export class OpenAIProvider implements AIProvider {
       costPerOutputToken: 0.03 / 1000,  // $0.03 per 1k tokens
     }
   ]
+
+  constructor() {
+    this.apiKey = process.env.OPENAI_API_KEY
+  }
 
   async generateResponse(
     messages: AIMessage[],
@@ -93,6 +99,10 @@ export class OpenAIProvider implements AIProvider {
 
   getAvailableModels(): AIModel[] {
     return this.models
+  }
+
+  isConfigured(): boolean {
+    return !!this.apiKey
   }
 
   async* streamResponse(

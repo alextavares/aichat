@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { prisma } from '@/lib/db'
+import { prisma } from '@/lib/prisma'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const session = await getServerSession(authOptions)
     
@@ -22,7 +23,7 @@ export async function GET(
 
     const conversation = await prisma.conversation.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: session.user.id
       },
       include: {
@@ -76,7 +77,7 @@ export async function GET(
 
       exportData.messages.forEach((msg) => {
         const timestamp = new Date(msg.createdAt).toLocaleTimeString('pt-BR')
-        if (msg.role === 'user') {
+        if (msg.role === 'USER') {
           markdown += `### 👤 Usuário (${timestamp})\n\n${msg.content}\n\n`
         } else {
           markdown += `### 🤖 Assistente (${timestamp})\n\n${msg.content}\n\n`
@@ -91,7 +92,7 @@ export async function GET(
       })
     } else if (format === 'txt') {
       let text = `${exportData.title}\n`
-      text += `${'='.repeat(exportData.title.length)}\n\n`
+      text += `${'='.repeat(exportData.title?.length || 10)}\n\n`
       text += `Modelo: ${exportData.model}\n`
       text += `Data: ${new Date(exportData.createdAt).toLocaleDateString('pt-BR')}\n`
       text += `Usuário: ${exportData.user}\n\n`
@@ -99,7 +100,7 @@ export async function GET(
 
       exportData.messages.forEach((msg) => {
         const timestamp = new Date(msg.createdAt).toLocaleTimeString('pt-BR')
-        if (msg.role === 'user') {
+        if (msg.role === 'USER') {
           text += `[USUÁRIO - ${timestamp}]\n${msg.content}\n\n`
         } else {
           text += `[ASSISTENTE - ${timestamp}]\n${msg.content}\n\n`

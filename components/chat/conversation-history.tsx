@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -31,11 +31,7 @@ export default function ConversationHistory({
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingTitle, setEditingTitle] = useState("")
 
-  useEffect(() => {
-    loadConversations()
-  }, [])
-
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     setLoading(true)
     try {
       const response = await fetch("/api/conversations")
@@ -52,7 +48,11 @@ export default function ConversationHistory({
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    loadConversations()
+  }, [loadConversations])
 
   const deleteConversation = async (conversationId: string) => {
     if (!confirm("Tem certeza que deseja deletar esta conversa?")) return

@@ -1,8 +1,8 @@
 import { UsageTracker } from '@/lib/usage-tracker';
-import { prisma } from '@/lib/db';
+import { prisma } from '@/lib/prisma';
 
 // Mock Prisma
-jest.mock('@/lib/db', () => ({
+jest.mock('@/lib/prisma', () => ({
   prisma: {
     userUsage: {
       findFirst: jest.fn(),

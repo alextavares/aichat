@@ -1,0 +1,33 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Desabilita checagens custosas em dev
+    "skipLibCheck": true,
+    "noEmit": false,
+    "incremental": true,
+    "tsBuildInfoFile": "./.tsbuildinfo.dev",
+    
+    // Source maps mais rápidos
+    "sourceMap": false,
+    "inlineSourceMap": true,
+    "inlineSources": false,
+    
+    // Menos strict em dev (mantém tipos seguros)
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitReturns": false,
+    "noFallthroughCasesInSwitch": false,
+    
+    // Otimizações de compilação
+    "assumeChangesOnlyAffectDirectDependencies": true
+  },
+  "exclude": [
+    "node_modules",
+    ".next",
+    "tests",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "cypress",
+    "playwright-report"
+  ]
+}

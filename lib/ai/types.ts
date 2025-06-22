@@ -21,9 +21,11 @@ export interface AIResponse {
   }
   cost: number
   model: string
+  provider?: string
 }
 
 export interface AIProvider {
+  id: string
   generateResponse(
     messages: AIMessage[],
     model: string,
@@ -36,6 +38,7 @@ export interface AIProvider {
   
   estimateTokens(text: string, model: string): number
   getAvailableModels(): AIModel[]
+  isConfigured(): boolean
   streamResponse?(
     messages: AIMessage[],
     model: string,

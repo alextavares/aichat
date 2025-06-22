@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient, PromptCategory } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
@@ -106,7 +106,14 @@ async function main() {
   }
 
   // Seed templates
-  const templates = [
+  const templates: {
+    name: string
+    description: string
+    category: PromptCategory
+    templateContent: string
+    variables: string[]
+    isPublic: boolean
+  }[] = [
     {
       name: "Email Marketing",
       description: "Template para criar campanhas de email marketing eficazes",

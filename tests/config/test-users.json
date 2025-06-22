@@ -1,0 +1,53 @@
+{
+  "validUser": {
+    "email": "test@example.com",
+    "password": "Test123!@#",
+    "name": "Test User",
+    "profession": "QA Engineer",
+    "organization": "InnerAI Test"
+  },
+  "premiumUser": {
+    "email": "premium@example.com",
+    "password": "Premium123!@#",
+    "name": "Premium User",
+    "profession": "Developer",
+    "organization": "Premium Corp",
+    "subscription": "premium"
+  },
+  "adminUser": {
+    "email": "admin@innerai.com",
+    "password": "Admin123!@#",
+    "name": "Admin User",
+    "role": "admin"
+  },
+  "invalidUsers": {
+    "wrongPassword": {
+      "email": "test@example.com",
+      "password": "WrongPassword123"
+    },
+    "nonExistent": {
+      "email": "nonexistent@example.com",
+      "password": "Test123!@#"
+    },
+    "invalidEmail": {
+      "email": "invalid-email",
+      "password": "Test123!@#"
+    }
+  },
+  "newUsers": {
+    "user1": {
+      "email": "newuser1@example.com",
+      "password": "NewUser123!@#",
+      "name": "New User One",
+      "profession": "Designer",
+      "organization": "Design Co"
+    },
+    "user2": {
+      "email": "newuser2@example.com",
+      "password": "NewUser123!@#",
+      "name": "New User Two",
+      "profession": "Marketing",
+      "organization": "Marketing Inc"
+    }
+  }
+}

@@ -29,33 +29,50 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    /* InnerAI Original Colors */
+    --background: 0 0% 6%;          /* #0f0f0f */
+    --foreground: 0 0% 100%;        /* #ffffff */
+    --card: 0 0% 10%;               /* #1a1a1a */
+    --card-foreground: 0 0% 100%;   /* #ffffff */
+    --popover: 0 0% 10%;            /* #1a1a1a */
+    --popover-foreground: 0 0% 100%; /* #ffffff */
+    --primary: 271 91% 65%;         /* #7C3AED - Roxo/Lilás */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 18%;          /* #2d2d2d */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 18%;              /* #2d2d2d */
+    --muted-foreground: 220 9% 64%; /* #9ca3af */
+    --accent: 271 91% 65%;          /* #7C3AED */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 18%;             /* #2d2d2d */
+    --input: 0 0% 18%;              /* #2d2d2d */
+    --ring: 271 91% 65%;            /* #7C3AED */
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --sidebar-background: 0 0% 10%; /* #1a1a1a */
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 271 91% 65%; /* #7C3AED */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 15%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 18%;     /* #2d2d2d */
+    --sidebar-ring: 271 91% 65%;
   }
 }
 
@@ -66,9 +83,54 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  }
+  
+  /* Typography */
+  h1 {
+    @apply text-2xl lg:text-3xl font-semibold;
+  }
+  
+  h2 {
+    @apply text-xl lg:text-2xl font-semibold;
+  }
+  
+  h3 {
+    @apply text-lg lg:text-xl font-medium;
+  }
+  
+  p {
+    @apply text-base;
+  }
+  
+  .text-muted {
+    @apply text-muted-foreground;
   }
 }
 
 html {
   @apply dark;
+}
+
+/* Custom styles for InnerAI design */
+@layer utilities {
+  /* Gradient for upgrade button */
+  .gradient-primary {
+    background: linear-gradient(135deg, #7C3AED 0%, #EC4899 100%);
+  }
+  
+  /* Hover elevation effect */
+  .hover-elevation {
+    @apply transition-all duration-200 hover:shadow-xl hover:-translate-y-0.5;
+  }
+  
+  /* Chat input shadow */
+  .chat-input-shadow {
+    box-shadow: 0 -1px 12px rgba(0, 0, 0, 0.1), 0 -4px 24px rgba(0, 0, 0, 0.05);
+  }
+  
+  /* Card hover effect */
+  .card-hover {
+    @apply transition-all duration-200 hover:bg-card/80 hover:border-primary/20;
+  }
 }

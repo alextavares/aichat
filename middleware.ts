@@ -6,11 +6,16 @@ export async function middleware(request: NextRequest) {
   const token = await getToken({ req: request })
   const isAuth = !!token
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth')
-  const isPublicPage = request.nextUrl.pathname === '/'
+  const isPublicPage = request.nextUrl.pathname === '/' || 
+                      request.nextUrl.pathname === '/demo-chat' ||
+                      request.nextUrl.pathname === '/teste-gratis'
+  const isOnboardingPage = request.nextUrl.pathname === '/onboarding'
   const isApiAuthRoute = request.nextUrl.pathname.startsWith('/api/auth')
+  const isPublicApiRoute = request.nextUrl.pathname.startsWith('/api/test-ai-public') || 
+                          request.nextUrl.pathname.startsWith('/api/test-stream-public')
 
-  // If it's an API auth route, let it through
-  if (isApiAuthRoute) {
+  // If it's an API auth route or public test route, let it through
+  if (isApiAuthRoute || isPublicApiRoute) {
     return NextResponse.next()
   }
 
@@ -20,7 +25,12 @@ export async function middleware(request: NextRequest) {
   }
 
   // If user is not authenticated and trying to access protected pages
-  if (!isAuth && !isAuthPage && !isPublicPage) {
+  if (!isAuth && !isAuthPage && !isPublicPage && !isOnboardingPage) {
+    return NextResponse.redirect(new URL('/auth/signin', request.url))
+  }
+
+  // If user is authenticated but onboarding page requires auth
+  if (isOnboardingPage && !isAuth) {
     return NextResponse.redirect(new URL('/auth/signin', request.url))
   }
 

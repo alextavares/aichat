@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 
 // Mock dependencies
 jest.mock('next-auth');
-jest.mock('@/lib/db');
+jest.mock('@/lib/prisma');
 jest.mock('@/lib/ai/ai-service');
 
 describe('/api/chat', () => {

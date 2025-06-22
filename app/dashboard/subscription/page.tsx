@@ -1,0 +1,403 @@
+"use client"
+
+import { useState, useEffect } from 'react'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Progress } from '@/components/ui/progress'
+import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Separator } from '@/components/ui/separator'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import {
+  CreditCard,
+  Calendar,
+  AlertCircle,
+  CheckCircle,
+  Zap,
+  Loader2,
+  TrendingUp,
+  MessageSquare,
+  Coins,
+  Shield,
+} from 'lucide-react'
+import { format } from 'date-fns'
+import { ptBR } from 'date-fns/locale'
+import { toast } from '@/hooks/use-toast'
+
+interface Subscription {
+  id: string
+  planType: 'FREE' | 'PRO' | 'ENTERPRISE'
+  status: 'ACTIVE' | 'CANCELLED' | 'EXPIRED'
+  startedAt: string
+  expiresAt: string | null
+  stripeSubscriptionId: string | null
+}
+
+interface Usage {
+  dailyMessages: {
+    used: number
+    limit: number | null
+  }
+  monthlyTokens: {
+    used: number
+    limit: number | null
+  }
+}
+
+const PLAN_DETAILS = {
+  FREE: {
+    name: 'Plano Gratuito',
+    price: 0,
+    color: 'secondary',
+    icon: Shield,
+    features: [
+      '10 mensagens por dia',
+      '100k tokens por mês',
+      'Modelo GPT-3.5 Turbo',
+      'Templates públicos',
+    ],
+  },
+  PRO: {
+    name: 'Plano Pro',
+    price: 49.90,
+    color: 'blue',
+    icon: Zap,
+    features: [
+      '500 mensagens por dia',
+      '5M tokens por mês',
+      'Todos os modelos GPT',
+      'Templates premium',
+      'Suporte prioritário',
+    ],
+  },
+  ENTERPRISE: {
+    name: 'Plano Enterprise',
+    price: 199.90,
+    color: 'purple',
+    icon: TrendingUp,
+    features: [
+      'Mensagens ilimitadas',
+      'Tokens ilimitados',
+      'Todos os modelos de IA',
+      'API personalizada',
+      'Suporte 24/7',
+    ],
+  },
+}
+
+export default function SubscriptionPage() {
+  const { data: session } = useSession()
+  const router = useRouter()
+  const [subscription, setSubscription] = useState<Subscription | null>(null)
+  const [usage, setUsage] = useState<Usage | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
+
+  useEffect(() => {
+    fetchSubscriptionData()
+  }, [])
+
+  const fetchSubscriptionData = async () => {
+    try {
+      const [subResponse, usageResponse] = await Promise.all([
+        fetch('/api/user/subscription'),
+        fetch('/api/usage/today'),
+      ])
+
+      if (subResponse.ok) {
+        const data = await subResponse.json()
+        setSubscription(data.subscription || {
+          planType: 'FREE',
+          status: 'ACTIVE',
+          startedAt: new Date().toISOString(),
+          expiresAt: null,
+          stripeSubscriptionId: null,
+        })
+      }
+
+      if (usageResponse.ok) {
+        const data = await usageResponse.json()
+        setUsage(data)
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar os dados da assinatura.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleCancelSubscription = async () => {
+    if (!subscription?.stripeSubscriptionId) return
+
+    setIsCancelling(true)
+    try {
+      const response = await fetch('/api/stripe/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          subscriptionId: subscription.stripeSubscriptionId,
+        }),
+      })
+
+      if (response.ok) {
+        toast({
+          title: "Assinatura cancelada",
+          description: "Sua assinatura foi cancelada com sucesso.",
+        })
+        setShowCancelDialog(false)
+        fetchSubscriptionData()
+      } else {
+        throw new Error('Failed to cancel subscription')
+      }
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível cancelar a assinatura.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsCancelling(false)
+    }
+  }
+
+  const handleUpgrade = () => {
+    router.push('/pricing')
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    )
+  }
+
+  const planDetails = subscription ? PLAN_DETAILS[subscription.planType] : PLAN_DETAILS.FREE
+  const PlanIcon = planDetails.icon
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Assinatura</h1>
+        <p className="text-muted-foreground">
+          Gerencie seu plano e acompanhe seu uso
+        </p>
+      </div>
+
+      {/* Success Alert */}
+      {new URLSearchParams(window.location.search).get('success') === 'true' && (
+        <Alert className="border-green-500 bg-green-50 dark:bg-green-950">
+          <CheckCircle className="h-4 w-4 text-green-600" />
+          <AlertDescription className="text-green-800 dark:text-green-200">
+            Parabéns! Sua assinatura foi ativada com sucesso.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Current Plan Card */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-3 rounded-lg bg-${planDetails.color}-100 dark:bg-${planDetails.color}-900`}>
+                <PlanIcon className={`h-6 w-6 text-${planDetails.color}-600 dark:text-${planDetails.color}-400`} />
+              </div>
+              <div>
+                <CardTitle>{planDetails.name}</CardTitle>
+                <CardDescription>
+                  {subscription?.status === 'ACTIVE' ? 'Ativo' : 'Inativo'}
+                </CardDescription>
+              </div>
+            </div>
+            <Badge variant={subscription?.status === 'ACTIVE' ? 'default' : 'secondary'}>
+              {subscription?.status || 'FREE'}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center gap-2">
+              <Calendar className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm">
+                Iniciado em:{' '}
+                {subscription && format(new Date(subscription.startedAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+              </span>
+            </div>
+            {subscription?.expiresAt && (
+              <div className="flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                <span className="text-sm">
+                  Expira em:{' '}
+                  {format(new Date(subscription.expiresAt), "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}
+                </span>
+              </div>
+            )}
+          </div>
+
+          <Separator />
+
+          <div>
+            <h4 className="text-sm font-medium mb-2">Recursos incluídos:</h4>
+            <ul className="space-y-1">
+              {planDetails.features.map((feature, index) => (
+                <li key={index} className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <CheckCircle className="h-3 w-3 text-green-500" />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="flex gap-2">
+            {subscription?.planType !== 'ENTERPRISE' && (
+              <Button onClick={handleUpgrade} className="flex-1">
+                Fazer Upgrade
+              </Button>
+            )}
+            {subscription?.planType !== 'FREE' && subscription?.status === 'ACTIVE' && (
+              <Button
+                variant="outline"
+                onClick={() => setShowCancelDialog(true)}
+                className="flex-1"
+              >
+                Cancelar Assinatura
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Usage Cards */}
+      <div className="grid gap-4 md:grid-cols-2">
+        {/* Daily Messages */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Mensagens Diárias</CardTitle>
+              <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span>Usadas hoje</span>
+                <span className="font-medium">
+                  {usage?.dailyMessages.used || 0} / {usage?.dailyMessages.limit || '∞'}
+                </span>
+              </div>
+              {usage?.dailyMessages.limit && (
+                <Progress
+                  value={(usage.dailyMessages.used / usage.dailyMessages.limit) * 100}
+                  className="h-2"
+                />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Monthly Tokens */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Tokens Mensais</CardTitle>
+              <Coins className="h-4 w-4 text-muted-foreground" />
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span>Usados este mês</span>
+                <span className="font-medium">
+                  {usage?.monthlyTokens.used?.toLocaleString() || 0} / {usage?.monthlyTokens.limit?.toLocaleString() || '∞'}
+                </span>
+              </div>
+              {usage?.monthlyTokens.limit && (
+                <Progress
+                  value={(usage.monthlyTokens.used / usage.monthlyTokens.limit) * 100}
+                  className="h-2"
+                />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Payment Method */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Método de Pagamento</CardTitle>
+          <CardDescription>
+            Gerencie seus métodos de pagamento
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <CreditCard className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <p className="font-medium">•••• •••• •••• 4242</p>
+                <p className="text-sm text-muted-foreground">Expira 12/25</p>
+              </div>
+            </div>
+            <Button variant="outline" size="sm">
+              Atualizar
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Cancel Dialog */}
+      <Dialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancelar assinatura?</DialogTitle>
+            <DialogDescription>
+              Tem certeza que deseja cancelar sua assinatura? Você perderá acesso aos recursos premium
+              no final do período atual de cobrança.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowCancelDialog(false)}
+              disabled={isCancelling}
+            >
+              Manter assinatura
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleCancelSubscription}
+              disabled={isCancelling}
+            >
+              {isCancelling ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Cancelando...
+                </>
+              ) : (
+                'Cancelar assinatura'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  )
+}

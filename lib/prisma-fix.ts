@@ -1,7 +1,9 @@
 // Temporary fix for Prisma unique constraint
 // This creates the composite unique constraint manually if it doesn't exist
 
-import { prisma } from "./db"
+import { prisma } from "./prisma"
+
+export { prisma } // Re-export prisma for imports
 
 export async function ensureUniqueConstraints() {
   try {

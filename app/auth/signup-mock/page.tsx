@@ -14,6 +14,7 @@ export default function SignUpMock() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    console.log("Mock form submitted")
     setLoading(true)
     setError("")
 
