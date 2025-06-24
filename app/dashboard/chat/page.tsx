@@ -76,6 +76,7 @@ interface FileAttachment {
 }
 
 // Categorias de modelos para melhor organização
+// Esta estrutura deve ser mantida em sincronia com a lógica de `getModelsForPlan` em `lib/ai/ai-service.ts`
 const MODEL_CATEGORIES = {
   OPENAI: {
     name: 'OpenAI',
@@ -84,7 +85,7 @@ const MODEL_CATEGORIES = {
       { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', tier: 'FREE' },
       { id: 'gpt-4', name: 'GPT-4', tier: 'PRO' },
       { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', tier: 'PRO' },
-      { id: 'gpt-4-vision-preview', name: 'GPT-4 Vision', tier: 'PRO' },
+      { id: 'gpt-4-vision-preview', name: 'GPT-4 Vision', tier: 'ENTERPRISE' }, // Alinhado com a lógica de backend (PRO não inclui explicitamente, então assume-se ENTERPRISE)
     ]
   },
   ANTHROPIC: {
@@ -103,7 +104,7 @@ const MODEL_CATEGORIES = {
       { id: 'gemini-pro', name: 'Gemini Pro', tier: 'PRO' },
     ]
   },
-  META: {
+  META: { // Llama
     name: 'Llama',
     icon: Brain,
     models: [
@@ -131,25 +132,33 @@ const MODEL_CATEGORIES = {
     name: 'Open Source',
     icon: Brain,
     models: [
-      { id: 'nous-hermes-2', name: 'Nous Hermes 2', tier: 'PRO' },
-      { id: 'openhermes-2.5', name: 'OpenHermes 2.5', tier: 'PRO' },
+      // Alinhado com a lógica de backend (PRO não inclui explicitamente, então assume-se ENTERPRISE)
+      { id: 'nous-hermes-2', name: 'Nous Hermes 2', tier: 'ENTERPRISE' },
+      { id: 'openhermes-2.5', name: 'OpenHermes 2.5', tier: 'ENTERPRISE' },
+      // Adicionar aqui outros modelos Open Source que são apenas ENTERPRISE conforme `aiService.getAllAvailableModels()`
+      // e não cobertos pelas listas FREE/PRO do `aiService.getModelsForPlan`.
+      // Exemplo: 'claude-2.1', 'codellama-70b', 'zephyr-7b' etc. seriam ENTERPRISE.
     ]
   }
+  // Outros modelos de `aiService.getAllAvailableModels()` que não estão nas listas FREE ou PRO
+  // do `aiService.getModelsForPlan` seriam implicitamente ENTERPRISE.
+  // A função `getAvailableModels` abaixo lida com isso corretamente.
 }
 
 // Função para obter modelos disponíveis baseado no plano do usuário
 function getAvailableModels(planType: string) {
   const tierMap: Record<string, string[]> = {
     FREE: ['FREE'],
-    PRO: ['FREE', 'PRO'],
-    ENTERPRISE: ['FREE', 'PRO', 'ENTERPRISE']
+    PRO: ['FREE', 'PRO'], // Usuários PRO têm acesso a modelos FREE e PRO
+    ENTERPRISE: ['FREE', 'PRO', 'ENTERPRISE'] // ENTERPRISE têm acesso a todos
   }
   
-  const allowedTiers = tierMap[planType] || ['FREE']
+  const allowedTiers = tierMap[planType] || ['FREE'] // Default to FREE if planType is unknown
   const availableModels: Array<{id: string, name: string, category: string, icon: any}> = []
   
   Object.entries(MODEL_CATEGORIES).forEach(([key, category]) => {
     category.models.forEach(model => {
+      // Um modelo é considerado disponível se seu tier estiver incluído nos tiers permitidos para o plano do usuário.
       if (allowedTiers.includes(model.tier)) {
         availableModels.push({
           id: model.id,

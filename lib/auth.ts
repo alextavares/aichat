@@ -96,17 +96,51 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
+    async jwt({ token, user, trigger, session: updateSessionData }) { // Adicionado trigger e session para updates
+      // Quando o usuário faz login (objeto `user` está presente)
+      if (user?.id) {
+        token.id = user.id;
+        // Buscar dados adicionais do usuário no login inicial
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { onboardingCompleted: true, planType: true } // Adicionando planType também, para o próximo passo do plano
+        });
+        if (dbUser) {
+          token.onboardingCompleted = dbUser.onboardingCompleted;
+          token.planType = dbUser.planType;
+        }
       }
-      return token
+
+      // Se o trigger for um update (ex: useSession().update())
+      if (trigger === "update" && updateSessionData) {
+        // Aqui podemos atualizar o token com novos dados, se necessário.
+        // Por exemplo, se o onboarding foi completado e a sessão foi atualizada.
+        // A página de onboarding (`app/onboarding/page.tsx`) já chama `update()`
+        // após o onboarding. Precisamos garantir que os novos dados sejam refletidos.
+
+        // Refetch user data to ensure token has the latest info
+        if (token.id) {
+            const dbUser = await prisma.user.findUnique({
+                where: { id: token.id as string },
+                select: { onboardingCompleted: true, planType: true }
+            });
+            if (dbUser) {
+                token.onboardingCompleted = dbUser.onboardingCompleted;
+                token.planType = dbUser.planType; // Atualiza o planType também
+            }
+        }
+      }
+      return token;
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string
+      if (token?.id) {
+        session.user.id = token.id as string;
+        // @ts-ignore
+        session.user.onboardingCompleted = token.onboardingCompleted as boolean | undefined;
+        // @ts-ignore
+        session.user.planType = token.planType as string | undefined; // Adicionando planType também
       }
-      return session
+      return session;
     }
   }
 }

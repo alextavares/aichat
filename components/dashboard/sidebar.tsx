@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
-import { useEffect, useState, useCallback } from 'react'
+// Removido: import { useEffect, useState, useCallback } from 'react'
 import {
   Sidebar,
   SidebarContent,
