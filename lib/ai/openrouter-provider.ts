@@ -14,6 +14,11 @@ export class OpenRouterProvider implements AIProvider {
 
   // Mapa de modelos com nomes amigáveis para o usuário
   private modelMap: Record<string, string> = {
+    // Modelos OpenAI via OpenRouter
+    'gpt-3.5-turbo': 'openai/gpt-3.5-turbo',
+    'gpt-4': 'openai/gpt-4',
+    'gpt-4-turbo': 'openai/gpt-4-turbo-preview',
+    
     // Modelos Anthropic
     'claude-3-opus': 'anthropic/claude-3-opus',
     'claude-3-sonnet': 'anthropic/claude-3-sonnet-20240229',

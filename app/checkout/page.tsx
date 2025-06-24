@@ -16,6 +16,8 @@ export default function CheckoutPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const planId = searchParams.get('plan') || 'pro'
+  const billing = searchParams.get('billing') || 'monthly'
+  const isYearly = billing === 'yearly'
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'pix' | 'boleto'>('card')
   const [installments, setInstallments] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
@@ -27,6 +29,11 @@ export default function CheckoutPage() {
     return null
   }
 
+  // Calculate yearly price with 60% discount
+  const monthlyPrice = plan.price
+  const yearlyPrice = isYearly ? monthlyPrice * 12 * 0.4 : monthlyPrice
+  const displayPrice = isYearly ? yearlyPrice : monthlyPrice
+
   const handleCheckout = async () => {
     setIsLoading(true)
     
@@ -37,7 +44,8 @@ export default function CheckoutPage() {
         body: JSON.stringify({
           planId: plan.id,
           paymentMethod,
-          installments: paymentMethod === 'card' ? installments : undefined
+          installments: paymentMethod === 'card' ? installments : undefined,
+          billingCycle: billing
         })
       })
 
@@ -63,7 +71,7 @@ export default function CheckoutPage() {
   }
 
   const installmentOptions = [1, 2, 3, 6, 12]
-  const installmentPrice = plan.price / installments
+  const installmentPrice = displayPrice / installments
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-background">
@@ -71,17 +79,33 @@ export default function CheckoutPage() {
         <CardHeader>
           <CardTitle className="text-2xl">Finalizar Assinatura</CardTitle>
           <CardDescription>
-            Complete seu pagamento para ativar o plano {plan.name}
+            Complete seu pagamento para ativar o plano {plan.name} {isYearly ? 'Anual' : 'Mensal'}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Plan Summary */}
           <div className="bg-card rounded-lg p-4 border">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-semibold">Plano {plan.name}</h3>
-              <Badge variant="secondary" className="text-lg px-3 py-1">
-                R$ {plan.price}/mês
-              </Badge>
+              <h3 className="text-lg font-semibold">Plano {plan.name} {isYearly ? 'Anual' : 'Mensal'}</h3>
+              <div className="text-right">
+                {isYearly ? (
+                  <>
+                    <Badge variant="secondary" className="text-lg px-3 py-1">
+                      R$ {(yearlyPrice / 12).toFixed(2)}/mês
+                    </Badge>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      R$ {yearlyPrice.toFixed(2)}/ano
+                    </p>
+                    <p className="text-sm text-green-600 font-medium">
+                      60% de desconto
+                    </p>
+                  </>
+                ) : (
+                  <Badge variant="secondary" className="text-lg px-3 py-1">
+                    R$ {monthlyPrice.toFixed(2)}/mês
+                  </Badge>
+                )}
+              </div>
             </div>
             <ul className="space-y-2">
               {plan.features.map((feature, index) => (
@@ -143,7 +167,7 @@ export default function CheckoutPage() {
                 <SelectContent>
                   {installmentOptions.map(option => (
                     <SelectItem key={option} value={option.toString()}>
-                      {option}x de R$ {(plan.price / option).toFixed(2)} sem juros
+                      {option}x de R$ {(displayPrice / option).toFixed(2)} sem juros
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -162,11 +186,11 @@ export default function CheckoutPage() {
                       {installments}x R$ {installmentPrice.toFixed(2)}
                     </p>
                     <p className="text-sm text-muted-foreground font-normal">
-                      Total: R$ {plan.price.toFixed(2)}
+                      Total: R$ {displayPrice.toFixed(2)}
                     </p>
                   </>
                 ) : (
-                  <p className="text-2xl">R$ {plan.price.toFixed(2)}</p>
+                  <p className="text-2xl">R$ {displayPrice.toFixed(2)}</p>
                 )}
               </div>
             </div>

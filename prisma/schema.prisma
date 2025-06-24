@@ -32,6 +32,7 @@ model User {
   messageFeedback MessageFeedback[]
   userUsage       UserUsage[]
   templateFavorites TemplateFavorite[]
+  knowledgeBase   KnowledgeBase[]
 
   @@map("users")
 }
@@ -247,6 +248,7 @@ model MessageFeedback {
 
 enum PlanType {
   FREE
+  LITE
   PRO
   ENTERPRISE
 }
@@ -313,4 +315,32 @@ model TemplateFavorite {
 
   @@unique([userId, templateId])
   @@map("template_favorites")
+}
+
+model KnowledgeBase {
+  id            String            @id @default(cuid())
+  userId        String            @map("user_id")
+  name          String
+  description   String?
+  type          KnowledgeBaseType
+  content       String            @db.Text
+  metadata      Json?
+  isActive      Boolean           @default(true) @map("is_active")
+  embeddingId   String?           @map("embedding_id")
+  fileSize      Int?              @map("file_size")
+  mimeType      String?           @map("mime_type")
+  originalName  String?           @map("original_name")
+  createdAt     DateTime          @default(now()) @map("created_at")
+  updatedAt     DateTime          @updatedAt @map("updated_at")
+  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isActive])
+  @@map("knowledge_base")
+}
+
+enum KnowledgeBaseType {
+  DOCUMENT
+  WEBPAGE
+  TEXT
+  FAQ
 }

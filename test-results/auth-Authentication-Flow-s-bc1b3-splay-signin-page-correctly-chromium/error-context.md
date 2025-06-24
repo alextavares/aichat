@@ -2,10 +2,9 @@
 
 ```yaml
 - text: Entrar na sua conta Entre com sua conta para acessar o InnerAI Email
-- textbox "Email": test@example.com
+- textbox "Email"
 - text: Senha
-- textbox "Senha": Test123!@#
-- text: Credenciais inválidas
+- textbox "Senha"
 - button "Entrar"
 - text: Não tem uma conta?
 - link "Criar conta":

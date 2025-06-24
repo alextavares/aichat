@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import Link from "next/link"
 import { Github, Mail, AlertCircle, Loader2, CheckCircle } from "lucide-react"
+import { SocialLoginButtons } from "@/components/auth/social-login-buttons"
 
 export default function SignIn() {
   const [email, setEmail] = useState("")
@@ -66,40 +67,19 @@ export default function SignIn() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* OAuth Providers - temporarily disabled */}
-          {false && (
-            <>
-              <div className="grid grid-cols-2 gap-4">
-                <Button
-                  variant="outline"
-                  onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
-                  disabled={loading}
-                >
-                  <Mail className="mr-2 h-4 w-4" />
-                  Google
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
-                  disabled={loading}
-                >
-                  <Github className="mr-2 h-4 w-4" />
-                  GitHub
-                </Button>
-              </div>
+          {/* OAuth Providers */}
+          <SocialLoginButtons />
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <Separator className="w-full" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">
-                    Ou continue com
-                  </span>
-                </div>
-              </div>
-            </>
-          )}
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <Separator className="w-full" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Ou continue com email
+              </span>
+            </div>
+          </div>
 
           {/* Email/Password Form */}
           <form data-testid="login-form" onSubmit={handleSubmit} className="space-y-4">

@@ -1,10 +1,6 @@
 import OpenAI from 'openai'
 import { AIProvider, AIMessage, AIResponse, AIModel } from './types'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
-
 // Token estimation for OpenAI models (rough estimation)
 function estimateTokens(text: string): number {
   // Rough estimation: ~4 characters per token
@@ -14,6 +10,7 @@ function estimateTokens(text: string): number {
 export class OpenAIProvider implements AIProvider {
   readonly id = 'openai'
   private apiKey: string | undefined
+  private openai: OpenAI | null = null
   private models: AIModel[] = [
     {
       id: 'gpt-3.5-turbo',
@@ -38,11 +35,22 @@ export class OpenAIProvider implements AIProvider {
       maxTokens: 128000,
       costPerInputToken: 0.01 / 1000,   // $0.01 per 1k tokens
       costPerOutputToken: 0.03 / 1000,  // $0.03 per 1k tokens
+    },
+    {
+      id: 'gpt-4-vision-preview',
+      name: 'GPT-4 Vision',
+      provider: 'openai',
+      maxTokens: 4096,
+      costPerInputToken: 0.01 / 1000,   // $0.01 per 1k tokens
+      costPerOutputToken: 0.03 / 1000,  // $0.03 per 1k tokens
     }
   ]
 
   constructor() {
     this.apiKey = process.env.OPENAI_API_KEY
+    if (this.apiKey) {
+      this.openai = new OpenAI({ apiKey: this.apiKey })
+    }
   }
 
   async generateResponse(
@@ -54,12 +62,16 @@ export class OpenAIProvider implements AIProvider {
       stream?: boolean
     }
   ): Promise<AIResponse> {
+    if (!this.openai) {
+      throw new Error('OpenAI API key not configured')
+    }
+    
     try {
-      const completion = await openai.chat.completions.create({
+      const completion = await this.openai.chat.completions.create({
         model,
         messages: messages.map(msg => ({
-          role: msg.role,
-          content: msg.content
+          role: msg.role as any,
+          content: msg.content as any
         })),
         max_tokens: options?.maxTokens || 1000,
         temperature: options?.temperature || 0.7,
@@ -113,13 +125,54 @@ export class OpenAIProvider implements AIProvider {
       temperature?: number
     }
   ): AsyncGenerator<string> {
+    if (!this.openai) {
+      throw new Error('OpenAI API key not configured')
+    }
+    
     try {
-      const stream = await openai.chat.completions.create({
-        model,
-        messages: messages.map(msg => ({
-          role: msg.role,
+      // Verificar se o modelo suporta imagens
+      const visionModels = ['gpt-4-vision-preview', 'gpt-4-turbo', 'gpt-4o']
+      const supportsImages = visionModels.includes(model)
+      
+      // Processar mensagens para remover imagens se o modelo não suporta
+      const processedMessages = messages.map(msg => {
+        if (typeof msg.content === 'string') {
+          return {
+            role: msg.role as any,
+            content: msg.content
+          }
+        }
+        
+        // Se for array de conteúdo (com imagens)
+        if (Array.isArray(msg.content)) {
+          if (supportsImages) {
+            return {
+              role: msg.role as any,
+              content: msg.content
+            }
+          } else {
+            // Extrair apenas o texto se o modelo não suporta imagens
+            const textContent = msg.content
+              .filter((part: any) => part.type === 'text')
+              .map((part: any) => part.text)
+              .join('\n')
+            
+            return {
+              role: msg.role as any,
+              content: textContent
+            }
+          }
+        }
+        
+        return {
+          role: msg.role as any,
           content: msg.content
-        })),
+        }
+      })
+      
+      const stream = await this.openai.chat.completions.create({
+        model,
+        messages: processedMessages,
         max_tokens: options?.maxTokens || 1000,
         temperature: options?.temperature || 0.7,
         stream: true,

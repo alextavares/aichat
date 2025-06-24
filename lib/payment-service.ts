@@ -24,13 +24,14 @@ export interface PaymentPlan {
   interval: 'monthly' | 'yearly'
   features: string[]
   stripePriceId?: string
+  stripeYearlyPriceId?: string
   mercadoPagoPreferenceId?: string
 }
 
 export const PAYMENT_PLANS: PaymentPlan[] = [
   {
     id: 'free',
-    name: 'Free',
+    name: 'Grátis',
     price: 0,
     currency: 'BRL',
     interval: 'monthly',
@@ -38,23 +39,41 @@ export const PAYMENT_PLANS: PaymentPlan[] = [
       '50 mensagens por dia',
       'GPT-3.5 Turbo',
       'Templates básicos',
-      'Suporte por email'
+      'Geração de imagens básica'
     ]
+  },
+  {
+    id: 'lite',
+    name: 'Lite',
+    price: 39.90,
+    currency: 'BRL',
+    interval: 'monthly',
+    features: [
+      '1.000 mensagens por mês',
+      'GPT-4 + Claude',
+      'Geração de imagens HD',
+      'Tradução de textos',
+      'Suporte por email'
+    ],
+    stripePriceId: process.env.STRIPE_PRICE_LITE,
+    stripeYearlyPriceId: process.env.STRIPE_PRICE_LITE_YEARLY,
   },
   {
     id: 'pro',
     name: 'Pro',
-    price: 47,
+    price: 79.90,
     currency: 'BRL',
     interval: 'monthly',
     features: [
-      '1.000 mensagens por dia',
-      'GPT-4 + Claude 3',
-      'Todos os templates',
-      'API Access',
+      'Mensagens ilimitadas',
+      'Todos os modelos de IA',
+      'Geração de imagens 4K',
+      'Transcrição de vídeo ilimitada',
+      'Edição avançada de imagens',
       'Suporte prioritário'
     ],
     stripePriceId: process.env.STRIPE_PRICE_PRO,
+    stripeYearlyPriceId: process.env.STRIPE_PRICE_PRO_YEARLY,
   },
   {
     id: 'enterprise',
@@ -63,14 +82,16 @@ export const PAYMENT_PLANS: PaymentPlan[] = [
     currency: 'BRL',
     interval: 'monthly',
     features: [
-      'Mensagens ilimitadas',
-      'Todos os modelos de IA',
-      'Templates personalizados',
+      'Tudo do plano Pro',
       'API dedicada',
       'SLA garantido',
-      'Suporte 24/7'
+      'Modelos customizados',
+      'Treinamento dedicado',
+      'Suporte 24/7',
+      'Compliance LGPD'
     ],
     stripePriceId: process.env.STRIPE_PRICE_ENTERPRISE,
+    stripeYearlyPriceId: process.env.STRIPE_PRICE_ENTERPRISE_YEARLY,
   }
 ]
 
@@ -82,6 +103,7 @@ export interface CreateCheckoutParams {
   installments?: number // Para parcelamento
   successUrl: string
   cancelUrl: string
+  billingCycle?: 'monthly' | 'yearly'
 }
 
 export async function createCheckoutSession(params: CreateCheckoutParams) {
@@ -92,15 +114,18 @@ export async function createCheckoutSession(params: CreateCheckoutParams) {
 
   // For card payments, use Stripe
   if (params.paymentMethod === 'card') {
-    if (!plan.stripePriceId) {
-      throw new Error('Stripe price ID not configured for this plan')
+    const isYearly = params.billingCycle === 'yearly'
+    const priceId = isYearly ? plan.stripeYearlyPriceId : plan.stripePriceId
+    
+    if (!priceId) {
+      throw new Error(`Stripe ${isYearly ? 'yearly' : 'monthly'} price ID not configured for this plan`)
     }
     
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
         {
-          price: plan.stripePriceId,
+          price: priceId,
           quantity: 1,
         },
       ],
@@ -111,11 +136,13 @@ export async function createCheckoutSession(params: CreateCheckoutParams) {
       metadata: {
         userId: params.userId,
         planId: params.planId,
+        billingCycle: params.billingCycle || 'monthly',
       },
       subscription_data: {
         metadata: {
           userId: params.userId,
           planId: params.planId,
+          billingCycle: params.billingCycle || 'monthly',
         },
       },
       // Enable installments for Brazilian cards
@@ -142,14 +169,18 @@ export async function createCheckoutSession(params: CreateCheckoutParams) {
 
   // For Pix and Boleto, use MercadoPago
   if (params.paymentMethod === 'pix' || params.paymentMethod === 'boleto') {
+    const isYearly = params.billingCycle === 'yearly'
+    const price = isYearly ? (plan.price * 12 * 0.4) : plan.price // 60% discount for yearly
+    const title = isYearly ? `Plano ${plan.name} Anual - InnerAI` : `Plano ${plan.name} - InnerAI`
+    
     const preference = await mercadopagoPreference.create({
       body: {
         items: [
           {
             id: plan.id,
-            title: `Plano ${plan.name} - InnerAI`,
+            title: title,
             quantity: 1,
-            unit_price: plan.price,
+            unit_price: price,
             currency_id: 'BRL',
           }
         ],
@@ -172,6 +203,7 @@ export async function createCheckoutSession(params: CreateCheckoutParams) {
         metadata: {
           user_id: params.userId,
           plan_id: params.planId,
+          billing_cycle: params.billingCycle || 'monthly',
         },
       }
     })

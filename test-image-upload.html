@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste Upload de Imagem - InnerAI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+        .test-image {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(45deg, #ff0000, #00ff00, #0000ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste de Upload de Imagem - InnerAI</h1>
+    
+    <div class="test-image" id="testImage">
+        TESTE
+    </div>
+    
+    <button onclick="createAndTestImage()">Criar e Testar Imagem</button>
+    
+    <div id="result"></div>
+
+    <script>
+        function createAndTestImage() {
+            // Criar um canvas com a imagem de teste
+            const canvas = document.createElement('canvas');
+            canvas.width = 200;
+            canvas.height = 200;
+            const ctx = canvas.getContext('2d');
+            
+            // Desenhar gradiente
+            const gradient = ctx.createLinearGradient(0, 0, 200, 200);
+            gradient.addColorStop(0, 'red');
+            gradient.addColorStop(0.5, 'green');
+            gradient.addColorStop(1, 'blue');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 200, 200);
+            
+            // Adicionar texto
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('TESTE', 100, 100);
+            
+            // Converter para base64
+            const base64 = canvas.toDataURL('image/png');
+            
+            // Mostrar resultado
+            document.getElementById('result').innerHTML = `
+<strong>Imagem criada com sucesso!</strong>
+
+Base64 Data URL (primeiros 100 caracteres):
+${base64.substring(0, 100)}...
+
+Tamanho aproximado: ${Math.round(base64.length / 1024)} KB
+
+<strong>Instruções para testar:</strong>
+1. Acesse http://localhost:3000/dashboard/chat
+2. Clique no ícone de clipe (📎) 
+3. Selecione uma imagem ou crie uma imagem de teste
+4. Escolha o modelo "GPT-4 Vision"
+5. Digite: "O que você vê nesta imagem?"
+6. Envie a mensagem
+
+<strong>Resultado esperado:</strong>
+A IA deve descrever a imagem corretamente.
+            `;
+            
+            // Também mostrar a imagem
+            const img = new Image();
+            img.src = base64;
+            img.style.border = '2px solid #333';
+            img.style.marginTop = '10px';
+            document.getElementById('result').appendChild(img);
+        }
+    </script>
+</body>
+</html>

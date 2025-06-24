@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { messages, model = 'gpt-3.5-turbo', conversationId } = await request.json()
+    const { messages, model = 'gpt-3.5-turbo', conversationId, webSearchEnabled, knowledgeBaseEnabled } = await request.json()
 
     // Validar entrada
     if (!messages || !Array.isArray(messages)) {
@@ -85,11 +85,84 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Preparar mensagens para IA
-    const aiMessages: AIMessage[] = messages.map((msg: any) => ({
-      role: msg.role,
-      content: msg.content
-    }))
+    // Buscar contexto da Knowledge Base se habilitado
+    let knowledgeContext = ''
+    if (knowledgeBaseEnabled) {
+      const knowledgeItems = await prisma.knowledgeBase.findMany({
+        where: {
+          userId: user.id,
+          isActive: true
+        },
+        select: {
+          name: true,
+          content: true,
+          type: true
+        },
+        take: 5 // Limitar para não exceder o contexto
+      })
+
+      if (knowledgeItems.length > 0) {
+        knowledgeContext = "\n\n[CONTEXTO DA BASE DE CONHECIMENTO]\n"
+        knowledgeItems.forEach(item => {
+          knowledgeContext += `\n### ${item.name} (${item.type})\n${item.content.substring(0, 1000)}...\n`
+        })
+        knowledgeContext += "\n[FIM DO CONTEXTO]\n\n"
+      }
+    }
+
+    // Preparar mensagens para IA (incluindo attachments)
+    const aiMessages: AIMessage[] = messages.map((msg: any, index: number) => {
+      // Adicionar contexto da Knowledge Base apenas na primeira mensagem do usuário
+      let content = msg.content || ''
+      if (index === 0 && knowledgeContext && msg.role === 'user') {
+        content = knowledgeContext + content
+      }
+
+      // Se não houver attachments, retornar mensagem simples
+      if (!msg.attachments || msg.attachments.length === 0) {
+        return {
+          role: msg.role,
+          content: content
+        }
+      }
+      
+      // Para mensagens com attachments, criar array de conteúdo multimodal
+      const contentParts: any[] = []
+      
+      // Adicionar texto da mensagem primeiro
+      if (content) {
+        contentParts.push({
+          type: 'text',
+          text: content
+        })
+      }
+      
+      // Adicionar attachments
+      for (const attachment of msg.attachments) {
+        if (attachment.type.startsWith('image/')) {
+          // Para imagens, usar formato de image_url
+          contentParts.push({
+            type: 'image_url',
+            image_url: {
+              url: attachment.content // Já está em base64 data URL
+            }
+          })
+        } else {
+          // Para outros arquivos, adicionar como texto
+          contentParts.push({
+            type: 'text',
+            text: `\n[Arquivo: ${attachment.name}]\n${attachment.content}`
+          })
+        }
+      }
+      
+      return {
+        role: msg.role,
+        content: contentParts.length === 1 && contentParts[0].type === 'text' 
+          ? contentParts[0].text 
+          : contentParts
+      }
+    })
 
     // Criar stream de resposta
     const encoder = new TextEncoder()

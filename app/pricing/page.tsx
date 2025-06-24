@@ -9,61 +9,68 @@ import { Check, X, Zap, Crown, Building2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSession } from 'next-auth/react'
 import { toast } from '@/hooks/use-toast'
+import { Switch } from '@/components/ui/switch'
+import { Label } from '@/components/ui/label'
 
 const plans = [
   {
     id: 'free',
     name: 'Grátis',
-    description: 'Perfeito para começar',
-    price: 0,
+    description: 'Experimente gratuitamente',
+    monthlyPrice: 0,
+    yearlyPrice: 0,
     icon: Zap,
     features: [
       { text: '50 mensagens por dia', included: true },
       { text: 'Acesso a GPT-3.5', included: true },
       { text: 'Histórico de 7 dias', included: true },
-      { text: 'Templates básicos', included: true },
+      { text: 'Geração de imagens básica', included: true },
       { text: 'Modelos avançados', included: false },
-      { text: 'API Access', included: false },
+      { text: 'Transcrição de vídeo', included: false },
       { text: 'Suporte prioritário', included: false },
     ],
-    buttonText: 'Plano Atual',
+    buttonText: 'Começar Grátis',
+    popular: false,
+  },
+  {
+    id: 'lite',
+    name: 'Lite',
+    description: 'Para uso pessoal',
+    monthlyPrice: 39.90,
+    yearlyPrice: 15.96, // 60% de desconto
+    yearlyTotal: 191.52, // 15.96 * 12
+    icon: Zap,
+    features: [
+      { text: '1.000 mensagens por mês', included: true },
+      { text: 'Acesso a GPT-4 e Claude', included: true },
+      { text: 'Histórico de 30 dias', included: true },
+      { text: 'Geração de imagens HD', included: true },
+      { text: 'Tradução de textos', included: true },
+      { text: 'Suporte por email', included: true },
+      { text: 'Transcrição de vídeo limitada', included: false },
+    ],
+    buttonText: 'Assinar Lite',
     popular: false,
   },
   {
     id: 'pro',
     name: 'Pro',
     description: 'Para profissionais',
-    price: 47,
+    monthlyPrice: 79.90,
+    yearlyPrice: 31.96, // 60% de desconto
+    yearlyTotal: 383.52, // 31.96 * 12
     icon: Crown,
     features: [
       { text: 'Mensagens ilimitadas', included: true },
       { text: 'Todos os modelos de IA', included: true },
       { text: 'Histórico ilimitado', included: true },
-      { text: 'Todos os templates', included: true },
-      { text: 'Exportação de dados', included: true },
-      { text: 'API Access básico', included: true },
-      { text: 'Suporte por email', included: true },
+      { text: 'Geração de imagens 4K', included: true },
+      { text: 'Transcrição de vídeo ilimitada', included: true },
+      { text: 'Edição avançada de imagens', included: true },
+      { text: 'Suporte prioritário', included: true },
     ],
     buttonText: 'Assinar Pro',
     popular: true,
-  },
-  {
-    id: 'enterprise',
-    name: 'Enterprise',
-    description: 'Para equipes e empresas',
-    price: 197,
-    icon: Building2,
-    features: [
-      { text: 'Tudo do plano Pro', included: true },
-      { text: 'API Access completo', included: true },
-      { text: 'Modelos customizados', included: true },
-      { text: 'SLA garantido', included: true },
-      { text: 'Treinamento dedicado', included: true },
-      { text: 'Suporte 24/7', included: true },
-      { text: 'Compliance LGPD', included: true },
-    ],
-    buttonText: 'Falar com Vendas',
-    popular: false,
   },
 ]
 
@@ -71,8 +78,9 @@ export default function PricingPage() {
   const router = useRouter()
   const { data: session } = useSession()
   const [isLoading, setIsLoading] = useState<string | null>(null)
+  const [isYearly, setIsYearly] = useState(false)
 
-  const handleSelectPlan = async (planId: string) => {
+  const handleSelectPlan = async (planId: string, isYearlyPlan: boolean = false) => {
     if (planId === 'free') {
       toast({
         title: "Plano Grátis",
@@ -93,7 +101,8 @@ export default function PricingPage() {
     }
 
     setIsLoading(planId)
-    router.push(`/checkout?plan=${planId}`)
+    const billing = isYearlyPlan ? 'yearly' : 'monthly'
+    router.push(`/checkout?plan=${planId}&billing=${billing}`)
   }
 
   return (
@@ -108,6 +117,37 @@ export default function PricingPage() {
             Comece gratuitamente e faça upgrade conforme sua necessidade. 
             Cancele a qualquer momento.
           </p>
+          
+          {/* Billing Toggle */}
+          <div className="flex items-center justify-center gap-4 mt-8">
+            <Label 
+              htmlFor="billing-toggle" 
+              className={cn(
+                "text-lg font-medium transition-colors",
+                !isYearly ? "text-foreground" : "text-muted-foreground"
+              )}
+            >
+              Mensal
+            </Label>
+            <Switch
+              id="billing-toggle"
+              checked={isYearly}
+              onCheckedChange={setIsYearly}
+              className="data-[state=checked]:bg-primary"
+            />
+            <Label 
+              htmlFor="billing-toggle" 
+              className={cn(
+                "text-lg font-medium transition-colors",
+                isYearly ? "text-foreground" : "text-muted-foreground"
+              )}
+            >
+              Anual
+              <Badge className="ml-2 bg-green-500/10 text-green-600 border-green-500/20">
+                -60%
+              </Badge>
+            </Label>
+          </div>
         </div>
 
         {/* Pricing Cards */}
@@ -139,11 +179,29 @@ export default function PricingPage() {
                   <CardTitle className="text-2xl">{plan.name}</CardTitle>
                   <CardDescription>{plan.description}</CardDescription>
                   <div className="mt-4">
-                    <span className="text-4xl font-bold">
-                      {plan.price === 0 ? 'Grátis' : `R$ ${plan.price}`}
-                    </span>
-                    {plan.price > 0 && (
-                      <span className="text-muted-foreground">/mês</span>
+                    {plan.monthlyPrice === 0 ? (
+                      <span className="text-4xl font-bold">Grátis</span>
+                    ) : (
+                      <>
+                        <div className="space-y-1">
+                          <div>
+                            <span className="text-4xl font-bold">
+                              R$ {isYearly ? plan.yearlyPrice?.toFixed(2) : plan.monthlyPrice.toFixed(2)}
+                            </span>
+                            <span className="text-muted-foreground">/mês</span>
+                          </div>
+                          {isYearly && plan.yearlyTotal && (
+                            <p className="text-sm text-muted-foreground">
+                              R$ {plan.yearlyTotal.toFixed(2)}/ano
+                            </p>
+                          )}
+                          {isYearly && plan.monthlyPrice > 0 && (
+                            <p className="text-sm text-green-600 font-medium">
+                              Economia de R$ {((plan.monthlyPrice * 12 - plan.yearlyTotal!).toFixed(2))}
+                            </p>
+                          )}
+                        </div>
+                      </>
                     )}
                   </div>
                 </CardHeader>
@@ -175,7 +233,7 @@ export default function PricingPage() {
                       plan.popular ? "gradient-primary text-white" : ""
                     )}
                     variant={plan.popular ? "default" : "outline"}
-                    onClick={() => handleSelectPlan(plan.id)}
+                    onClick={() => handleSelectPlan(plan.id, isYearly)}
                     disabled={isLoading === plan.id}
                   >
                     {isLoading === plan.id ? "Carregando..." : plan.buttonText}
@@ -186,12 +244,42 @@ export default function PricingPage() {
           })}
         </div>
 
+        {/* Annual Discount Banner */}
+        <div className="max-w-4xl mx-auto mb-12">
+          <div className="bg-gradient-to-r from-primary/10 to-purple-600/10 rounded-lg p-6 text-center">
+            <h3 className="text-xl font-bold mb-2">
+              🎉 Economize 60% no Plano Anual!
+            </h3>
+            <p className="text-muted-foreground">
+              Assine qualquer plano anual e economize o equivalente a mais de 7 meses grátis
+            </p>
+          </div>
+        </div>
+
         {/* FAQ Section */}
         <div className="max-w-3xl mx-auto">
           <h2 className="text-2xl font-bold text-center mb-8">
             Perguntas Frequentes
           </h2>
           <div className="space-y-6">
+            <div className="bg-card rounded-lg p-6">
+              <h3 className="font-semibold mb-2">
+                Vocês oferecem garantia?
+              </h3>
+              <p className="text-muted-foreground">
+                Sim! Oferecemos garantia de reembolso de 7 dias em todos os planos pagos. 
+                Se não ficar satisfeito, devolvemos 100% do seu dinheiro.
+              </p>
+            </div>
+            <div className="bg-card rounded-lg p-6">
+              <h3 className="font-semibold mb-2">
+                Como funciona o desconto anual?
+              </h3>
+              <p className="text-muted-foreground">
+                Ao escolher o pagamento anual, você recebe 60% de desconto. 
+                Por exemplo: o plano Pro sai por apenas R$ 31,96/mês quando pago anualmente.
+              </p>
+            </div>
             <div className="bg-card rounded-lg p-6">
               <h3 className="font-semibold mb-2">
                 Posso cancelar a qualquer momento?
@@ -208,15 +296,6 @@ export default function PricingPage() {
               <p className="text-muted-foreground">
                 Aceitamos cartões de crédito (Visa, Mastercard, Amex), 
                 Pix e boleto bancário. Parcelamos em até 12x sem juros.
-              </p>
-            </div>
-            <div className="bg-card rounded-lg p-6">
-              <h3 className="font-semibold mb-2">
-                Existe período de teste?
-              </h3>
-              <p className="text-muted-foreground">
-                Oferecemos o plano grátis para você experimentar. 
-                Para os planos pagos, garantimos reembolso em até 7 dias.
               </p>
             </div>
           </div>

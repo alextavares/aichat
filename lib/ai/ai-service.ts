@@ -141,19 +141,29 @@ class AIService {
       'mythomist-7b', 'cinematika-7b', 'neural-chat-7b'
     ]
     
-    if (openaiModels.includes(model)) {
-      return this.getProvider('openai')
-    }
-    
+    // Primeiro tentar OpenRouter se configurado
     if (openRouterModels.includes(model)) {
       const provider = this.getProvider('openrouter')
-      if (!provider.isConfigured()) {
-        throw new Error('OpenRouter provider not configured. Please set OPENROUTER_API_KEY.')
+      if (provider.isConfigured()) {
+        return provider
       }
-      return provider
     }
     
-    throw new Error(`No provider found for model: ${model}`)
+    // Fallback para OpenAI se disponível
+    if (openaiModels.includes(model)) {
+      const openaiProvider = this.getProvider('openai')
+      if (openaiProvider.isConfigured()) {
+        return openaiProvider
+      }
+    }
+    
+    // Se OpenRouter está configurado, usar como fallback para modelos OpenAI
+    const openRouterProvider = this.getProvider('openrouter')
+    if (openRouterProvider.isConfigured() && openaiModels.includes(model)) {
+      return openRouterProvider
+    }
+    
+    throw new Error(`No configured provider found for model: ${model}`)
   }
 
 }

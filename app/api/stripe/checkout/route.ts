@@ -21,9 +21,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { planId, paymentMethod = 'card', installments } = body
+    const { planId, paymentMethod = 'card', installments, billingCycle = 'monthly' } = body
 
-    if (!planId || !['pro', 'enterprise'].includes(planId)) {
+    if (!planId || !['lite', 'pro', 'enterprise'].includes(planId)) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     }
 
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       // Use mock checkout for development
       const mockSession = {
         id: `cs_test_${Date.now()}`,
-        url: `/api/stripe/mock-checkout?session_id=cs_test_${Date.now()}&plan=${planId}`
+        url: `/api/stripe/mock-checkout?session_id=cs_test_${Date.now()}&plan=${planId}&billing=${billingCycle}`
       }
       return NextResponse.json({ 
         url: mockSession.url,
@@ -49,6 +49,7 @@ export async function POST(request: NextRequest) {
       email: user.email,
       paymentMethod,
       installments,
+      billingCycle,
       successUrl: `${process.env.NEXTAUTH_URL}/dashboard?payment=success`,
       cancelUrl: `${process.env.NEXTAUTH_URL}/pricing?payment=cancelled`
     })

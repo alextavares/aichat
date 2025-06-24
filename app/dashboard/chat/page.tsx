@@ -17,6 +17,20 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import {
   Send,
   Bot,
   User,
@@ -33,6 +47,13 @@ import {
   X,
   FileText,
   Image,
+  Monitor,
+  Save,
+  Link,
+  Globe,
+  Search,
+  BookOpen,
+  Plus,
 } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 
@@ -63,6 +84,7 @@ const MODEL_CATEGORIES = {
       { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', tier: 'FREE' },
       { id: 'gpt-4', name: 'GPT-4', tier: 'PRO' },
       { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', tier: 'PRO' },
+      { id: 'gpt-4-vision-preview', name: 'GPT-4 Vision', tier: 'PRO' },
     ]
   },
   ANTHROPIC: {
@@ -148,14 +170,20 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedModel, setSelectedModel] = useState('gpt-3.5-turbo')
+  const [selectedModel, setSelectedModel] = useState('mistral-7b')
   const [conversationId, setConversationId] = useState<string | null>(null)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [userPlan, setUserPlan] = useState<string>('FREE')
   const [attachments, setAttachments] = useState<FileAttachment[]>([])
+  const [urlDialogOpen, setUrlDialogOpen] = useState(false)
+  const [urlInput, setUrlInput] = useState('')
+  const [savedFiles, setSavedFiles] = useState<FileAttachment[]>([]) // Simular arquivos salvos
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false) // Estado para controlar busca na internet
+  const [knowledgeBaseEnabled, setKnowledgeBaseEnabled] = useState(false) // Estado para controlar Knowledge Base
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const hasLoadedRef = useRef(false) // Prevent multiple loads
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -166,23 +194,25 @@ export default function ChatPage() {
   }, [messages])
 
   // Load user plan
-  const fetchUserPlan = useCallback(async () => {
-    if (session?.user) {
-      try {
-        const response = await fetch('/api/subscription')
-        if (response.ok) {
-          const data = await response.json()
-          setUserPlan(data.planType || 'FREE')
+  useEffect(() => {
+    const fetchUserPlan = async () => {
+      if (session?.user) {
+        try {
+          const response = await fetch('/api/subscription')
+          if (response.ok) {
+            const data = await response.json()
+            setUserPlan(data.planType || 'FREE')
+          }
+        } catch (error) {
+          console.error('Error fetching user plan:', error)
         }
-      } catch (error) {
-        console.error('Error fetching user plan:', error)
       }
     }
+    
+    if (session) {
+      fetchUserPlan()
+    }
   }, [session])
-
-  useEffect(() => {
-    fetchUserPlan()
-  }, [fetchUserPlan])
 
   const loadTemplate = useCallback(async (templateId: string) => {
     try {
@@ -237,15 +267,20 @@ export default function ChatPage() {
 
   // Load template or conversation if specified in URL
   useEffect(() => {
+    if (hasLoadedRef.current) return
+    
     const templateId = searchParams.get('template')
     const conversationId = searchParams.get('conversation')
     
-    if (templateId) {
+    if (templateId && templateId.length > 0) {
+      hasLoadedRef.current = true
       loadTemplate(templateId)
-    } else if (conversationId) {
+    } else if (conversationId && conversationId.length > 0) {
+      hasLoadedRef.current = true
       loadConversation(conversationId)
     }
-  }, [searchParams, loadTemplate, loadConversation])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
@@ -333,6 +368,36 @@ export default function ChatPage() {
     setAttachments(prev => prev.filter(att => att.id !== attachmentId))
   }
 
+  const handleUrlSubmit = async () => {
+    if (!urlInput.trim()) return
+
+    try {
+      // Aqui você normalmente faria uma requisição para buscar o conteúdo da URL
+      // Por enquanto, vamos simular com uma mensagem
+      const urlAttachment: FileAttachment = {
+        id: Date.now().toString() + Math.random().toString(),
+        name: urlInput,
+        type: 'text/html',
+        size: 0,
+        content: `[URL Content from: ${urlInput}]`, // Em produção, você buscaria o conteúdo real
+      }
+
+      setAttachments(prev => [...prev, urlAttachment])
+      toast({
+        title: "URL adicionada",
+        description: `${urlInput} foi anexada com sucesso.`,
+      })
+      setUrlInput('')
+      setUrlDialogOpen(false)
+    } catch (error) {
+      toast({
+        title: "Erro ao adicionar URL",
+        description: "Não foi possível adicionar a URL.",
+        variant: "destructive",
+      })
+    }
+  }
+
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes'
     const k = 1024
@@ -389,7 +454,9 @@ export default function ChatPage() {
             attachments: msg.attachments
           })),
           model: selectedModel,
-          conversationId
+          conversationId,
+          webSearchEnabled,
+          knowledgeBaseEnabled
         })
       })
 
@@ -530,12 +597,135 @@ export default function ChatPage() {
       {/* Messages Area */}
       <ScrollArea className="flex-1 p-4">
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center">
-            <Bot className="h-12 w-12 text-muted-foreground mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Comece uma nova conversa</h2>
-            <p className="text-muted-foreground max-w-md">
-              Escolha um modelo de IA e envie sua mensagem. Estou aqui para ajudar com qualquer pergunta!
-            </p>
+          <div className="flex flex-col items-center justify-center h-full">
+            <div className="max-w-5xl w-full mx-auto">
+              {/* Greeting */}
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-semibold mb-2">
+                  Hello {session?.user?.name?.split(' ')[0] || 'there'}
+                </h1>
+                <p className="text-lg text-muted-foreground">
+                  What can I do for you today?
+                </p>
+              </div>
+
+              {/* Category Tabs */}
+              <div className="flex items-center justify-center gap-2 mb-8">
+                <Button
+                  variant="secondary"
+                  className="rounded-full px-6 py-2 bg-purple-100 text-purple-700 hover:bg-purple-200"
+                >
+                  Work
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="rounded-full px-6 py-2"
+                >
+                  Popular
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="rounded-full px-6 py-2"
+                >
+                  Marketing
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="rounded-full h-10 w-10"
+                >
+                  <Plus className="h-5 w-5" />
+                </Button>
+              </div>
+
+              {/* Template Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {/* Performance Indicators */}
+                <Card 
+                  className="p-6 hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-purple-50 to-purple-100/50 border-purple-200"
+                  onClick={() => setInput("Design a comprehensive KPI framework for tracking business performance metrics")}
+                >
+                  <h3 className="font-semibold text-lg mb-3">Performance Indicators</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Design a comprehensive KPI framework for tracking business performance
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-purple-600">
+                    <Plus className="h-4 w-4" />
+                    <span>PROMPT</span>
+                  </div>
+                </Card>
+
+                {/* Priority Matrix */}
+                <Card 
+                  className="p-6 hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-blue-50 to-blue-100/50 border-blue-200"
+                  onClick={() => setInput("Create a strategic prioritization framework for Company/Sector using urgency and importance matrix")}>
+                  <h3 className="font-semibold text-lg mb-3">Priority Matrix</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Create a strategic prioritization framework for Company/Sector...
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-blue-600">
+                    <Plus className="h-4 w-4" />
+                    <span>PROMPT</span>
+                  </div>
+                </Card>
+
+                {/* Strategic Timeline */}
+                <Card 
+                  className="p-6 hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-cyan-50 to-cyan-100/50 border-cyan-200"
+                  onClick={() => setInput("Develop an implementation roadmap for strategic initiatives with key milestones and dependencies")}>
+                  <h3 className="font-semibold text-lg mb-3">Strategic Timeline</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Develop an implementation roadmap for...
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-cyan-600">
+                    <Plus className="h-4 w-4" />
+                    <span>PROMPT</span>
+                  </div>
+                </Card>
+
+                {/* Decision Criteria */}
+                <Card 
+                  className="p-6 hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-green-50 to-green-100/50 border-green-200"
+                  onClick={() => setInput("Design a robust decision-making framework for evaluating strategic options and alternatives")}>
+                  <h3 className="font-semibold text-lg mb-3">Decision Criteria</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Design a robust decision-making framework for Type of...
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-green-600">
+                    <Plus className="h-4 w-4" />
+                    <span>PROMPT</span>
+                  </div>
+                </Card>
+
+                {/* Planning Meeting Guide */}
+                <Card 
+                  className="p-6 hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-orange-50 to-orange-100/50 border-orange-200"
+                  onClick={() => setInput("Structure an annual strategic planning meeting agenda with objectives and expected outcomes")}>
+                  <h3 className="font-semibold text-lg mb-3">Planning Meeting Guide</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Structure an annual strategic planning
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-orange-600">
+                    <Plus className="h-4 w-4" />
+                    <span>PROMPT</span>
+                  </div>
+                </Card>
+
+                {/* Strategic Communication */}
+                <Card 
+                  className="p-6 hover:shadow-lg transition-shadow cursor-pointer bg-gradient-to-br from-violet-50 to-violet-100/50 border-violet-200"
+                  onClick={() => setInput("Develop a strategic communication plan for stakeholder engagement and change management")}>
+                  <h3 className="font-semibold text-lg mb-3">Strategic Communication</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Develop a strategic communication plan for
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-violet-600">
+                    <Plus className="h-4 w-4" />
+                    <span>PROMPT</span>
+                  </div>
+                </Card>
+              </div>
+            </div>
           </div>
         ) : (
           <div className="space-y-4 max-w-4xl mx-auto">
@@ -675,7 +865,7 @@ export default function ChatPage() {
             </div>
           )}
           
-          <div className="relative flex items-end gap-2 bg-card rounded-2xl p-2 border border-border/50">
+          <div className="relative bg-card rounded-2xl p-2 border border-border/50">
             <input
               ref={fileInputRef}
               type="file"
@@ -684,64 +874,162 @@ export default function ChatPage() {
               onChange={handleFileSelect}
               className="hidden"
             />
-            <div className="flex gap-1 absolute left-3 bottom-3">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-lg hover:bg-accent"
-                title="Adicionar arquivo"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Paperclip className="h-4 w-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-lg hover:bg-accent"
-                title="Pesquisar na web"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                </svg>
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 rounded-lg hover:bg-accent"
-                title="Conhecimento"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </Button>
-            </div>
             <Textarea
               ref={textareaRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Pergunte para Inner AI"
-              className="min-h-[70px] max-h-[200px] resize-none border-0 bg-transparent pl-28 pr-12 py-4 focus-visible:ring-0 focus-visible:ring-offset-0 text-base"
+              placeholder="Design a comprehensive KPI framework for Area/Department that captures both leading and lagging indicators. Structure metrics to reflect operational efficiency, strategic progress, and stakeholder value creation. Include data collection protocols, reporting frequencies, and intervention thresholds."
+              className="min-h-[100px] max-h-[200px] resize-none border-0 bg-transparent px-4 pt-4 pb-12 focus-visible:ring-0 focus-visible:ring-offset-0 text-base placeholder:text-muted-foreground/60"
               disabled={isLoading}
             />
-            <Button
-              type="submit"
-              disabled={(!input.trim() && attachments.length === 0) || isLoading}
-              size="icon"
-              className="absolute right-2 bottom-2 h-10 w-10 rounded-xl bg-primary hover:bg-primary/90"
-            >
-              {isLoading ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
-              ) : (
-                <Send className="h-5 w-5" />
-              )}
-            </Button>
+            {/* Bottom toolbar */}
+            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-3 rounded-lg text-xs hover:bg-accent"
+                      title="Add"
+                    >
+                      <Paperclip className="h-4 w-4 mr-2" />
+                      Add
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56">
+                    <DropdownMenuItem 
+                      onClick={() => fileInputRef.current?.click()}
+                      className="cursor-pointer"
+                    >
+                      <Monitor className="mr-2 h-4 w-4" />
+                      From your computer
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        toast({
+                          title: "Em breve",
+                          description: "Funcionalidade de arquivos salvos estará disponível em breve.",
+                        })
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <Save className="mr-2 h-4 w-4" />
+                      Saved files
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => setUrlDialogOpen(true)}
+                      className="cursor-pointer"
+                    >
+                      <Link className="mr-2 h-4 w-4" />
+                      From URL
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                
+                <Button
+                  type="button"
+                  variant={webSearchEnabled ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-8 px-3 rounded-lg text-xs hover:bg-accent flex items-center gap-2"
+                  title="Web Search"
+                  onClick={() => {
+                    setWebSearchEnabled(!webSearchEnabled)
+                    toast({
+                      title: webSearchEnabled ? "Web Search desativado" : "Web Search ativado",
+                      description: webSearchEnabled 
+                        ? "A IA não fará buscas na internet." 
+                        : "A IA pode fazer buscas na internet para responder suas perguntas.",
+                    })
+                  }}
+                >
+                  <Globe className="h-4 w-4" />
+                  <span>Web Search</span>
+                </Button>
+                
+                <Button
+                  type="button"
+                  variant={knowledgeBaseEnabled ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-8 px-3 rounded-lg text-xs hover:bg-accent flex items-center gap-2"
+                  title="Knowledge Base"
+                  onClick={() => {
+                    setKnowledgeBaseEnabled(!knowledgeBaseEnabled)
+                    toast({
+                      title: knowledgeBaseEnabled ? "Knowledge Base desativada" : "Knowledge Base ativada",
+                      description: knowledgeBaseEnabled 
+                        ? "A IA não usará a base de conhecimento." 
+                        : "A IA usará documentos da base de conhecimento como contexto.",
+                    })
+                  }}
+                >
+                  <BookOpen className="h-4 w-4" />
+                  <span>Knowledge</span>
+                </Button>
+              </div>
+              
+              <Button
+                type="submit"
+                disabled={(!input.trim() && attachments.length === 0) || isLoading}
+                size="icon"
+                className="h-10 w-10 rounded-xl bg-primary hover:bg-primary/90"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <Send className="h-5 w-5" />
+                )}
+              </Button>
+            </div>
           </div>
         </form>
       </div>
+
+      {/* Dialog para inserir URL */}
+      <Dialog open={urlDialogOpen} onOpenChange={setUrlDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Adicionar arquivo de URL</DialogTitle>
+            <DialogDescription>
+              Insira a URL do arquivo que deseja adicionar ao chat.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-1 gap-2">
+              <input
+                type="url"
+                placeholder="https://exemplo.com/arquivo.pdf"
+                value={urlInput}
+                onChange={(e) => setUrlInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleUrlSubmit()
+                  }
+                }}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setUrlDialogOpen(false)
+                setUrlInput('')
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button onClick={handleUrlSubmit} disabled={!urlInput.trim()}>
+              <Plus className="mr-2 h-4 w-4" />
+              Adicionar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

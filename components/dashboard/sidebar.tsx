@@ -34,6 +34,7 @@ import {
   Sparkles,
   ChevronDown,
   Headphones,
+  BookOpen,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -55,6 +56,11 @@ const menuItems = [
     title: 'Templates',
     href: '/dashboard/templates',
     icon: FileText,
+  },
+  {
+    title: 'Base de Conhecimento',
+    href: '/dashboard/knowledge',
+    icon: BookOpen,
   },
   {
     title: 'Cursos',

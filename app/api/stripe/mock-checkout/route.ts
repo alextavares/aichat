@@ -7,6 +7,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const sessionId = searchParams.get('session_id')
   const plan = searchParams.get('plan')
+  const billing = searchParams.get('billing') || 'monthly'
 
   // Mock checkout page
   const html = `
@@ -92,8 +93,20 @@ export async function GET(request: NextRequest) {
         </div>
         
         <div class="plan-info">
-          <h3>Plano ${plan}</h3>
-          <p>R$ ${plan === 'PRO' ? '49,90' : '199,90'}/mês</p>
+          <h3>Plano ${plan} ${billing === 'yearly' ? 'Anual' : 'Mensal'}</h3>
+          ${billing === 'yearly' ? `
+            <p style="font-size: 20px; margin: 5px 0;">
+              R$ ${plan === 'lite' ? '15,96' : plan === 'pro' ? '31,96' : '78,80'}/mês
+            </p>
+            <p style="color: #666; margin: 5px 0;">
+              R$ ${plan === 'lite' ? '191,52' : plan === 'pro' ? '383,52' : '946,00'}/ano
+            </p>
+            <p style="color: #22c55e; font-weight: bold;">
+              60% de desconto!
+            </p>
+          ` : `
+            <p>R$ ${plan === 'lite' ? '39,90' : plan === 'pro' ? '79,90' : '197,00'}/mês</p>
+          `}
         </div>
         
         <form id="payment-form">
