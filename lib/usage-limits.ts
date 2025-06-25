@@ -158,37 +158,32 @@ export async function trackUsage(
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const existingUsage = await prisma.userUsage.findFirst({
+  // Use upsert for a more atomic and potentially efficient operation
+  await prisma.userUsage.upsert({
     where: {
-      userId,
-      modelId,
-      date: today,
-    },
-  })
-
-  if (existingUsage) {
-    await prisma.userUsage.update({
-      where: { id: existingUsage.id },
-      data: {
-        messagesCount: { increment: 1 },
-        inputTokensUsed: { increment: tokensUsed.input },
-        outputTokensUsed: { increment: tokensUsed.output },
-        costIncurred: { increment: cost },
-      },
-    })
-  } else {
-    await prisma.userUsage.create({
-      data: {
+      // This relies on the @@unique([userId, modelId, date]) constraint in schema.prisma
+      userId_modelId_date: {
         userId,
         modelId,
         date: today,
-        messagesCount: 1,
-        inputTokensUsed: tokensUsed.input,
-        outputTokensUsed: tokensUsed.output,
-        costIncurred: cost,
       },
-    })
-  }
+    },
+    create: {
+      userId,
+      modelId,
+      date: today,
+      messagesCount: 1,
+      inputTokensUsed: tokensUsed.input,
+      outputTokensUsed: tokensUsed.output,
+      costIncurred: cost,
+    },
+    update: {
+      messagesCount: { increment: 1 },
+      inputTokensUsed: { increment: tokensUsed.input },
+      outputTokensUsed: { increment: tokensUsed.output },
+      costIncurred: { increment: cost },
+    },
+  })
 }
 
 export async function getUserUsageStats(userId: string) {
