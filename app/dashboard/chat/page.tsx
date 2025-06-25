@@ -180,6 +180,7 @@ export default function ChatPage() {
   const [savedFiles, setSavedFiles] = useState<FileAttachment[]>([]) // Simular arquivos salvos
   const [webSearchEnabled, setWebSearchEnabled] = useState(false) // Estado para controlar busca na internet
   const [knowledgeBaseEnabled, setKnowledgeBaseEnabled] = useState(false) // Estado para controlar Knowledge Base
+  const [isChatDisabledByLimit, setIsChatDisabledByLimit] = useState(false) // Novo estado
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -281,6 +282,22 @@ export default function ChatPage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+// Classe de erro customizada
+class HttpError extends Error {
+  status: number;
+  data: any;
+
+  constructor(message: string, status: number, data: any) {
+    super(message);
+    this.name = 'HttpError';
+    this.status = status;
+    this.data = data;
+    if (Error.captureStackTrace) {
+      Error.captureStackTrace(this, HttpError);
+    }
+  }
+}
 
   const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files
@@ -462,7 +479,8 @@ export default function ChatPage() {
 
       if (!response.ok) {
         const errorData = await response.json()
-        throw new Error(errorData.message || 'Erro na resposta')
+        // Usar a classe de erro customizada para propagar mais detalhes
+        throw new HttpError(errorData.message || 'Erro na resposta', response.status, errorData)
       }
 
       const reader = response.body?.getReader()
@@ -522,20 +540,64 @@ export default function ChatPage() {
       }
     } catch (error) {
       console.error('Chat error:', error)
+      let toastMessage = "Erro ao enviar mensagem";
+      let toastTitle = "Erro no chat";
+
+      if (error instanceof HttpError && error.data?.errorCode === "LIMIT_REACHED") {
+        setIsChatDisabledByLimit(true) // Desabilita o chat
+        toastTitle = "Limite Atingido"
+        // Construir mensagem mais detalhada
+        toastMessage = error.message // Mensagem base do backend (ex: "Daily message limit reached (10/10)")
+
+        if (error.data.planType && error.data.usage) {
+          if (error.data.details?.limitType === 'dailyMessages') {
+             toastMessage = `Você atingiu seu limite de ${error.data.details.limit} mensagens diárias para o plano ${error.data.planType}.`
+          } else if (error.data.details?.limitType === 'monthlyTokens') {
+            toastMessage = `Você atingiu seu limite de tokens mensais para o plano ${error.data.planType}.`
+          }
+        }
+        // Para adicionar link ao toast, a description do toast pode precisar aceitar JSX.
+        // Se não, podemos adicionar a sugestão de upgrade na mensagem.
+        toastMessage += " Considere fazer um upgrade para continuar."
+
+        // Exemplo de como adicionar um link se o toast suportar ReactNode na description
+        // (isso depende da implementação do componente `toast`)
+        // const symptômesDescription = (
+        //   <>
+        //     {toastMessage}
+        //     <Button variant="link" onClick={() => router.push('/pricing')} className="p-0 h-auto text-white underline">
+        //       Fazer Upgrade
+        //     </Button>
+        //   </>
+        // );
+      } else if (error instanceof Error) {
+        toastMessage = error.message
+      }
+
       toast({
-        title: "Erro no chat",
-        description: error instanceof Error ? error.message : "Erro ao enviar mensagem",
+        title: toastTitle,
+        description: toastMessage, // Aqui poderia ser o JSX com o botão se suportado
         variant: "destructive",
+        // duration: isChatDisabledByLimit ? Infinity : 5000 // Manter o toast visível se o chat estiver desabilitado?
       })
       
-      // Remove failed message
-      setMessages(prev => prev.slice(0, -1))
+      // Remove a mensagem do usuário que falhou da UI, exceto se o chat foi desabilitado por limite
+      // pois nesse caso a mensagem pode já ter sido removida ou o estado do chat é diferente.
+      if (!isChatDisabledByLimit && messages.length > 0 && messages[messages.length -1].role === 'user') {
+         setMessages(prev => prev.filter(msg => msg.id !== userMessage.id)); // Remove a mensagem específica
+      } else if (messages.length > 0 && messages[messages.length -1].role === 'user' && !(error instanceof HttpError && error.data?.errorCode === "LIMIT_REACHED")) {
+        // Se não for erro de limite, remove a última mensagem do usuário
+         setMessages(prev => prev.slice(0, -1));
+      }
+
+
     } finally {
       setIsLoading(false)
     }
   }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (isChatDisabledByLimit) return; // Não permitir submit se desabilitado
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       handleSubmit(e as any)
@@ -879,9 +941,9 @@ export default function ChatPage() {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Design a comprehensive KPI framework for Area/Department that captures both leading and lagging indicators. Structure metrics to reflect operational efficiency, strategic progress, and stakeholder value creation. Include data collection protocols, reporting frequencies, and intervention thresholds."
+              placeholder={isChatDisabledByLimit ? "Limite atingido. Faça upgrade para continuar." : "Design a comprehensive KPI framework for Area/Department that captures both leading and lagging indicators. Structure metrics to reflect operational efficiency, strategic progress, and stakeholder value creation. Include data collection protocols, reporting frequencies, and intervention thresholds."}
               className="min-h-[100px] max-h-[200px] resize-none border-0 bg-transparent px-4 pt-4 pb-12 focus-visible:ring-0 focus-visible:ring-offset-0 text-base placeholder:text-muted-foreground/60"
-              disabled={isLoading}
+              disabled={isLoading || isChatDisabledByLimit}
             />
             {/* Bottom toolbar */}
             <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
@@ -894,6 +956,7 @@ export default function ChatPage() {
                       size="sm"
                       className="h-8 px-3 rounded-lg text-xs hover:bg-accent"
                       title="Add"
+                      disabled={isLoading || isChatDisabledByLimit}
                     >
                       <Paperclip className="h-4 w-4 mr-2" />
                       Add
@@ -972,11 +1035,11 @@ export default function ChatPage() {
               
               <Button
                 type="submit"
-                disabled={(!input.trim() && attachments.length === 0) || isLoading}
+                disabled={(!input.trim() && attachments.length === 0) || isLoading || isChatDisabledByLimit}
                 size="icon"
                 className="h-10 w-10 rounded-xl bg-primary hover:bg-primary/90"
               >
-                {isLoading ? (
+                {isLoading && !isChatDisabledByLimit ? ( // Mostrar loader apenas se não estiver desabilitado por limite
                   <Loader2 className="h-5 w-5 animate-spin" />
                 ) : (
                   <Send className="h-5 w-5" />

@@ -32,7 +32,8 @@ export async function POST(request: NextRequest) {
     
     if (!limitsCheck.allowed) {
       return new Response(
-        JSON.stringify({ 
+        JSON.stringify({
+          errorCode: "LIMIT_REACHED",
           message: limitsCheck.reason,
           usage: limitsCheck.usage,
           planType: limitsCheck.planType
