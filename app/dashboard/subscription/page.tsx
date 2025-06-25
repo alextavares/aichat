@@ -102,6 +102,7 @@ export default function SubscriptionPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [showCancelDialog, setShowCancelDialog] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
+  const [hasSubscriptionError, setHasSubscriptionError] = useState(false)
 
   useEffect(() => {
     fetchSubscriptionData()
@@ -116,12 +117,24 @@ export default function SubscriptionPage() {
 
       if (subResponse.ok) {
         const data = await subResponse.json()
-        setSubscription(data.subscription || {
-          planType: 'FREE',
-          status: 'ACTIVE',
-          startedAt: new Date().toISOString(),
-          expiresAt: null,
-          stripeSubscriptionId: null,
+        if (data.subscription === null) {
+          // This indicates an inconsistency from the API (e.g., paid plan in User table but no Subscription record)
+          setHasSubscriptionError(true)
+          setSubscription(null)
+        } else {
+          // This will correctly set either a paid plan's subscription object
+          // or the default FREE plan object if that's what the API returned.
+          setSubscription(data.subscription)
+          setHasSubscriptionError(false)
+        }
+      } else {
+        // Handle non-ok response for subscription fetch
+        setHasSubscriptionError(true)
+        setSubscription(null)
+        toast({
+          title: "Erro de Rede",
+          description: "Não foi possível carregar os dados da assinatura.",
+          variant: "destructive",
         })
       }
 
@@ -188,8 +201,32 @@ export default function SubscriptionPage() {
     )
   }
 
-  const planDetails = subscription ? PLAN_DETAILS[subscription.planType] : PLAN_DETAILS.FREE
-  const PlanIcon = planDetails.icon
+  if (hasSubscriptionError) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Assinatura</h1>
+          <p className="text-muted-foreground">
+            Gerencie seu plano e acompanhe seu uso
+          </p>
+        </div>
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Houve um problema ao carregar os detalhes da sua assinatura.
+            Por favor, tente recarregar a página. Se o problema persistir, entre em contato com o suporte técnico.
+          </AlertDescription>
+        </Alert>
+      </div>
+    )
+  }
+
+  // If subscription is null here, it means it's genuinely a FREE plan (or an unhandled case after error checking)
+  // The API now returns a FREE plan structure if user is FREE and no active paid subscription.
+  // If subscription was null due to error, hasSubscriptionError would be true.
+  const planDetails = subscription ? PLAN_DETAILS[subscription.planType] : PLAN_DETAILS.FREE;
+  const PlanIcon = planDetails.icon;
+
 
   return (
     <div className="space-y-6">
