@@ -80,6 +80,7 @@ model UserUsage {
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, modelId, date])
+  @@index([userId, date]) // Novo índice para otimizar consultas de agregação por usuário e data
   @@map("user_usage")
 }
 
