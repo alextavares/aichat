@@ -277,7 +277,8 @@ export async function handleMercadoPagoWebhook(data: any) {
         userId: payment.external_reference,
         planId: payment.metadata?.plan_id,
         paymentId: payment.id,
-        status: 'approved'
+        status: 'approved',
+        billingCycle: payment.metadata?.billing_cycle || 'monthly'
       }
     }
   }

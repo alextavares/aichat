@@ -54,14 +54,24 @@ export async function POST(request: NextRequest) {
       })
       
       // Create subscription record
+      const startDate = new Date()
+      let expiresDate = new Date(startDate)
+      const billingCycle = result.billingCycle || 'monthly' // Default to monthly if undefined
+
+      if (billingCycle === 'yearly') {
+        expiresDate.setFullYear(startDate.getFullYear() + 1)
+      } else {
+        expiresDate.setMonth(startDate.getMonth() + 1)
+      }
+
       await prisma.subscription.create({
         data: {
           userId: result.userId,
           planType: result.planId.toUpperCase() as any,
           status: 'ACTIVE',
           mercadoPagoPaymentId: String(result.paymentId),
-          startedAt: new Date(),
-          expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+          startedAt: startDate,
+          expiresAt: expiresDate
         }
       })
       
