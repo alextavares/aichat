@@ -3,7 +3,8 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
 import { z } from 'zod'
-import pdfParse from 'pdf-parse'
+// Lazy import pdf-parse to avoid build-time issues
+// import pdfParse from 'pdf-parse'
 
 const createKnowledgeSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -19,6 +20,9 @@ const createKnowledgeSchema = z.object({
 async function extractTextFromFile(content: string, mimeType: string): Promise<string> {
   try {
     if (mimeType === 'application/pdf') {
+      // Dynamically import pdf-parse to avoid build-time issues
+      const pdfParse = (await import('pdf-parse')).default
+      
       // Remove data URL prefix if present
       const base64Data = content.includes(',') ? content.split(',')[1] : content
       const buffer = Buffer.from(base64Data, 'base64')
