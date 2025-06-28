@@ -30,8 +30,16 @@ export async function POST(request: NextRequest) {
     const body = await request.text()
     const signature = (await headers()).get('x-signature')
     
+    // Log webhook calls in development
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[MercadoPago Webhook] Received:', { 
+        body: JSON.parse(body), 
+        signature 
+      })
+    }
+    
     // Verify signature in production
-    if (process.env.MERCADOPAGO_WEBHOOK_SECRET) {
+    if (process.env.NODE_ENV === 'production' && process.env.MERCADOPAGO_WEBHOOK_SECRET) {
       const isValid = verifyMercadoPagoSignature(
         body,
         signature,
@@ -39,6 +47,7 @@ export async function POST(request: NextRequest) {
       )
       
       if (!isValid) {
+        console.error('[MercadoPago Webhook] Invalid signature')
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
       }
     }
@@ -46,7 +55,11 @@ export async function POST(request: NextRequest) {
     const data = JSON.parse(body)
     const result = await handleMercadoPagoWebhook(data)
     
+    console.log('[MercadoPago Webhook] Processing result:', result)
+    
     if (result && result.status === 'approved') {
+      console.log('[MercadoPago Webhook] Payment approved, updating user:', result.userId)
+      
       // Update user subscription
       await prisma.user.update({
         where: { id: result.userId },

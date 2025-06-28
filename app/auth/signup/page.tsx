@@ -24,26 +24,57 @@ export default function SignUp() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [loading, setLoading] = useState(false)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const router = useRouter()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value
     }))
+    
+    // Clear field error when user starts typing
+    if (fieldErrors[name]) {
+      setFieldErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }))
+    }
+    
+    // Real-time validation for password confirmation
+    if (name === "confirmPassword" && value && formData.password && value !== formData.password) {
+      setFieldErrors(prev => ({
+        ...prev,
+        confirmPassword: "Senhas não coincidem"
+      }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     console.log("Form submitted", formData)
-    setLoading(true)
     setError("")
+    setSuccess("")
+
+    // Basic validation
+    if (!formData.name || !formData.email || !formData.password) {
+      setError("Por favor, preencha todos os campos obrigatórios")
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError("A senha deve ter pelo menos 6 caracteres")
+      return
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setError("Senhas não coincidem")
-      setLoading(false)
       return
     }
+
+    // Set loading immediately after validation
+    setLoading(true)
 
     try {
       console.log("Sending POST to /api/auth/register")
@@ -86,7 +117,7 @@ export default function SignUp() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-lg">
+      <Card className={`w-full max-w-lg transition-opacity duration-200 ${loading ? 'opacity-90' : ''}`}>
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center">Criar sua conta</CardTitle>
           <CardDescription className="text-center">
@@ -224,9 +255,9 @@ export default function SignUp() {
             )}
 
             <Button
-              type="submit" data-testid="signup-button" data-testid="signup-button"
-              disabled={loading}
-              className="w-full"
+              type="submit" data-testid="signup-button"
+              disabled={loading || !formData.email || !formData.password || !formData.name}
+              className="w-full transition-all duration-200"
             >
               {loading ? (
                 <>

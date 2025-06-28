@@ -8,7 +8,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group-simple'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { Loader2, CreditCard, QrCode, FileText, Check } from 'lucide-react'
+import { Loader2, CreditCard, QrCode, FileText, Check, Sparkles } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { PAYMENT_PLANS } from '@/lib/payment-service'
 
@@ -221,6 +221,45 @@ function CheckoutContent() {
               )}
             </Button>
           </div>
+
+          {/* Test Mode Button - Only in development */}
+          {process.env.NODE_ENV !== 'production' && (
+            <div className="mt-4 p-4 border border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-2">
+                🧪 Modo de Teste - Upgrade sem pagamento real
+              </p>
+              <Button
+                onClick={async () => {
+                  setIsLoading(true)
+                  try {
+                    const response = await fetch('/api/test/upgrade-plan', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ planType: plan?.id.toUpperCase() })
+                    })
+                    
+                    if (response.ok) {
+                      toast.success('Upgrade realizado com sucesso! (Modo teste)')
+                      router.push('/dashboard')
+                    } else {
+                      const error = await response.json()
+                      toast.error(error.message || 'Erro ao fazer upgrade de teste')
+                    }
+                  } catch (error) {
+                    toast.error('Erro ao processar upgrade de teste')
+                  } finally {
+                    setIsLoading(false)
+                  }
+                }}
+                variant="secondary"
+                className="w-full"
+                disabled={isLoading}
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                Fazer Upgrade de Teste (Sem Pagamento)
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

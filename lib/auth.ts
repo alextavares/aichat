@@ -90,21 +90,40 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers,
   session: {
-    strategy: "jwt"
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60, // 24 hours
   },
   pages: {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id
+        token.email = user.email
       }
+      
+      // Refresh token logic
+      if (account) {
+        token.accessToken = account.access_token
+        token.refreshToken = account.refresh_token
+        token.accessTokenExpires = account.expires_at ? account.expires_at * 1000 : 0
+      }
+      
+      // Return previous token if the access token has not expired yet
+      if (Date.now() < (token.accessTokenExpires as number)) {
+        return token
+      }
+      
+      // Access token has expired, return the token as is
+      // In a real implementation, you would refresh the token here
       return token
     },
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id as string
+        session.user.email = token.email as string
       }
       return session
     }
