@@ -116,7 +116,8 @@ export default function OnboardingPage() {
         description: "Seu perfil foi configurado com sucesso.",
       })
 
-      router.push('/dashboard')
+      // Force a hard redirect to ensure the onboarding page is completely closed
+      window.location.href = '/dashboard'
     } catch (error) {
       toast({
         title: "Erro",
