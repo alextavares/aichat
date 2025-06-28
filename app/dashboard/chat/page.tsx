@@ -676,18 +676,21 @@ class HttpError extends Error {
                 <Button
                   variant="secondary"
                   className="rounded-full px-6 py-2 bg-purple-100 text-purple-700 hover:bg-purple-200"
+                  onClick={() => toast({ title: "Filtragem em Breve!", description: "A capacidade de filtrar sugestões de prompt por categoria estará disponível em futuras atualizações." })}
                 >
                   Work
                 </Button>
                 <Button
                   variant="ghost"
                   className="rounded-full px-6 py-2"
+                  onClick={() => toast({ title: "Filtragem em Breve!", description: "A capacidade de filtrar sugestões de prompt por categoria estará disponível em futuras atualizações." })}
                 >
                   Popular
                 </Button>
                 <Button
                   variant="ghost"
                   className="rounded-full px-6 py-2"
+                  onClick={() => toast({ title: "Filtragem em Breve!", description: "A capacidade de filtrar sugestões de prompt por categoria estará disponível em futuras atualizações." })}
                 >
                   Marketing
                 </Button>
@@ -695,6 +698,7 @@ class HttpError extends Error {
                   variant="ghost"
                   size="icon"
                   className="rounded-full h-10 w-10"
+                  onClick={() => toast({ title: "Mais Opções em Breve!", description: "Funcionalidades adicionais, como ver mais categorias ou adicionar seus próprios prompts, serão implementadas em breve." })}
                 >
                   <Plus className="h-5 w-5" />
                 </Button>

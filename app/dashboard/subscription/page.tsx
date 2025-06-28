@@ -346,6 +346,9 @@ export default function SubscriptionPage() {
                 />
               )}
             </div>
+            <p className="text-xs text-muted-foreground mt-2 px-1">
+              O limite de mensagens diárias é zerado à meia-noite (UTC).
+            </p>
           </CardContent>
         </Card>
 
@@ -372,6 +375,9 @@ export default function SubscriptionPage() {
                 />
               )}
             </div>
+            <p className="text-xs text-muted-foreground mt-2 px-1">
+              O limite de tokens mensais é zerado no primeiro dia de cada mês.
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -381,22 +387,37 @@ export default function SubscriptionPage() {
         <CardHeader>
           <CardTitle>Método de Pagamento</CardTitle>
           <CardDescription>
-            Gerencie seus métodos de pagamento
+            Visualize seu método de pagamento atual ou acesse o portal seguro para gerenciá-lo e ver seu histórico de faturas.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <CreditCard className="h-5 w-5 text-muted-foreground" />
               <div>
                 <p className="font-medium">•••• •••• •••• 4242</p>
                 <p className="text-sm text-muted-foreground">Expira 12/25</p>
+                {/* Em uma implementação real, você buscaria e exibiria dados reais aqui, se disponíveis e seguros. */}
+                {/* Ex: <p className="text-sm text-muted-foreground">Cartão Visa terminando em 4242</p> */}
               </div>
             </div>
-            <Button variant="outline" size="sm">
-              Atualizar
+            <Button variant="outline" size="sm" onClick={() => {
+              // Lógica para redirecionar ao portal do Stripe/MercadoPago
+              // Ex: router.push('/api/user/manage-subscription') que redirecionaria
+              toast({ title: "Redirecionando...", description: "Você será redirecionado para o portal de pagamento." });
+              // Por enquanto, apenas um placeholder:
+              if (process.env.NEXT_PUBLIC_STRIPE_PORTAL_URL_MOCK) {
+                 window.location.href = process.env.NEXT_PUBLIC_STRIPE_PORTAL_URL_MOCK;
+              } else {
+                 alert("A funcionalidade de portal de pagamento será implementada aqui.");
+              }
+            }}>
+              Gerenciar Assinatura e Faturas
             </Button>
           </div>
+          <p className="text-xs text-muted-foreground px-1">
+            Você será redirecionado para o portal seguro do nosso processador de pagamentos (ex: Stripe) para gerenciar seus dados.
+          </p>
         </CardContent>
       </Card>
 
