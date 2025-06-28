@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -12,7 +12,7 @@ import { Loader2, CreditCard, QrCode, FileText, Check } from 'lucide-react'
 import { toast } from '@/hooks/use-toast'
 import { PAYMENT_PLANS } from '@/lib/payment-service'
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const planId = searchParams.get('plan') || 'pro'
@@ -224,5 +224,21 @@ export default function CheckoutPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <Card className="w-full max-w-2xl">
+          <CardContent className="flex items-center justify-center p-8">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <CheckoutContent />
+    </Suspense>
   )
 }
