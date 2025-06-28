@@ -604,8 +604,7 @@ describe('Templates & Knowledge Base Integration Tests', () => {
       })
 
       test('should handle PDF extraction', async () => {
-        const pdfParse = require('pdf-parse')
-        pdfParse.mockResolvedValue({
+        const pdfParse = jest.fn().mockResolvedValue({
           text: 'Extracted PDF content',
           numpages: 5,
           info: { Title: 'PDF Document' },
