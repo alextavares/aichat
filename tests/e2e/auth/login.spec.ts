@@ -16,8 +16,8 @@ test.describe('Authentication - Login Module', () => {
       await expect(page.getByText('Entrar na sua conta')).toBeVisible();
 
       // Check form fields
-      await expect(page.getByLabel('Email')).toBeVisible();
-      await expect(page.getByLabel('Senha')).toBeVisible();
+      await expect(page.locator('input[id="email"]')).toBeVisible();
+      await expect(page.locator('input[id="password"]')).toBeVisible();
 
       // Check buttons
       await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible();
@@ -27,7 +27,7 @@ test.describe('Authentication - Login Module', () => {
     });
 
     test('should show/hide password when toggle is clicked', async ({ page }) => {
-      const passwordInput = page.getByLabel('Senha');
+      const passwordInput = page.locator('input[id="password"]');
       
       // Initially password should be hidden
       await expect(passwordInput).toHaveAttribute('type', 'password');
@@ -168,7 +168,7 @@ test.describe('Authentication - Login Module', () => {
       await expect(page.locator('[role="alert"]')).toBeVisible();
 
       // Start typing in email field
-      await page.getByLabel('Email').fill('new@email.com');
+      await page.locator('input[id="email"]').fill('new@email.com');
 
       // Error should disappear
       await expect(page.locator('[role="alert"]')).not.toBeVisible();
@@ -227,10 +227,10 @@ test.describe('Authentication - Login Module', () => {
     test('should be keyboard navigable', async ({ page }) => {
       // Tab through form elements
       await page.keyboard.press('Tab'); // Focus email
-      await expect(page.getByLabel('Email')).toBeFocused();
+      await expect(page.locator('input[id="email"]')).toBeFocused();
 
       await page.keyboard.press('Tab'); // Focus password
-      await expect(page.getByLabel('Senha')).toBeFocused();
+      await expect(page.locator('input[id="password"]')).toBeFocused();
 
       await page.keyboard.press('Tab'); // Focus login button
       await expect(page.getByRole('button', { name: 'Entrar' })).toBeFocused();
@@ -243,8 +243,8 @@ test.describe('Authentication - Login Module', () => {
       await expect(form).toBeVisible();
 
       // Check inputs have labels
-      await expect(page.getByLabel('Email')).toBeVisible();
-      await expect(page.getByLabel('Senha')).toBeVisible();
+      await expect(page.locator('input[id="email"]')).toBeVisible();
+      await expect(page.locator('input[id="password"]')).toBeVisible();
     });
   });
 
@@ -253,8 +253,8 @@ test.describe('Authentication - Login Module', () => {
 
     test('should be responsive on mobile', async ({ page }) => {
       // Check that form is still accessible
-      await expect(page.getByLabel('Email')).toBeVisible();
-      await expect(page.getByLabel('Senha')).toBeVisible();
+      await expect(page.locator('input[id="email"]')).toBeVisible();
+      await expect(page.locator('input[id="password"]')).toBeVisible();
       await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible();
 
       // Form should stack vertically

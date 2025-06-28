@@ -8,8 +8,8 @@ export class AuthHelpers {
    */
   async login(email: string, password: string) {
     await this.page.goto('/auth/signin');
-    await this.page.getByLabel('Email').fill(email);
-    await this.page.getByLabel('Senha').fill(password);
+    await this.page.locator('input[id="email"]').fill(email);
+    await this.page.locator('input[id="password"]').fill(password);
     await this.page.getByRole('button', { name: 'Entrar' }).click();
     
     // Wait for navigation or error
@@ -86,8 +86,8 @@ export class AuthHelpers {
    * Fill login form without submitting
    */
   async fillLoginForm(email: string, password: string) {
-    await this.page.getByLabel('Email').fill(email);
-    await this.page.getByLabel('Senha').fill(password);
+    await this.page.locator('input[id="email"]').fill(email);
+    await this.page.locator('input[id="password"]').fill(password);
   }
 
   /**

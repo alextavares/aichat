@@ -88,7 +88,7 @@ export default function SignIn() {
                 Email
               </label>
               <Input
-                id="email" data-testid="email-input"
+                id="email" data-testid="email-input" data-testid="email-input"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -102,7 +102,7 @@ export default function SignIn() {
                 Senha
               </label>
               <Input
-                id="password" data-testid="password-input"
+                id="password" data-testid="password-input" data-testid="password-input"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -129,7 +129,7 @@ export default function SignIn() {
             )}
 
             <Button
-              type="submit" data-testid="login-button"
+              type="submit" data-testid="login-button" data-testid="login-button"
               disabled={loading || success}
               className="w-full"
             >

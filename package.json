@@ -15,8 +15,8 @@
     "fix": "bash scripts/quick-fix.sh",
     "clean": "rm -rf .next node_modules .turbo .swc && npm install",
     "test": "npm run type-check && npm run lint",
-    "test:unit": "jest --testPathPattern=tests/unit",
-    "test:integration": "jest --testPathPattern=tests/integration",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
     "test:e2e": "playwright test",
     "test:all": "./run-tests.sh"
   },
@@ -65,24 +65,32 @@
     "zod": "^3.25.67"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
     "@eslint/eslintrc": "^3",
+    "@jest/globals": "^30.0.3",
     "@playwright/test": "^1.53.1",
     "@stripe/stripe-js": "^7.3.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
     "@types/bcryptjs": "^2.4.6",
     "@types/jest": "^30.0.0",
-    "@types/node": "^20.19.1",
-    "@types/react": "^19",
+    "@types/node": "24.0.4",
+    "@types/react": "19.1.8",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.20",
     "chalk": "^4.1.2",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
+    "jest": "^30.0.3",
+    "jest-environment-jsdom": "^30.0.2",
+    "node-mocks-http": "^1.17.2",
     "postcss": "^8.4.49",
     "prisma": "^5.19.1",
     "stripe": "^18.2.1",
     "tailwindcss": "^3.4.15",
+    "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
-    "typescript": "^5"
+    "typescript": "5.8.3"
   },
   "prisma": {
     "seed": "node --loader ts-node/esm prisma/seed.ts"

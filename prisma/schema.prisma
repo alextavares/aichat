@@ -248,7 +248,6 @@ model MessageFeedback {
 
 enum PlanType {
   FREE
-  LITE
   PRO
   ENTERPRISE
 }

@@ -36,27 +36,12 @@ export const PAYMENT_PLANS: PaymentPlan[] = [
     currency: 'BRL',
     interval: 'monthly',
     features: [
-      '50 mensagens por dia',
-      'GPT-3.5 Turbo',
-      'Templates básicos',
-      'Geração de imagens básica'
+      'Mensagens ilimitadas com modelos rápidos',
+      '120 mensagens por mês com modelos avançados',
+      'GPT-4o Mini, Deepseek 3.1, Claude 3.5 Haiku',
+      'Criação de 1 assistente personalizado',
+      'Até 2 anexos por chat'
     ]
-  },
-  {
-    id: 'lite',
-    name: 'Lite',
-    price: 39.90,
-    currency: 'BRL',
-    interval: 'monthly',
-    features: [
-      '1.000 mensagens por mês',
-      'GPT-4 + Claude',
-      'Geração de imagens HD',
-      'Tradução de textos',
-      'Suporte por email'
-    ],
-    stripePriceId: process.env.STRIPE_PRICE_LITE,
-    stripeYearlyPriceId: process.env.STRIPE_PRICE_LITE_YEARLY,
   },
   {
     id: 'pro',
@@ -65,12 +50,12 @@ export const PAYMENT_PLANS: PaymentPlan[] = [
     currency: 'BRL',
     interval: 'monthly',
     features: [
-      'Mensagens ilimitadas',
-      'Todos os modelos de IA',
-      'Geração de imagens 4K',
-      'Transcrição de vídeo ilimitada',
-      'Edição avançada de imagens',
-      'Suporte prioritário'
+      'Mensagens ilimitadas com modelos rápidos',
+      'Mensagens ilimitadas com modelos avançados',
+      'GPT-4o, Claude 4 Sonnet, Gemini 2.5 Pro',
+      '7.000 créditos mensais para imagem/áudio/vídeo',
+      'Criação ilimitada de assistentes',
+      'Anexos ilimitados nos chats'
     ],
     stripePriceId: process.env.STRIPE_PRICE_PRO,
     stripeYearlyPriceId: process.env.STRIPE_PRICE_PRO_YEARLY,
@@ -149,12 +134,7 @@ export async function createCheckoutSession(params: CreateCheckoutParams) {
       payment_method_options: {
         card: {
           installments: {
-            enabled: true,
-            plan: {
-              count: params.installments || 1,
-              type: 'fixed_count',
-              interval: 'month'
-            }
+            enabled: true
           }
         }
       }
