@@ -1,20 +1,53 @@
 import Stripe from 'stripe'
 import { MercadoPagoConfig, Payment, Preference } from 'mercadopago'
 
-// Initialize Stripe
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-05-28.basil',
-  typescript: true,
-})
+// Initialize Stripe conditionally to avoid build-time errors
+let stripe: Stripe | null = null
 
-// Initialize MercadoPago
-const mercadopagoClient = new MercadoPagoConfig({ 
-  accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN!,
-  options: { timeout: 5000 }
-})
+function getStripe(): Stripe {
+  if (!stripe && process.env.STRIPE_SECRET_KEY) {
+    stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-05-28.basil',
+      typescript: true,
+    })
+  }
+  if (!stripe) {
+    throw new Error('Stripe not initialized. Missing STRIPE_SECRET_KEY environment variable.')
+  }
+  return stripe
+}
 
-export const mercadopagoPayment = new Payment(mercadopagoClient)
-export const mercadopagoPreference = new Preference(mercadopagoClient)
+// Initialize MercadoPago lazily to avoid build-time errors
+let mercadopagoClient: MercadoPagoConfig | null = null
+let mercadopagoPayment: Payment | null = null
+let mercadopagoPreference: Preference | null = null
+
+function initializeMercadoPago() {
+  if (!mercadopagoClient && process.env.MERCADOPAGO_ACCESS_TOKEN) {
+    mercadopagoClient = new MercadoPagoConfig({ 
+      accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
+      options: { timeout: 5000 }
+    })
+    mercadopagoPayment = new Payment(mercadopagoClient)
+    mercadopagoPreference = new Preference(mercadopagoClient)
+  }
+}
+
+function getMercadoPagoPayment(): Payment {
+  initializeMercadoPago()
+  if (!mercadopagoPayment) {
+    throw new Error('MercadoPago not initialized. Missing MERCADOPAGO_ACCESS_TOKEN environment variable.')
+  }
+  return mercadopagoPayment
+}
+
+function getMercadoPagoPreference(): Preference {
+  initializeMercadoPago()
+  if (!mercadopagoPreference) {
+    throw new Error('MercadoPago not initialized. Missing MERCADOPAGO_ACCESS_TOKEN environment variable.')
+  }
+  return mercadopagoPreference
+}
 
 export interface PaymentPlan {
   id: string
@@ -106,7 +139,7 @@ export async function createCheckoutSession(params: CreateCheckoutParams) {
       throw new Error(`Stripe ${isYearly ? 'yearly' : 'monthly'} price ID not configured for this plan`)
     }
     
-    const session = await stripe.checkout.sessions.create({
+    const session = await getStripe().checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
         {
@@ -153,7 +186,7 @@ export async function createCheckoutSession(params: CreateCheckoutParams) {
     const price = isYearly ? (plan.price * 12 * 0.4) : plan.price // 60% discount for yearly
     const title = isYearly ? `Plano ${plan.name} Anual - InnerAI` : `Plano ${plan.name} - InnerAI`
     
-    const preference = await mercadopagoPreference.create({
+    const preference = await getMercadoPagoPreference().create({
       body: {
         items: [
           {
@@ -199,7 +232,7 @@ export async function createCheckoutSession(params: CreateCheckoutParams) {
 }
 
 export async function createPortalSession(customerId: string, returnUrl: string) {
-  const session = await stripe.billingPortal.sessions.create({
+  const session = await getStripe().billingPortal.sessions.create({
     customer: customerId,
     return_url: returnUrl,
   })
@@ -208,7 +241,7 @@ export async function createPortalSession(customerId: string, returnUrl: string)
 }
 
 export async function cancelSubscription(subscriptionId: string) {
-  const subscription = await stripe.subscriptions.update(subscriptionId, {
+  const subscription = await getStripe().subscriptions.update(subscriptionId, {
     cancel_at_period_end: true,
   })
 
@@ -216,7 +249,7 @@ export async function cancelSubscription(subscriptionId: string) {
 }
 
 export async function getSubscription(subscriptionId: string) {
-  const subscription = await stripe.subscriptions.retrieve(subscriptionId)
+  const subscription = await getStripe().subscriptions.retrieve(subscriptionId)
   return subscription
 }
 
@@ -250,7 +283,7 @@ export async function handleStripeWebhook(event: Stripe.Event) {
 export async function handleMercadoPagoWebhook(data: any) {
   // MercadoPago sends notification with data.id and data.topic
   if (data.topic === 'payment') {
-    const payment = await mercadopagoPayment.get({ id: data.id })
+    const payment = await getMercadoPagoPayment().get({ id: data.id })
     
     if (payment.status === 'approved') {
       return {
