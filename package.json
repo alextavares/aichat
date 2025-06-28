@@ -18,7 +18,8 @@
     "test:unit": "jest tests/unit",
     "test:integration": "jest tests/integration",
     "test:e2e": "playwright test",
-    "test:all": "./run-tests.sh"
+    "test:all": "./run-tests.sh",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.10.0",
@@ -94,5 +95,9 @@
   },
   "prisma": {
     "seed": "node --loader ts-node/esm prisma/seed.ts"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
   }
 }
