@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { prisma } from '@/lib/prisma'
-import { stripe, handleStripeWebhook } from '@/lib/payment-service'
+import { handleStripeWebhook } from '@/lib/payment-service'
 import type Stripe from 'stripe'
 import { SubscriptionStatus, PlanType } from '@prisma/client' // Import Prisma enums
 

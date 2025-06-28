@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     // In production, cancel via Stripe
     try {
-      await stripe.subscriptions.cancel(subscriptionId)
+      await stripe().subscriptions.cancel(subscriptionId)
       
       // Update local database
       await prisma.subscription.update({
