@@ -1,0 +1,67 @@
+name: innerai-clone
+region: nyc1
+services:
+  - name: web
+    github:
+      repo: ${GITHUB_REPO}
+      branch: main
+      deploy_on_push: true
+    build_command: npm ci && npm run build && npx prisma generate
+    run_command: npm start
+    environment_slug: node-js
+    instance_size_slug: professional-xs
+    instance_count: 1
+    http_port: 3000
+    health_check:
+      http_path: /api/health
+      initial_delay_seconds: 30
+      period_seconds: 30
+      timeout_seconds: 10
+      success_threshold: 1
+      failure_threshold: 3
+    envs:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        type: SECRET
+        value: ${DATABASE_URL}
+      - key: DIRECT_URL
+        type: SECRET
+        value: ${DIRECT_URL}
+      - key: NEXTAUTH_URL
+        value: ${NEXTAUTH_URL}
+      - key: NEXTAUTH_SECRET
+        type: SECRET
+        value: ${NEXTAUTH_SECRET}
+      - key: OPENAI_API_KEY
+        type: SECRET
+        value: ${OPENAI_API_KEY}
+      - key: NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY
+        value: ${NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY}
+      - key: MERCADOPAGO_ACCESS_TOKEN
+        type: SECRET
+        value: ${MERCADOPAGO_ACCESS_TOKEN}
+      - key: MERCADOPAGO_WEBHOOK_SECRET
+        type: SECRET
+        value: ${MERCADOPAGO_WEBHOOK_SECRET}
+
+databases:
+  - name: innerai-db
+    engine: PG
+    version: "15"
+    size: professional-xs
+    num_nodes: 1
+    
+jobs:
+  - name: migrate
+    kind: PRE_DEPLOY
+    github:
+      repo: ${GITHUB_REPO}
+      branch: main
+    run_command: npx prisma migrate deploy
+    environment_slug: node-js
+    instance_size_slug: basic-xxs
+    envs:
+      - key: DATABASE_URL
+        type: SECRET
+        value: ${DATABASE_URL}

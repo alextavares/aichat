@@ -4,52 +4,93 @@ import { PlanType } from '@prisma/client'
 export interface UsageLimits {
   dailyMessages: number | null
   monthlyTokens: number | null
-  modelsAllowed: string[]
+  monthlyAdvancedMessages: number | null
+  modelsAllowed: {
+    fast: string[]
+    advanced: string[]
+  }
+  monthlyCredits: number | null
 }
 
 export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
   FREE: {
-    dailyMessages: 10,
-    monthlyTokens: 100000,
-    modelsAllowed: ['gpt-3.5-turbo', 'claude-3-haiku', 'mistral-7b', 'llama-2-13b'],
+    dailyMessages: null, // unlimited for fast models
+    monthlyTokens: null, // unlimited for fast models
+    monthlyAdvancedMessages: 120,
+    modelsAllowed: {
+      fast: [
+        'gpt-4o-mini',
+        'deepseek-3.1',
+        'claude-3.5-haiku',
+        'gemini-2.5-flash',
+        'llama-4.0'
+      ],
+      advanced: [
+        'gpt-4o',
+        'claude-4-sonnet',
+        'gemini-2.5-pro',
+        'perplexity',
+        'mistral-large-2',
+        'grok-3.0',
+        'sabia-3'
+      ]
+    },
+    monthlyCredits: 0, // no credits for image/video/audio
   },
   PRO: {
-    dailyMessages: 500,
-    monthlyTokens: 5000000,
-    modelsAllowed: [
-      'gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo',
-      'claude-3-sonnet', 'claude-3-haiku',
-      'gemini-pro',
-      'mixtral-8x7b', 'llama-2-70b',
-      'phind-codellama-34b', 'deepseek-coder',
-      'nous-hermes-2', 'openhermes-2.5',
-    ],
+    dailyMessages: null, // unlimited
+    monthlyTokens: null, // unlimited
+    monthlyAdvancedMessages: null, // unlimited
+    modelsAllowed: {
+      fast: [
+        'gpt-4o-mini',
+        'deepseek-3.1',
+        'claude-3.5-haiku',
+        'gemini-2.5-flash',
+        'llama-4.0'
+      ],
+      advanced: [
+        'gpt-4o',
+        'gpt-o3',
+        'claude-4-sonnet',
+        'gemini-2.5-pro',
+        'perplexity',
+        'mistral-large-2',
+        'grok-3.0',
+        'sabia-3'
+      ]
+    },
+    monthlyCredits: 7000, // for image/video/audio generation
   },
   ENTERPRISE: {
     dailyMessages: null, // unlimited
     monthlyTokens: null, // unlimited
-    modelsAllowed: [
-      // OpenAI
-      'gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo',
-      // Anthropic
-      'claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku', 'claude-2.1', 'claude-2',
-      // Google
-      'gemini-pro', 'gemini-pro-vision', 'palm-2',
-      // Meta
-      'llama-2-70b', 'llama-2-13b', 'codellama-70b',
-      // Mistral
-      'mixtral-8x7b', 'mistral-7b',
-      // Open Source
-      'nous-hermes-2', 'openhermes-2.5', 'zephyr-7b',
-      // Código
-      'phind-codellama-34b', 'deepseek-coder', 'wizardcoder-33b',
-      // Criativos
-      'mythomist-7b', 'cinematika-7b', 'neural-chat-7b',
-    ],
+    monthlyAdvancedMessages: null, // unlimited
+    modelsAllowed: {
+      fast: [
+        'gpt-4o-mini',
+        'deepseek-3.1',
+        'claude-3.5-haiku',
+        'gemini-2.5-flash',
+        'llama-4.0'
+      ],
+      advanced: [
+        'gpt-4o',
+        'gpt-o3',
+        'claude-4-sonnet',
+        'claude-3-opus',
+        'gemini-2.5-pro',
+        'perplexity',
+        'mistral-large-2',
+        'grok-3.0',
+        'sabia-3'
+      ]
+    },
+    monthlyCredits: null, // unlimited credits
   },
 }
 
-export async function checkUsageLimits(userId: string, model?: string) {
+export async function checkUsageLimits(userId: string, model?: string, modelType?: 'fast' | 'advanced') {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { planType: true },
@@ -62,11 +103,58 @@ export async function checkUsageLimits(userId: string, model?: string) {
   const limits = PLAN_LIMITS[user.planType]
   
   // Check model access
-  if (model && !limits.modelsAllowed.includes(model)) {
-    return {
-      allowed: false,
-      reason: `Model ${model} is not available for ${user.planType} plan`,
-      planType: user.planType,
+  if (model) {
+    const allAllowedModels = [...limits.modelsAllowed.fast, ...limits.modelsAllowed.advanced]
+    if (!allAllowedModels.includes(model)) {
+      return {
+        allowed: false,
+        reason: `Model ${model} is not available for ${user.planType} plan`,
+        planType: user.planType,
+      }
+    }
+    
+    // Determine if model is fast or advanced
+    const isFastModel = limits.modelsAllowed.fast.includes(model)
+    const isAdvancedModel = limits.modelsAllowed.advanced.includes(model)
+    
+    // For advanced models, check monthly limit for FREE plan
+    if (isAdvancedModel && user.planType === 'FREE' && limits.monthlyAdvancedMessages !== null) {
+      const startOfMonth = new Date()
+      startOfMonth.setDate(1)
+      startOfMonth.setHours(0, 0, 0, 0)
+      
+      const monthlyAdvancedUsage = await prisma.userUsage.aggregate({
+        where: {
+          userId,
+          date: {
+            gte: startOfMonth,
+          },
+          model: {
+            name: {
+              in: limits.modelsAllowed.advanced
+            }
+          }
+        },
+        _sum: {
+          messagesCount: true,
+        },
+      })
+
+      const advancedMessagesUsed = monthlyAdvancedUsage._sum.messagesCount || 0
+      
+      if (advancedMessagesUsed >= limits.monthlyAdvancedMessages) {
+        return {
+          allowed: false,
+          reason: `Monthly advanced messages limit reached (${advancedMessagesUsed}/${limits.monthlyAdvancedMessages})`,
+          planType: user.planType,
+          usage: {
+            monthlyAdvancedMessages: {
+              used: advancedMessagesUsed,
+              limit: limits.monthlyAdvancedMessages,
+            },
+          },
+        }
+      }
     }
   }
 
@@ -240,6 +328,26 @@ export async function getUserUsageStats(userId: string) {
                         (monthlyUsage._sum.outputTokensUsed || 0)
   const monthlyCost = monthlyUsage._sum.costIncurred || 0
 
+  // Calculate advanced messages used for FREE plan
+  const monthlyAdvancedMessages = user.planType === 'FREE' ? await prisma.userUsage.aggregate({
+    where: {
+      userId,
+      date: {
+        gte: startOfMonth,
+      },
+      model: {
+        name: {
+          in: limits.modelsAllowed.advanced
+        }
+      }
+    },
+    _sum: {
+      messagesCount: true,
+    },
+  }) : null
+
+  const advancedMessagesUsed = monthlyAdvancedMessages?._sum.messagesCount || 0
+
   return {
     planType: user.planType,
     daily: {
@@ -252,10 +360,20 @@ export async function getUserUsageStats(userId: string) {
     },
     monthly: {
       messages: monthlyUsage._sum.messagesCount || 0,
+      advancedMessages: {
+        used: advancedMessagesUsed,
+        limit: limits.monthlyAdvancedMessages,
+        remaining: limits.monthlyAdvancedMessages ? Math.max(0, limits.monthlyAdvancedMessages - advancedMessagesUsed) : null,
+      },
       tokens: {
         used: monthlyTokens,
         limit: limits.monthlyTokens,
         remaining: limits.monthlyTokens ? Math.max(0, limits.monthlyTokens - monthlyTokens) : null,
+      },
+      credits: {
+        used: 0, // TODO: implement credit tracking
+        limit: limits.monthlyCredits,
+        remaining: limits.monthlyCredits ? limits.monthlyCredits : null,
       },
       cost: monthlyCost,
     },

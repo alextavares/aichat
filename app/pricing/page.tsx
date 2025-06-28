@@ -21,35 +21,16 @@ const plans = [
     yearlyPrice: 0,
     icon: Zap,
     features: [
-      { text: '50 mensagens por dia', included: true },
-      { text: 'Acesso a GPT-3.5', included: true },
-      { text: 'Histórico de 7 dias', included: true },
-      { text: 'Geração de imagens básica', included: true },
-      { text: 'Modelos avançados', included: false },
-      { text: 'Transcrição de vídeo', included: false },
-      { text: 'Suporte prioritário', included: false },
+      { text: 'Mensagens ilimitadas com modelos rápidos', included: true },
+      { text: '120 mensagens/mês com modelos avançados', included: true },
+      { text: 'GPT-4o Mini, Deepseek 3.1, Claude 3.5 Haiku', included: true },
+      { text: 'Criação de 1 assistente personalizado', included: true },
+      { text: 'Até 2 anexos por chat', included: true },
+      { text: 'Geração de imagem/áudio/vídeo', included: false },
+      { text: 'Assistentes ilimitados', included: false },
+      { text: 'Anexos ilimitados', included: false },
     ],
     buttonText: 'Começar Grátis',
-    popular: false,
-  },
-  {
-    id: 'lite',
-    name: 'Lite',
-    description: 'Para uso pessoal',
-    monthlyPrice: 39.90,
-    yearlyPrice: 15.96, // 60% de desconto
-    yearlyTotal: 191.52, // 15.96 * 12
-    icon: Zap,
-    features: [
-      { text: '1.000 mensagens por mês', included: true },
-      { text: 'Acesso a GPT-4 e Claude', included: true },
-      { text: 'Histórico de 30 dias', included: true },
-      { text: 'Geração de imagens HD', included: true },
-      { text: 'Tradução de textos', included: true },
-      { text: 'Suporte por email', included: true },
-      { text: 'Transcrição de vídeo limitada', included: false },
-    ],
-    buttonText: 'Assinar Lite',
     popular: false,
   },
   {
@@ -61,16 +42,36 @@ const plans = [
     yearlyTotal: 383.52, // 31.96 * 12
     icon: Crown,
     features: [
-      { text: 'Mensagens ilimitadas', included: true },
-      { text: 'Todos os modelos de IA', included: true },
-      { text: 'Histórico ilimitado', included: true },
-      { text: 'Geração de imagens 4K', included: true },
-      { text: 'Transcrição de vídeo ilimitada', included: true },
-      { text: 'Edição avançada de imagens', included: true },
+      { text: 'Mensagens ilimitadas com modelos rápidos', included: true },
+      { text: 'Mensagens ilimitadas com modelos avançados', included: true },
+      { text: 'GPT-4o, Claude 4 Sonnet, Gemini 2.5 Pro', included: true },
+      { text: '7.000 créditos mensais para imagem/áudio/vídeo', included: true },
+      { text: 'Criação ilimitada de assistentes', included: true },
+      { text: 'Anexos ilimitados nos chats', included: true },
       { text: 'Suporte prioritário', included: true },
     ],
     buttonText: 'Assinar Pro',
     popular: true,
+  },
+  {
+    id: 'enterprise',
+    name: 'Enterprise',
+    description: 'Para empresas',
+    monthlyPrice: 197,
+    yearlyPrice: 78.80, // 60% de desconto
+    yearlyTotal: 945.60, // 78.80 * 12
+    icon: Building2,
+    features: [
+      { text: 'Tudo do plano Pro', included: true },
+      { text: 'API dedicada', included: true },
+      { text: 'SLA garantido', included: true },
+      { text: 'Modelos customizados', included: true },
+      { text: 'Treinamento dedicado', included: true },
+      { text: 'Suporte 24/7', included: true },
+      { text: 'Compliance LGPD', included: true },
+    ],
+    buttonText: 'Falar com Vendas',
+    popular: false,
   },
 ]
 
@@ -151,7 +152,7 @@ export default function PricingPage() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
           {plans.map((plan) => {
             const Icon = plan.icon
             return (
