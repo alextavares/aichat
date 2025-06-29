@@ -168,10 +168,37 @@ export async function POST(request: NextRequest) {
       cost: aiResponse.cost
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error("Chat API error:", error)
+    
+    // Tratamento específico de erros
+    if (error.message?.includes('API key not configured')) {
+      return NextResponse.json(
+        { message: "Serviço de IA não configurado. Entre em contato com o suporte." },
+        { status: 503 }
+      )
+    }
+    
+    if (error.message?.includes('No configured provider')) {
+      return NextResponse.json(
+        { message: "Modelo de IA não disponível no momento." },
+        { status: 503 }
+      )
+    }
+    
+    // Log detalhado para debug
+    console.error("Detalhes do erro:", {
+      message: error.message,
+      stack: error.stack,
+      model: model,
+      userId: session?.user?.id
+    })
+    
     return NextResponse.json(
-      { message: "Erro interno do servidor" },
+      { 
+        message: error.message || "Erro ao processar mensagem. Tente novamente.",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      },
       { status: 500 }
     )
   }

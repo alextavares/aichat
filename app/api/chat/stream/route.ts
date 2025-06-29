@@ -7,6 +7,8 @@ import { AIMessage } from "@/lib/ai/types"
 import { checkUsageLimits, trackUsage } from "@/lib/usage-limits"
 
 export async function POST(request: NextRequest) {
+  const encoder = new TextEncoder()
+  
   try {
     const session = await getServerSession(authOptions)
     
@@ -54,137 +56,64 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Criar ou buscar conversa
-    let conversation
-    if (conversationId) {
-      conversation = await prisma.conversation.findFirst({
-        where: {
-          id: conversationId,
-          userId: user.id
-        }
-      })
-    }
-
-    if (!conversation) {
-      const title = messages[0]?.content?.substring(0, 50) + "..." || "Nova conversa"
-      conversation = await prisma.conversation.create({
-        data: {
-          userId: user.id,
-          title,
-          modelUsed: model
-        }
-      })
-    }
-
-    // Salvar mensagem do usuário
-    await prisma.message.create({
-      data: {
-        conversationId: conversation.id,
-        role: 'USER',
-        content: messages[messages.length - 1].content,
-        modelUsed: model
-      }
-    })
-
-    // Buscar contexto da Knowledge Base se habilitado
-    let knowledgeContext = ''
-    if (knowledgeBaseEnabled) {
-      const knowledgeItems = await prisma.knowledgeBase.findMany({
-        where: {
-          userId: user.id,
-          isActive: true
-        },
-        select: {
-          name: true,
-          content: true,
-          type: true
-        },
-        take: 5 // Limitar para não exceder o contexto
-      })
-
-      if (knowledgeItems.length > 0) {
-        knowledgeContext = "\n\n[CONTEXTO DA BASE DE CONHECIMENTO]\n"
-        knowledgeItems.forEach(item => {
-          knowledgeContext += `\n### ${item.name} (${item.type})\n${item.content.substring(0, 1000)}...\n`
-        })
-        knowledgeContext += "\n[FIM DO CONTEXTO]\n\n"
-      }
-    }
-
-    // Preparar mensagens para IA (incluindo attachments)
-    const aiMessages: AIMessage[] = messages.map((msg: any, index: number) => {
-      // Adicionar contexto da Knowledge Base apenas na primeira mensagem do usuário
-      let content = msg.content || ''
-      if (index === 0 && knowledgeContext && msg.role === 'user') {
-        content = knowledgeContext + content
-      }
-
-      // Se não houver attachments, retornar mensagem simples
-      if (!msg.attachments || msg.attachments.length === 0) {
-        return {
-          role: msg.role,
-          content: content
-        }
-      }
-      
-      // Para mensagens com attachments, criar array de conteúdo multimodal
-      const contentParts: any[] = []
-      
-      // Adicionar texto da mensagem primeiro
-      if (content) {
-        contentParts.push({
-          type: 'text',
-          text: content
-        })
-      }
-      
-      // Adicionar attachments
-      for (const attachment of msg.attachments) {
-        if (attachment.type.startsWith('image/')) {
-          // Para imagens, usar formato de image_url
-          contentParts.push({
-            type: 'image_url',
-            image_url: {
-              url: attachment.content // Já está em base64 data URL
-            }
-          })
-        } else {
-          // Para outros arquivos, adicionar como texto
-          contentParts.push({
-            type: 'text',
-            text: `\n[Arquivo: ${attachment.name}]\n${attachment.content}`
-          })
-        }
-      }
-      
-      return {
-        role: msg.role,
-        content: contentParts.length === 1 && contentParts[0].type === 'text' 
-          ? contentParts[0].text 
-          : contentParts
-      }
-    })
-
-    // Criar stream de resposta
-    const encoder = new TextEncoder()
+    // Criar stream
     const stream = new ReadableStream({
       async start(controller) {
-        let fullContent = ''
-        let tokensUsed = { input: 0, output: 0, total: 0 }
-        let cost = 0
-
         try {
-          // Usar o método de streaming do AI service
+          // Processar mensagens
+          const aiMessages: AIMessage[] = messages.map((msg: any) => ({
+            role: msg.role,
+            content: msg.content
+          }))
+
+          // Criar ou recuperar conversa
+          let conversation
+          if (conversationId) {
+            conversation = await prisma.conversation.findFirst({
+              where: {
+                id: conversationId,
+                userId: user.id
+              }
+            })
+          }
+
+          if (!conversation) {
+            const title = messages[0]?.content?.substring(0, 50) + "..." || "Nova conversa"
+            conversation = await prisma.conversation.create({
+              data: {
+                userId: user.id,
+                title,
+                modelUsed: model
+              }
+            })
+          }
+
+          // Salvar mensagem do usuário
+          await prisma.message.create({
+            data: {
+              conversationId: conversation.id,
+              role: 'USER',
+              content: messages[messages.length - 1].content,
+              modelUsed: model
+            }
+          })
+
+          let fullContent = ''
+          let tokensUsed = { input: 0, output: 0, total: 0 }
+          let cost = 0
+
+          // Stream da resposta
           await aiService.streamResponseWithCallbacks(aiMessages, model, {
-            onToken: (token: string) => {
+            onToken: (token) => {
               fullContent += token
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ token })}\n\n`))
+              const data = JSON.stringify({ token })
+              controller.enqueue(encoder.encode(`data: ${data}\n\n`))
             },
-            onComplete: async (response: any) => {
+            onComplete: async (response) => {
               tokensUsed = response.tokensUsed
               cost = response.cost
 
-              // Salvar resposta completa da IA
+              // Salvar resposta da IA
               await prisma.message.create({
                 data: {
                   conversationId: conversation.id,
@@ -195,27 +124,46 @@ export async function POST(request: NextRequest) {
                 }
               })
 
-              // Atualizar estatísticas de uso
+              // Atualizar estatísticas
               await trackUsage(user.id, model, tokensUsed, cost)
 
               // Enviar dados finais
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ 
-                done: true, 
+              const finalData = JSON.stringify({
+                done: true,
                 conversationId: conversation.id,
                 tokensUsed,
-                cost 
-              })}\n\n`))
+                cost
+              })
+              controller.enqueue(encoder.encode(`data: ${finalData}\n\n`))
               controller.close()
             },
-            onError: (error: Error) => {
+            onError: (error) => {
               console.error("Streaming error:", error)
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: error.message })}\n\n`))
+              const errorData = JSON.stringify({
+                error: error.message || "Erro ao processar mensagem"
+              })
+              controller.enqueue(encoder.encode(`data: ${errorData}\n\n`))
               controller.close()
             }
           })
-        } catch (error) {
+
+        } catch (error: any) {
           console.error("Stream error:", error)
-          controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: "Erro ao gerar resposta" })}\n\n`))
+          
+          // Enviar erro específico
+          let errorMessage = "Erro ao processar mensagem"
+          
+          if (error.message?.includes('API key not configured')) {
+            errorMessage = "Serviço de IA temporariamente indisponível"
+          } else if (error.message?.includes('No configured provider')) {
+            errorMessage = "Modelo selecionado não está disponível"
+          }
+          
+          const errorData = JSON.stringify({
+            error: errorMessage,
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined
+          })
+          controller.enqueue(encoder.encode(`data: ${errorData}\n\n`))
           controller.close()
         }
       }
@@ -229,11 +177,25 @@ export async function POST(request: NextRequest) {
       },
     })
 
-  } catch (error) {
-    console.error("Chat Stream API error:", error)
+  } catch (error: any) {
+    console.error("Chat stream API error:", error)
+    
+    // Log detalhado
+    console.error("Detalhes do erro:", {
+      message: error.message,
+      stack: error.stack,
+      body: await request.text()
+    })
+    
     return new Response(
-      JSON.stringify({ message: "Erro interno do servidor" }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        message: "Erro ao processar requisição",
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      }),
+      { 
+        status: 500, 
+        headers: { 'Content-Type': 'application/json' } 
+      }
     )
   }
 }
