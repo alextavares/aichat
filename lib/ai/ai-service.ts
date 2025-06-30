@@ -114,12 +114,12 @@ class AIService {
     switch (planType) {
       case 'FREE':
         return allModels.filter(model => 
-          ['gpt-3.5-turbo', 'claude-3-haiku', 'mistral-7b', 'llama-2-13b'].includes(model.id)
+          ['gpt-3.5-turbo', 'claude-3-haiku', 'mistral-7b', 'llama-2-13b', 'deepseek-r1'].includes(model.id)
         )
       case 'PRO':
         return allModels.filter(model => 
           ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'claude-3-sonnet', 'gemini-pro', 
-           'mixtral-8x7b', 'llama-2-70b', 'phind-codellama-34b', 'deepseek-coder'].includes(model.id)
+           'mixtral-8x7b', 'llama-2-70b', 'phind-codellama-34b', 'deepseek-coder', 'deepseek-r1'].includes(model.id)
         )
       case 'ENTERPRISE':
         return allModels
@@ -137,7 +137,7 @@ class AIService {
       'llama-2-70b', 'llama-2-13b', 'codellama-70b',
       'mixtral-8x7b', 'mistral-7b',
       'nous-hermes-2', 'openhermes-2.5', 'zephyr-7b',
-      'phind-codellama-34b', 'deepseek-coder', 'wizardcoder-33b',
+      'phind-codellama-34b', 'deepseek-coder', 'deepseek-r1', 'wizardcoder-33b',
       'mythomist-7b', 'cinematika-7b', 'neural-chat-7b'
     ]
     

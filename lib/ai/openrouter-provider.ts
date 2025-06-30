@@ -48,6 +48,7 @@ export class OpenRouterProvider implements AIProvider {
     // Modelos para Código
     'phind-codellama-34b': 'phind/phind-codellama-34b-v2',
     'deepseek-coder': 'deepseek/deepseek-coder-33b-instruct',
+    'deepseek-r1': 'deepseek/deepseek-r1-0528:free',
     'wizardcoder-33b': 'wizardlm/wizardcoder-33b-v1.1',
     
     // Modelos Criativos
@@ -116,6 +117,13 @@ export class OpenRouterProvider implements AIProvider {
         category: 'code',
         contextWindow: 16000,
         strengths: ['Programação', 'Algoritmos', 'Refatoração']
+      },
+      'deepseek-r1': {
+        name: 'DeepSeek R1',
+        description: 'Modelo avançado de raciocínio (gratuito)',
+        category: 'reasoning',
+        contextWindow: 128000,
+        strengths: ['Raciocínio complexo', 'Análise profunda', 'Resolução de problemas']
       },
       'mythomist-7b': {
         name: 'Mythomist',
@@ -300,6 +308,7 @@ export class OpenRouterProvider implements AIProvider {
       'zephyr-7b': { input: 0.00006, output: 0.00006 },
       'phind-codellama-34b': { input: 0.0004, output: 0.0004 },
       'deepseek-coder': { input: 0.0004, output: 0.0004 },
+      'deepseek-r1': { input: 0.0, output: 0.0 }, // Modelo gratuito
       'wizardcoder-33b': { input: 0.0004, output: 0.0004 },
       'mythomist-7b': { input: 0.00006, output: 0.00006 },
       'cinematika-7b': { input: 0.00006, output: 0.00006 },
@@ -401,6 +410,14 @@ export class OpenRouterProvider implements AIProvider {
         maxTokens: 4096,
         costPerInputToken: 0.0000004,
         costPerOutputToken: 0.0000004
+      },
+      {
+        id: 'deepseek-r1',
+        name: 'DeepSeek R1 (Free)',
+        provider: 'openrouter',
+        maxTokens: 128000,
+        costPerInputToken: 0.0,
+        costPerOutputToken: 0.0
       },
       // Modelos Open Source
       {

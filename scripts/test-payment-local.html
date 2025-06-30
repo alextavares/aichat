@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de Pagamento - InnerAI</title>
+    <script src="https://sdk.mercadopago.com/js/v2"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .plan-info {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 30px;
+        }
+        .plan-info h2 {
+            margin: 0 0 10px 0;
+            color: #555;
+        }
+        .price {
+            font-size: 36px;
+            font-weight: bold;
+            color: #007bff;
+            margin: 10px 0;
+        }
+        .features {
+            margin-top: 15px;
+        }
+        .features li {
+            margin: 5px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+            margin: 20px 0;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Teste de Pagamento - InnerAI</h1>
+        
+        <div class="plan-info">
+            <h2>Plano Pro - Teste</h2>
+            <div class="price">R$ 1,00</div>
+            <ul class="features">
+                <li>✓ Mensagens ilimitadas com modelos avançados</li>
+                <li>✓ GPT-4o, Claude 4 Sonnet, Gemini 2.5 Pro</li>
+                <li>✓ 7.000 créditos mensais para imagem/áudio/vídeo</li>
+                <li>✓ Criação ilimitada de assistentes</li>
+                <li>✓ Anexos ilimitados nos chats</li>
+            </ul>
+        </div>
+
+        <div id="message"></div>
+
+        <button id="checkout-btn" onclick="createCheckout()">
+            Pagar com Mercado Pago
+        </button>
+    </div>
+
+    <script>
+        // Public key do Mercado Pago (teste)
+        const mp = new MercadoPago('TEST-8b607be2-b7e6-4d56-b685-755ac9fb8584', {
+            locale: 'pt-BR'
+        });
+
+        async function createCheckout() {
+            const btn = document.getElementById('checkout-btn');
+            const messageDiv = document.getElementById('message');
+            
+            btn.disabled = true;
+            btn.textContent = 'Processando...';
+            messageDiv.innerHTML = '<div class="loading">Criando checkout...</div>';
+
+            try {
+                // Simular dados do usuário
+                const checkoutData = {
+                    items: [{
+                        id: 'pro-plan-test',
+                        title: 'Plano Pro InnerAI - Teste',
+                        description: 'Assinatura mensal do plano Pro',
+                        picture_url: 'https://innerai.com/logo.png',
+                        category_id: 'services',
+                        quantity: 1,
+                        currency_id: 'BRL',
+                        unit_price: 1
+                    }],
+                    payer: {
+                        email: 'teste@innerai.com'
+                    },
+                    back_urls: {
+                        success: window.location.origin + '?status=success',
+                        failure: window.location.origin + '?status=failure',
+                        pending: window.location.origin + '?status=pending'
+                    },
+                    auto_return: 'approved',
+                    payment_methods: {
+                        installments: 1,
+                        default_installments: 1
+                    }
+                };
+
+                // Aqui você precisaria fazer uma chamada para sua API
+                // Por enquanto, vamos simular com uma URL de teste
+                messageDiv.innerHTML = `
+                    <div class="success">
+                        <h3>Checkout Criado!</h3>
+                        <p>Para completar o teste, você precisa:</p>
+                        <ol>
+                            <li>Fazer deploy das mudanças no Digital Ocean</li>
+                            <li>Ou configurar um servidor local com as credenciais do Mercado Pago</li>
+                        </ol>
+                        <p>URL que seria chamada: <code>/api/mercadopago/checkout</code></p>
+                    </div>
+                `;
+
+                // Para teste real, descomente isso:
+                /*
+                const response = await fetch('/api/mercadopago/checkout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        planId: 'pro',
+                        paymentMethod: 'card',
+                        billingCycle: 'monthly'
+                    })
+                });
+
+                const data = await response.json();
+                window.location.href = data.url;
+                */
+
+            } catch (error) {
+                messageDiv.innerHTML = `<div class="error">Erro: ${error.message}</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Pagar com Mercado Pago';
+            }
+        }
+
+        // Verificar status de retorno
+        const urlParams = new URLSearchParams(window.location.search);
+        const status = urlParams.get('status');
+        if (status) {
+            const messageDiv = document.getElementById('message');
+            if (status === 'success') {
+                messageDiv.innerHTML = '<div class="success">Pagamento aprovado com sucesso!</div>';
+            } else if (status === 'failure') {
+                messageDiv.innerHTML = '<div class="error">Pagamento recusado. Tente novamente.</div>';
+            } else if (status === 'pending') {
+                messageDiv.innerHTML = '<div class="loading">Pagamento pendente de aprovação.</div>';
+            }
+        }
+    </script>
+</body>
+</html>
