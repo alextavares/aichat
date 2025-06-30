@@ -79,7 +79,7 @@ export const PAYMENT_PLANS: PaymentPlan[] = [
   {
     id: 'pro',
     name: 'Pro',
-    price: 79.90,
+    price: 1.00,  // Valor de teste
     currency: 'BRL',
     interval: 'monthly',
     features: [
@@ -96,7 +96,7 @@ export const PAYMENT_PLANS: PaymentPlan[] = [
   {
     id: 'enterprise',
     name: 'Enterprise',
-    price: 197,
+    price: 2.00,  // Valor de teste
     currency: 'BRL',
     interval: 'monthly',
     features: [

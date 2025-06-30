@@ -38,7 +38,7 @@ function CheckoutContent() {
     setIsLoading(true)
     
     try {
-      const response = await fetch('/api/stripe/checkout', {
+      const response = await fetch('/api/mercadopago/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

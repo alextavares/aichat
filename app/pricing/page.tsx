@@ -37,9 +37,9 @@ const plans = [
     id: 'pro',
     name: 'Pro',
     description: 'Para profissionais',
-    monthlyPrice: 79.90,
-    yearlyPrice: 31.96, // 60% de desconto
-    yearlyTotal: 383.52, // 31.96 * 12
+    monthlyPrice: 1.00,  // Valor de teste
+    yearlyPrice: 0.40,   // 60% de desconto
+    yearlyTotal: 4.80,   // 0.40 * 12
     icon: Crown,
     features: [
       { text: 'Mensagens ilimitadas com modelos rápidos', included: true },
@@ -57,9 +57,9 @@ const plans = [
     id: 'enterprise',
     name: 'Enterprise',
     description: 'Para empresas',
-    monthlyPrice: 197,
-    yearlyPrice: 78.80, // 60% de desconto
-    yearlyTotal: 945.60, // 78.80 * 12
+    monthlyPrice: 2.00,   // Valor de teste
+    yearlyPrice: 0.80,    // 60% de desconto
+    yearlyTotal: 9.60,    // 0.80 * 12
     icon: Building2,
     features: [
       { text: 'Tudo do plano Pro', included: true },
