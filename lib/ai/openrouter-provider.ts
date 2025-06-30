@@ -18,17 +18,24 @@ export class OpenRouterProvider implements AIProvider {
     'gpt-3.5-turbo': 'openai/gpt-3.5-turbo',
     'gpt-4': 'openai/gpt-4',
     'gpt-4-turbo': 'openai/gpt-4-turbo-preview',
+    'gpt-4o': 'openai/gpt-4o',
+    'gpt-4o-mini': 'openai/gpt-4o-mini',
     
     // Modelos Anthropic
     'claude-3-opus': 'anthropic/claude-3-opus',
     'claude-3-sonnet': 'anthropic/claude-3-sonnet-20240229',
+    'claude-3.5-sonnet': 'anthropic/claude-3.5-sonnet',
     'claude-3-haiku': 'anthropic/claude-3-haiku-20240307',
+    'claude-3.5-haiku': 'anthropic/claude-3.5-haiku',
     'claude-2.1': 'anthropic/claude-2.1',
     'claude-2': 'anthropic/claude-2',
     
     // Modelos Google
     'gemini-pro': 'google/gemini-pro',
     'gemini-pro-vision': 'google/gemini-pro-vision',
+    'gemini-2-flash': 'google/gemini-2.5-flash',
+    'gemini-2-pro': 'google/gemini-2.5-pro',
+    'gemini-2-flash-free': 'google/gemini-2.0-flash-exp:free',
     'palm-2': 'google/palm-2-chat-bison',
     
     // Modelos Meta
@@ -57,6 +64,29 @@ export class OpenRouterProvider implements AIProvider {
     
     // Modelos Rápidos
     'neural-chat-7b': 'intel/neural-chat-7b-v3-3',
+    
+    // Modelos xAI (Grok)
+    'grok-3': 'x-ai/grok-3',
+    'grok-3-mini': 'x-ai/grok-3-mini',
+    'grok-2-vision': 'x-ai/grok-2-vision-1212',
+    
+    // Modelos Perplexity
+    'perplexity-sonar-pro': 'perplexity/sonar-pro',
+    'perplexity-sonar': 'perplexity/sonar',
+    'perplexity-reasoning': 'perplexity/sonar-reasoning-pro',
+    
+    // Modelos Llama atualizados
+    'llama-3.3-70b': 'meta-llama/llama-3.3-70b-instruct',
+    'llama-3.2-90b-vision': 'meta-llama/llama-3.2-90b-vision-instruct',
+    'llama-3.1-405b': 'meta-llama/llama-3.1-405b-instruct',
+    
+    // Modelos Qwen
+    'qwq-32b': 'qwen/qwq-32b',
+    'qwen-2.5-72b': 'qwen/qwen-2.5-72b-instruct',
+    'qwen-2.5-coder': 'qwen/qwen-2.5-coder-32b-instruct',
+    
+    // Mistral atualizado
+    'mistral-large-2': 'mistralai/mistral-large-2411'
   }
 
   // Informações sobre os modelos para exibição
@@ -138,6 +168,126 @@ export class OpenRouterProvider implements AIProvider {
         category: 'balanced',
         contextWindow: 8192,
         strengths: ['Instruções', 'Versatilidade', 'Consistência']
+      },
+      // Novos modelos OpenAI
+      'gpt-4o': {
+        name: 'GPT-4o',
+        description: 'Modelo mais recente e poderoso da OpenAI',
+        category: 'advanced',
+        contextWindow: 128000,
+        strengths: ['Raciocínio avançado', 'Multimodal', 'Velocidade']
+      },
+      'gpt-4o-mini': {
+        name: 'GPT-4o Mini',
+        description: 'Versão otimizada do GPT-4o',
+        category: 'fast',
+        contextWindow: 128000,
+        strengths: ['Velocidade', 'Eficiência', 'Custo-benefício']
+      },
+      // Claude atualizado
+      'claude-3.5-sonnet': {
+        name: 'Claude 3.5 Sonnet',
+        description: 'Versão mais recente do Claude Sonnet',
+        category: 'advanced',
+        contextWindow: 200000,
+        strengths: ['Raciocínio', 'Código', 'Análise']
+      },
+      'claude-3.5-haiku': {
+        name: 'Claude 3.5 Haiku',
+        description: 'Claude rápido e eficiente atualizado',
+        category: 'fast',
+        contextWindow: 200000,
+        strengths: ['Velocidade', 'Precisão', 'Eficiência']
+      },
+      // Gemini 2
+      'gemini-2-flash': {
+        name: 'Gemini 2.5 Flash',
+        description: 'Modelo rápido do Google com contexto enorme',
+        category: 'fast',
+        contextWindow: 1048576,
+        strengths: ['Contexto gigante', 'Multimodal', 'Velocidade']
+      },
+      'gemini-2-pro': {
+        name: 'Gemini 2.5 Pro',
+        description: 'Modelo avançado do Google',
+        category: 'advanced',
+        contextWindow: 1048576,
+        strengths: ['Contexto gigante', 'Análise profunda', 'Multimodal']
+      },
+      // Grok
+      'grok-3': {
+        name: 'Grok 3',
+        description: 'Modelo mais recente da xAI',
+        category: 'advanced',
+        contextWindow: 131072,
+        strengths: ['Humor', 'Atualidade', 'Personalidade']
+      },
+      'grok-3-mini': {
+        name: 'Grok 3 Mini',
+        description: 'Versão rápida do Grok',
+        category: 'fast',
+        contextWindow: 131072,
+        strengths: ['Velocidade', 'Humor', 'Conversação']
+      },
+      // Perplexity
+      'perplexity-sonar-pro': {
+        name: 'Perplexity Sonar Pro',
+        description: 'Modelo com pesquisa web integrada',
+        category: 'research',
+        contextWindow: 200000,
+        strengths: ['Pesquisa web', 'Atualidade', 'Fontes']
+      },
+      'perplexity-reasoning': {
+        name: 'Perplexity Reasoning Pro',
+        description: 'Modelo focado em raciocínio com pesquisa',
+        category: 'reasoning',
+        contextWindow: 128000,
+        strengths: ['Raciocínio', 'Pesquisa', 'Análise']
+      },
+      // Llama atualizado
+      'llama-3.3-70b': {
+        name: 'Llama 3.3 70B',
+        description: 'Versão mais recente do Llama',
+        category: 'balanced',
+        contextWindow: 131072,
+        strengths: ['Open source', 'Versatilidade', 'Performance']
+      },
+      'llama-3.1-405b': {
+        name: 'Llama 3.1 405B',
+        description: 'Maior modelo do Llama',
+        category: 'advanced',
+        contextWindow: 32768,
+        strengths: ['Capacidade máxima', 'Open source', 'Profundidade']
+      },
+      // Mistral
+      'mistral-large-2': {
+        name: 'Mistral Large 2',
+        description: 'Versão mais recente do Mistral Large',
+        category: 'advanced',
+        contextWindow: 131072,
+        strengths: ['Multilíngue', 'Raciocínio', 'Código']
+      },
+      // Qwen
+      'qwq-32b': {
+        name: 'QwQ 32B',
+        description: 'Modelo de raciocínio da Qwen',
+        category: 'reasoning',
+        contextWindow: 131072,
+        strengths: ['Raciocínio step-by-step', 'Matemática', 'Lógica']
+      },
+      'qwen-2.5-72b': {
+        name: 'Qwen 2.5 72B',
+        description: 'Modelo avançado da Alibaba',
+        category: 'advanced',
+        contextWindow: 32768,
+        strengths: ['Multilíngue', 'Código', 'Análise']
+      },
+      'qwen-2.5-coder': {
+        name: 'Qwen 2.5 Coder',
+        description: 'Especializado em programação',
+        category: 'code',
+        contextWindow: 32768,
+        strengths: ['Código', 'Debug', 'Arquitetura']
       }
     }
   }
@@ -313,6 +463,27 @@ export class OpenRouterProvider implements AIProvider {
       'mythomist-7b': { input: 0.00006, output: 0.00006 },
       'cinematika-7b': { input: 0.00006, output: 0.00006 },
       'neural-chat-7b': { input: 0.00006, output: 0.00006 },
+      // Novos modelos
+      'gpt-4o': { input: 0.0025, output: 0.01 },
+      'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
+      'claude-3.5-sonnet': { input: 0.003, output: 0.015 },
+      'claude-3.5-haiku': { input: 0.0008, output: 0.004 },
+      'gemini-2-flash': { input: 0.0003, output: 0.0025 },
+      'gemini-2-pro': { input: 0.00125, output: 0.01 },
+      'gemini-2-flash-free': { input: 0.0, output: 0.0 },
+      'grok-3': { input: 0.003, output: 0.015 },
+      'grok-3-mini': { input: 0.0003, output: 0.0005 },
+      'grok-2-vision': { input: 0.002, output: 0.01 },
+      'perplexity-sonar-pro': { input: 0.003, output: 0.015 },
+      'perplexity-sonar': { input: 0.001, output: 0.001 },
+      'perplexity-reasoning': { input: 0.002, output: 0.008 },
+      'llama-3.3-70b': { input: 0.000039, output: 0.00012 },
+      'llama-3.2-90b-vision': { input: 0.0012, output: 0.0012 },
+      'llama-3.1-405b': { input: 0.0008, output: 0.0008 },
+      'qwq-32b': { input: 0.000075, output: 0.00015 },
+      'qwen-2.5-72b': { input: 0.00012, output: 0.00039 },
+      'qwen-2.5-coder': { input: 0.00006, output: 0.00015 },
+      'mistral-large-2': { input: 0.002, output: 0.006 }
     }
 
     const modelCosts = costs[model] || { input: 0.001, output: 0.001 }
@@ -326,6 +497,23 @@ export class OpenRouterProvider implements AIProvider {
 
   getAvailableModels(): AIModel[] {
     return [
+      // Modelos OpenAI
+      {
+        id: 'gpt-4o',
+        name: 'GPT-4o',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.0000025,
+        costPerOutputToken: 0.00001
+      },
+      {
+        id: 'gpt-4o-mini',
+        name: 'GPT-4o Mini',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.00000015,
+        costPerOutputToken: 0.0000006
+      },
       // Modelos Anthropic
       {
         id: 'claude-3-opus',
@@ -338,6 +526,14 @@ export class OpenRouterProvider implements AIProvider {
       {
         id: 'claude-3-sonnet',
         name: 'Claude 3 Sonnet',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000003,
+        costPerOutputToken: 0.000015
+      },
+      {
+        id: 'claude-3.5-sonnet',
+        name: 'Claude 3.5 Sonnet',
         provider: 'openrouter',
         maxTokens: 4096,
         costPerInputToken: 0.000003,
@@ -468,6 +664,141 @@ export class OpenRouterProvider implements AIProvider {
         maxTokens: 4096,
         costPerInputToken: 0.00000006,
         costPerOutputToken: 0.00000006
+      },
+      // Novos modelos - Fase 1
+      {
+        id: 'claude-3.5-haiku',
+        name: 'Claude 3.5 Haiku',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.0000008,
+        costPerOutputToken: 0.000004
+      },
+      // Google Gemini
+      {
+        id: 'gemini-2-flash',
+        name: 'Gemini 2.5 Flash',
+        provider: 'openrouter',
+        maxTokens: 8192,
+        costPerInputToken: 0.0000003,
+        costPerOutputToken: 0.0000025
+      },
+      {
+        id: 'gemini-2-pro',
+        name: 'Gemini 2.5 Pro',
+        provider: 'openrouter',
+        maxTokens: 8192,
+        costPerInputToken: 0.00000125,
+        costPerOutputToken: 0.00001
+      },
+      {
+        id: 'gemini-2-flash-free',
+        name: 'Gemini 2.0 Flash (Free)',
+        provider: 'openrouter',
+        maxTokens: 8192,
+        costPerInputToken: 0.0,
+        costPerOutputToken: 0.0
+      },
+      // xAI Grok
+      {
+        id: 'grok-3',
+        name: 'Grok 3',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000003,
+        costPerOutputToken: 0.000015
+      },
+      {
+        id: 'grok-3-mini',
+        name: 'Grok 3 Mini',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.0000003,
+        costPerOutputToken: 0.0000005
+      },
+      {
+        id: 'grok-2-vision',
+        name: 'Grok 2 Vision',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000002,
+        costPerOutputToken: 0.00001
+      },
+      // Perplexity
+      {
+        id: 'perplexity-sonar-pro',
+        name: 'Perplexity Sonar Pro',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000003,
+        costPerOutputToken: 0.000015
+      },
+      {
+        id: 'perplexity-sonar',
+        name: 'Perplexity Sonar',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000001,
+        costPerOutputToken: 0.000001
+      },
+      {
+        id: 'perplexity-reasoning',
+        name: 'Perplexity Reasoning Pro',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000002,
+        costPerOutputToken: 0.000008
+      },
+      // Llama atualizados
+      {
+        id: 'llama-3.3-70b',
+        name: 'Llama 3.3 70B',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000000039,
+        costPerOutputToken: 0.00000012
+      },
+      {
+        id: 'llama-3.1-405b',
+        name: 'Llama 3.1 405B',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.0000008,
+        costPerOutputToken: 0.0000008
+      },
+      // Mistral
+      {
+        id: 'mistral-large-2',
+        name: 'Mistral Large 2',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000002,
+        costPerOutputToken: 0.000006
+      },
+      // Qwen
+      {
+        id: 'qwq-32b',
+        name: 'QwQ 32B',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000000075,
+        costPerOutputToken: 0.00000015
+      },
+      {
+        id: 'qwen-2.5-72b',
+        name: 'Qwen 2.5 72B',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.00000012,
+        costPerOutputToken: 0.00000039
+      },
+      {
+        id: 'qwen-2.5-coder',
+        name: 'Qwen 2.5 Coder',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.00000006,
+        costPerOutputToken: 0.00000015
       }
     ]
   }

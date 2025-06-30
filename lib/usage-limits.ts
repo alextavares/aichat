@@ -20,19 +20,24 @@ export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
     modelsAllowed: {
       fast: [
         'gpt-4o-mini',
-        'deepseek-3.1',
         'claude-3.5-haiku',
-        'gemini-2.5-flash',
-        'llama-4.0'
+        'gemini-2-flash-free',
+        'mistral-7b',
+        'llama-2-13b',
+        'llama-3.3-70b',
+        'deepseek-r1',
+        'grok-3-mini',
+        'perplexity-sonar',
+        'qwq-32b'
       ],
       advanced: [
         'gpt-4o',
-        'claude-4-sonnet',
-        'gemini-2.5-pro',
-        'perplexity',
-        'mistral-large-2',
-        'grok-3.0',
-        'sabia-3'
+        'claude-3.5-sonnet',
+        'gemini-2-pro',
+        'grok-3',
+        'perplexity-sonar-pro',
+        'perplexity-reasoning',
+        'mistral-large-2'
       ]
     },
     monthlyCredits: 0, // no credits for image/video/audio
@@ -43,21 +48,38 @@ export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
     monthlyAdvancedMessages: null, // unlimited
     modelsAllowed: {
       fast: [
+        'gpt-3.5-turbo',
         'gpt-4o-mini',
-        'deepseek-3.1',
+        'claude-3-haiku',
         'claude-3.5-haiku',
-        'gemini-2.5-flash',
-        'llama-4.0'
+        'gemini-2-flash',
+        'gemini-2-flash-free',
+        'mistral-7b',
+        'llama-2-13b',
+        'llama-3.3-70b',
+        'deepseek-r1',
+        'grok-3-mini',
+        'perplexity-sonar',
+        'qwq-32b',
+        'qwen-2.5-coder'
       ],
       advanced: [
+        'gpt-4',
+        'gpt-4-turbo',
         'gpt-4o',
-        'gpt-o3',
-        'claude-4-sonnet',
-        'gemini-2.5-pro',
-        'perplexity',
+        'claude-3-sonnet',
+        'claude-3.5-sonnet',
+        'gemini-pro',
+        'gemini-2-pro',
+        'mixtral-8x7b',
         'mistral-large-2',
-        'grok-3.0',
-        'sabia-3'
+        'llama-2-70b',
+        'llama-3.1-405b',
+        'grok-3',
+        'grok-2-vision',
+        'perplexity-sonar-pro',
+        'perplexity-reasoning',
+        'qwen-2.5-72b'
       ]
     },
     monthlyCredits: 7000, // for image/video/audio generation
@@ -68,26 +90,64 @@ export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
     monthlyAdvancedMessages: null, // unlimited
     modelsAllowed: {
       fast: [
+        'gpt-3.5-turbo',
         'gpt-4o-mini',
-        'deepseek-3.1',
+        'claude-3-haiku',
         'claude-3.5-haiku',
-        'gemini-2.5-flash',
-        'llama-4.0'
+        'gemini-2-flash',
+        'gemini-2-flash-free',
+        'mistral-7b',
+        'llama-2-13b',
+        'llama-3.3-70b',
+        'deepseek-r1',
+        'grok-3-mini',
+        'perplexity-sonar',
+        'qwq-32b',
+        'qwen-2.5-coder',
+        'neural-chat-7b',
+        'mythomist-7b'
       ],
       advanced: [
+        'gpt-4',
+        'gpt-4-turbo',
         'gpt-4o',
-        'gpt-o3',
-        'claude-4-sonnet',
         'claude-3-opus',
-        'gemini-2.5-pro',
-        'perplexity',
+        'claude-3-sonnet',
+        'claude-3.5-sonnet',
+        'gemini-pro',
+        'gemini-2-pro',
+        'gemini-pro-vision',
+        'mixtral-8x7b',
         'mistral-large-2',
-        'grok-3.0',
-        'sabia-3'
+        'llama-2-70b',
+        'llama-3.1-405b',
+        'llama-3.2-90b-vision',
+        'codellama-70b',
+        'grok-3',
+        'grok-2-vision',
+        'perplexity-sonar-pro',
+        'perplexity-reasoning',
+        'qwen-2.5-72b',
+        'phind-codellama-34b',
+        'deepseek-coder',
+        'wizardcoder-33b',
+        'nous-hermes-2',
+        'openhermes-2.5',
+        'zephyr-7b',
+        'cinematika-7b'
       ]
     },
     monthlyCredits: null, // unlimited credits
   },
+}
+
+// Função auxiliar para determinar se um modelo é fast ou advanced
+export function getModelType(model: string): 'fast' | 'advanced' | null {
+  for (const plan of Object.values(PLAN_LIMITS)) {
+    if (plan.modelsAllowed.fast.includes(model)) return 'fast'
+    if (plan.modelsAllowed.advanced.includes(model)) return 'advanced'
+  }
+  return null
 }
 
 export async function checkUsageLimits(userId: string, model?: string, modelType?: 'fast' | 'advanced') {

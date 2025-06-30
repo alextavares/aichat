@@ -114,12 +114,21 @@ class AIService {
     switch (planType) {
       case 'FREE':
         return allModels.filter(model => 
-          ['gpt-3.5-turbo', 'claude-3-haiku', 'mistral-7b', 'llama-2-13b', 'deepseek-r1'].includes(model.id)
+          ['gpt-3.5-turbo', 'gpt-4o-mini', 'claude-3-haiku', 'claude-3.5-haiku', 
+           'gemini-2-flash-free', 'mistral-7b', 'llama-2-13b', 'llama-3.3-70b', 
+           'deepseek-r1', 'grok-3-mini', 'perplexity-sonar', 'qwq-32b'].includes(model.id)
         )
       case 'PRO':
         return allModels.filter(model => 
-          ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'claude-3-sonnet', 'gemini-pro', 
-           'mixtral-8x7b', 'llama-2-70b', 'phind-codellama-34b', 'deepseek-coder', 'deepseek-r1'].includes(model.id)
+          ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-4o-mini',
+           'claude-3-sonnet', 'claude-3.5-sonnet', 'claude-3-haiku', 'claude-3.5-haiku',
+           'gemini-pro', 'gemini-2-flash', 'gemini-2-pro', 
+           'mixtral-8x7b', 'mistral-7b', 'mistral-large-2',
+           'llama-2-70b', 'llama-3.3-70b', 'llama-3.1-405b',
+           'phind-codellama-34b', 'deepseek-coder', 'deepseek-r1', 'qwen-2.5-coder',
+           'grok-3', 'grok-3-mini', 'grok-2-vision',
+           'perplexity-sonar-pro', 'perplexity-sonar', 'perplexity-reasoning',
+           'qwq-32b', 'qwen-2.5-72b'].includes(model.id)
         )
       case 'ENTERPRISE':
         return allModels
@@ -132,13 +141,17 @@ class AIService {
     // Map models to providers
     const openaiModels = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo']
     const openRouterModels = [
-      'claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku', 'claude-2.1', 'claude-2',
-      'gemini-pro', 'gemini-pro-vision', 'palm-2',
-      'llama-2-70b', 'llama-2-13b', 'codellama-70b',
-      'mixtral-8x7b', 'mistral-7b',
+      'claude-3-opus', 'claude-3-sonnet', 'claude-3.5-sonnet', 'claude-3-haiku', 'claude-3.5-haiku', 'claude-2.1', 'claude-2',
+      'gemini-pro', 'gemini-pro-vision', 'gemini-2-flash', 'gemini-2-pro', 'gemini-2-flash-free', 'palm-2',
+      'llama-2-70b', 'llama-2-13b', 'llama-3.3-70b', 'llama-3.1-405b', 'codellama-70b',
+      'mixtral-8x7b', 'mistral-7b', 'mistral-large-2',
       'nous-hermes-2', 'openhermes-2.5', 'zephyr-7b',
       'phind-codellama-34b', 'deepseek-coder', 'deepseek-r1', 'wizardcoder-33b',
-      'mythomist-7b', 'cinematika-7b', 'neural-chat-7b'
+      'mythomist-7b', 'cinematika-7b', 'neural-chat-7b',
+      'gpt-4o', 'gpt-4o-mini',
+      'grok-3', 'grok-3-mini', 'grok-2-vision',
+      'perplexity-sonar-pro', 'perplexity-sonar', 'perplexity-reasoning',
+      'qwq-32b', 'qwen-2.5-72b', 'qwen-2.5-coder'
     ]
     
     // Primeiro tentar OpenRouter se configurado
