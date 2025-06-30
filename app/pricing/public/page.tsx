@@ -28,8 +28,8 @@ const PLANS = [
     id: 'pro',
     name: 'Pro',
     description: 'Para profissionais',
-    price: 1, // Preço de teste
-    originalPrice: 49,
+    price: 49.90, // Preço real
+    originalPrice: 49.90,
     features: [
       'Mensagens ilimitadas',
       '1M tokens por mês',
@@ -45,8 +45,8 @@ const PLANS = [
     id: 'enterprise',
     name: 'Enterprise',
     description: 'Para empresas',
-    price: 2, // Preço de teste
-    originalPrice: 199,
+    price: 199.90, // Preço real
+    originalPrice: 199.90,
     features: [
       'Tudo do Pro',
       'Tokens ilimitados',
@@ -195,11 +195,6 @@ export default function PublicPricingPage() {
                           </span>
                         )}
                       </div>
-                      {plan.price > 0 && (
-                        <div className="text-xs text-yellow-600 mt-1">
-                          Preço promocional de teste
-                        </div>
-                      )}
                     </div>
                   </CardHeader>
                   <CardContent>

@@ -1,4 +1,12 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# InnerAI Clone
+
+Um clone avançado do InnerAI com suporte a múltiplos modelos de IA, pagamentos via MercadoPago e funcionalidades completas de chat.
+
+## Documentação
+
+- [Configuração do MercadoPago](./MERCADOPAGO_SETUP.md) - Guia completo para configurar pagamentos reais
+- [Deploy no Digital Ocean](./DIGITAL_OCEAN_SETUP.md) - Instruções para deploy em produção
+- [Guia de Testes](./TESTING_GUIDE.md) - Como executar os testes automatizados
 
 ## Getting Started
 
