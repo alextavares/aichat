@@ -12,6 +12,9 @@ export default function Home() {
             <h1 className="text-2xl font-bold text-foreground">Inner AI</h1>
           </div>
           <div className="flex items-center space-x-4">
+            <Link href="/pricing">
+              <Button variant="ghost">Preços</Button>
+            </Link>
             <Link href="/auth/signin">
               <Button variant="ghost">Entrar</Button>
             </Link>
