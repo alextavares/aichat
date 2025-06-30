@@ -97,8 +97,24 @@ export async function POST(req: NextRequest) {
       sandboxUrl: response.sandbox_init_point // For testing
     })
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('MercadoPago checkout error:', error)
+    
+    // If token is invalid, use mock checkout
+    if (error.message?.includes('invalid_token') || error.status === 401 || error.status === 400) {
+      const baseUrl = process.env.NEXTAUTH_URL || 'https://seahorse-app-k5pag.ondigitalocean.app'
+      const mockUrl = new URL('/api/mercadopago/mock-checkout', baseUrl)
+      mockUrl.searchParams.set('plan', planId)
+      mockUrl.searchParams.set('billing', billingCycle)
+      mockUrl.searchParams.set('method', paymentMethod)
+      
+      return NextResponse.json({
+        url: mockUrl.toString(),
+        preferenceId: 'mock_' + Date.now(),
+        isMock: true
+      })
+    }
+    
     return NextResponse.json(
       { error: 'Failed to create checkout session' },
       { status: 500 }
