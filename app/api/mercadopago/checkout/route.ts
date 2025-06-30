@@ -71,12 +71,12 @@ export async function POST(req: NextRequest) {
         default_installments: installments || 1
       },
       back_urls: {
-        success: `${process.env.NEXT_PUBLIC_APP_URL}/payment/success`,
-        failure: `${process.env.NEXT_PUBLIC_APP_URL}/payment/failure`,
-        pending: `${process.env.NEXT_PUBLIC_APP_URL}/payment/pending`
+        success: `${process.env.NEXTAUTH_URL || 'https://seahorse-app-k5pag.ondigitalocean.app'}/payment/success`,
+        failure: `${process.env.NEXTAUTH_URL || 'https://seahorse-app-k5pag.ondigitalocean.app'}/payment/failure`,
+        pending: `${process.env.NEXTAUTH_URL || 'https://seahorse-app-k5pag.ondigitalocean.app'}/payment/pending`
       },
       auto_return: 'approved',
-      notification_url: `${process.env.NEXT_PUBLIC_APP_URL}/api/mercadopago/webhook`,
+      notification_url: `${process.env.NEXTAUTH_URL || 'https://seahorse-app-k5pag.ondigitalocean.app'}/api/mercadopago/webhook`,
       statement_descriptor: 'InnerAI',
       external_reference: JSON.stringify({
         userId: session.user.id,
