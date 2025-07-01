@@ -1,0 +1,80 @@
+🔍 Diagnóstico Completo do Sistema de Pagamentos
+===============================================
+Data: ter 01 jul 2025 09:52:09 -03
+URL: https://seahorse-app-k5pag.ondigitalocean.app
+
+=== 1. ENDPOINTS PÚBLICOS ===
+
+📍 Testando: Status de Configuração de Pagamento (Público)
+Endpoint: /api/public/payment-status
+Método: GET
+Status: 307
+⚠️ Redirecionamento detectado (autenticação necessária)
+
+📍 Testando: Health Check
+Endpoint: /api/health
+Método: GET
+Status: 307
+⚠️ Redirecionamento detectado (autenticação necessária)
+
+📍 Testando: Página Inicial
+Endpoint: /
+Método: GET
+Status: 200
+✅ Endpoint acessível
+
+📍 Testando: Página de Preços
+Endpoint: /pricing
+Método: GET
+Status: 307
+⚠️ Redirecionamento detectado (autenticação necessária)
+
+=== 2. ENDPOINTS DE API ===
+
+📍 Testando: Checkout MercadoPago
+Endpoint: /api/mercadopago/checkout
+Método: POST
+Status: 307
+⚠️ Redirecionamento detectado (autenticação necessária)
+
+📍 Testando: Debug de Configuração
+Endpoint: /api/debug/payment-config
+Método: GET
+Status: 307
+⚠️ Redirecionamento detectado (autenticação necessária)
+
+=== 3. TESTE DE CONECTIVIDADE MERCADOPAGO ===
+
+Testando API do MercadoPago diretamente...
+{"message":"neither a public key or caller id were provided","error":"unauthorized_scopes","status":401,"cause":[]}
+Status: 401
+
+=== 4. ANÁLISE DE PROBLEMAS COMUNS ===
+
+🔍 Checklist de verificação:
+
+[ ] Variáveis de ambiente configuradas no Digital Ocean:
+    - MERCADOPAGO_ACCESS_TOKEN (deve começar com APP_USR- para produção)
+    - NEXT_PUBLIC_MERCADOPAGO_PUBLIC_KEY
+    - MERCADOPAGO_WEBHOOK_SECRET
+
+[ ] Token é de produção (APP_USR-) e não teste (TEST-)
+[ ] Deploy foi feito após configurar variáveis
+[ ] Conta MercadoPago está ativa e verificada
+
+=== 5. PRÓXIMOS PASSOS ===
+
+1. Verifique os Runtime Logs no Digital Ocean:
+   https://cloud.digitalocean.com/apps
+
+2. Se os endpoints estão retornando 307 (redirecionamento):
+   - Pode haver um middleware muito restritivo
+   - Verifique o arquivo middleware.ts
+
+3. Para testar com autenticação:
+   - Faça login na aplicação
+   - Use o console do navegador (F12)
+   - Execute o comando JavaScript fornecido no arquivo VERIFICACAO_MERCADOPAGO.md
+
+📄 Relatório completo salvo em: payment-diagnostic-report-20250701_095209.txt
+

@@ -8,15 +8,29 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth')
   const isPublicPage = request.nextUrl.pathname === '/' || 
                       request.nextUrl.pathname === '/demo-chat' ||
-                      request.nextUrl.pathname === '/teste-gratis'
+                      request.nextUrl.pathname === '/teste-gratis' ||
+                      request.nextUrl.pathname === '/pricing' ||
+                      request.nextUrl.pathname.startsWith('/pricing/')
   const isOnboardingPage = request.nextUrl.pathname === '/onboarding'
   const isApiAuthRoute = request.nextUrl.pathname.startsWith('/api/auth')
   const isPublicApiRoute = request.nextUrl.pathname.startsWith('/api/test-ai-public') || 
-                          request.nextUrl.pathname.startsWith('/api/test-stream-public')
+                          request.nextUrl.pathname.startsWith('/api/test-stream-public') ||
+                          request.nextUrl.pathname.startsWith('/api/public/') ||
+                          request.nextUrl.pathname === '/api/health' ||
+                          request.nextUrl.pathname.startsWith('/api/mercadopago/webhook') ||
+                          request.nextUrl.pathname.startsWith('/api/stripe/webhook')
 
   // If it's an API auth route or public test route, let it through
   if (isApiAuthRoute || isPublicApiRoute) {
     return NextResponse.next()
+  }
+
+  // For API routes, return 401 instead of redirecting to login
+  if (request.nextUrl.pathname.startsWith('/api/') && !isAuth) {
+    return NextResponse.json(
+      { error: 'Unauthorized' },
+      { status: 401 }
+    )
   }
 
   // If user is authenticated and trying to access auth pages, redirect to dashboard
