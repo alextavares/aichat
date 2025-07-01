@@ -1,0 +1,41 @@
+{
+  "timestamp": "2025-07-01T00:37:19Z",
+  "app_url": "https://seahorse-app-k5pag.ondigitalocean.app",
+  "tests": {
+    "home_page": {
+      "status": "📍 Testando: Página Inicial
+URL: https://seahorse-app-k5pag.ondigitalocean.app
+Status HTTP: 200
+200",
+      "has_pricing_link": true
+    },
+    "pricing_page": {
+      "status": "📍 Testando: Página de Preços
+URL: https://seahorse-app-k5pag.ondigitalocean.app/pricing
+Status HTTP: 307
+307",
+      "has_starter_plan": false,
+      "has_pro_plan": false,
+      "has_ultimate_plan": false,
+      "has_subscribe_buttons": false
+    },
+    "login_page": {
+      "status": "📍 Testando: Página de Login
+URL: https://seahorse-app-k5pag.ondigitalocean.app/login
+Status HTTP: 307
+307",
+      "has_oauth_providers": false
+    },
+    "api_health": {
+      "status": "📍 Testando: API Health
+URL: https://seahorse-app-k5pag.ondigitalocean.app/api/health
+Status HTTP: 307
+307"
+    },
+    "ai_models": {
+      "mentions_gpt4": false,
+      "mentions_claude": false,
+      "mentions_gemini": false
+    }
+  }
+}
