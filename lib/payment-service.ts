@@ -282,17 +282,35 @@ export async function handleStripeWebhook(event: Stripe.Event) {
 
 export async function handleMercadoPagoWebhook(data: any) {
   // MercadoPago sends notification with data.id and data.topic
+  if (!data || !data.id) {
+    console.error('[MercadoPago] Invalid webhook data:', data)
+    return null
+  }
+
   if (data.topic === 'payment') {
-    const payment = await getMercadoPagoPayment().get({ id: data.id })
-    
-    if (payment.status === 'approved') {
-      return {
-        userId: payment.external_reference,
-        planId: payment.metadata?.plan_id,
-        paymentId: payment.id,
-        status: 'approved',
-        billingCycle: payment.metadata?.billing_cycle || 'monthly'
+    try {
+      const payment = await getMercadoPagoPayment().get({ id: data.id })
+      
+      if (payment.status === 'approved') {
+        // Parse external_reference if it's a JSON string
+        let parsedRef: any = {}
+        try {
+          parsedRef = JSON.parse(payment.external_reference || '{}')
+        } catch (e) {
+          console.error('[MercadoPago] Failed to parse external_reference:', payment.external_reference)
+        }
+
+        return {
+          userId: parsedRef.userId || payment.external_reference,
+          planId: parsedRef.planId || payment.metadata?.plan_id,
+          paymentId: payment.id,
+          status: 'approved',
+          billingCycle: parsedRef.billingCycle || payment.metadata?.billing_cycle || 'monthly'
+        }
       }
+    } catch (error) {
+      console.error('[MercadoPago] Error fetching payment:', error)
+      return null
     }
   }
   

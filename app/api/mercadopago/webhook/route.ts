@@ -89,7 +89,8 @@ export async function POST(request: NextRequest) {
       })
       
       // Create payment record
-      const amount = result.planId === 'pro' ? 47 : 197
+      // Using test values of R$ 1,00
+      const amount = 1
       await prisma.payment.create({
         data: {
           userId: result.userId,
