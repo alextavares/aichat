@@ -1,6 +1,10 @@
 "use client"
 
 import { useRouter, useSearchParams } from 'next/navigation'
+import { notFound } from 'next/navigation'
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Clock, CheckCircle, AlertCircle } from 'lucide-react'
@@ -17,9 +21,12 @@ function PaymentPendingContent() {
     const status = searchParams.get('status')
     const externalRef = searchParams.get('external_reference')
     
+    console.log('Payment pending page - URL params:', { paymentId, status, externalRef })
+    
     if (paymentId && externalRef) {
       try {
         const parsedRef = JSON.parse(externalRef)
+        console.log('Parsed external_reference:', parsedRef)
         setPaymentInfo({
           paymentId,
           status,
@@ -29,6 +36,7 @@ function PaymentPendingContent() {
         })
       } catch (e) {
         console.error('Error parsing external_reference:', e)
+        console.error('Raw external_reference:', externalRef)
       }
     }
   }, [searchParams])
