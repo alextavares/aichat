@@ -17,7 +17,22 @@ function verifyMercadoPagoSignature(
   
   if (!ts || !v1) return false
   
-  const manifest = `id:${JSON.parse(body).data.id};request-id:${headers().get('x-request-id')};ts:${ts};`
+  // Parse body to extract ID from different formats
+  const parsedBody = JSON.parse(body)
+  let id = parsedBody.id || parsedBody.data?.id
+  
+  // Extract ID from resource URL if present
+  if (!id && parsedBody.resource) {
+    const match = parsedBody.resource.match(/\/(\d+)$/)
+    id = match ? match[1] : null
+  }
+  
+  if (!id) {
+    console.error('[MercadoPago Webhook] Unable to extract ID for signature verification')
+    return false
+  }
+  
+  const manifest = `id:${id};request-id:${headers().get('x-request-id')};ts:${ts};`
   const hmac = crypto.createHmac('sha256', secret)
   hmac.update(manifest)
   const calculatedSignature = hmac.digest('hex')
