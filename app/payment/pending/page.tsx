@@ -4,9 +4,9 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Clock, CheckCircle, AlertCircle } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 
-export default function PaymentPendingPage() {
+function PaymentPendingContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [paymentInfo, setPaymentInfo] = useState<any>(null)
@@ -124,5 +124,21 @@ export default function PaymentPendingPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function PaymentPendingPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex items-center justify-center p-8">
+            <Clock className="h-8 w-8 animate-spin" />
+          </CardContent>
+        </Card>
+      </div>
+    }>
+      <PaymentPendingContent />
+    </Suspense>
   )
 }
