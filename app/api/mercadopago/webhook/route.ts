@@ -65,8 +65,18 @@ export async function POST(request: NextRequest) {
     
     // MercadoPago IPN format: { id: "...", topic: "payment" }
     // MercadoPago Webhooks format: { data: { id: "..." }, type: "payment" }
+    // MercadoPago Notification format: { resource: "...", topic: "payment" }
+    
+    // Extract ID from resource URL if present
+    let resourceId = parsedBody.id || parsedBody.data?.id
+    if (!resourceId && parsedBody.resource) {
+      // Resource format: https://api.mercadopago.com/v1/payments/123456
+      const match = parsedBody.resource.match(/\/(\d+)$/)
+      resourceId = match ? match[1] : null
+    }
+    
     const webhookData = {
-      id: parsedBody.id || parsedBody.data?.id || parsedBody.resource,
+      id: resourceId,
       topic: parsedBody.topic || parsedBody.type
     }
     
