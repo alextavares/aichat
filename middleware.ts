@@ -18,7 +18,8 @@ export async function middleware(request: NextRequest) {
                           request.nextUrl.pathname.startsWith('/api/public/') ||
                           request.nextUrl.pathname === '/api/health' ||
                           request.nextUrl.pathname.startsWith('/api/mercadopago/webhook') ||
-                          request.nextUrl.pathname.startsWith('/api/stripe/webhook')
+                          request.nextUrl.pathname.startsWith('/api/stripe/webhook') ||
+                          request.nextUrl.pathname === '/api/test-webhook'
 
   // If it's an API auth route or public test route, let it through
   if (isApiAuthRoute || isPublicApiRoute) {
