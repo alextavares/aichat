@@ -10,7 +10,8 @@ export async function middleware(request: NextRequest) {
                       request.nextUrl.pathname === '/demo-chat' ||
                       request.nextUrl.pathname === '/teste-gratis' ||
                       request.nextUrl.pathname === '/pricing' ||
-                      request.nextUrl.pathname.startsWith('/pricing/')
+                      request.nextUrl.pathname.startsWith('/pricing/') ||
+                      request.nextUrl.pathname.startsWith('/payment/')
   const isOnboardingPage = request.nextUrl.pathname === '/onboarding'
   const isApiAuthRoute = request.nextUrl.pathname.startsWith('/api/auth')
   const isPublicApiRoute = request.nextUrl.pathname.startsWith('/api/test-ai-public') || 
