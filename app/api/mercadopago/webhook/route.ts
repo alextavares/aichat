@@ -7,35 +7,64 @@ import crypto from 'crypto'
 function verifyMercadoPagoSignature(
   body: string,
   signature: string | null,
+  xRequestId: string | null,
   secret: string
 ): boolean {
-  if (!signature || !secret) return false
+  if (!signature || !secret) {
+    console.log('[MercadoPago Webhook] Missing signature or secret')
+    return false
+  }
   
+  // Split signature header: "ts=1704908010,v1=618c85345248dd820d5fd456117c2ab2ef8eda45a0282ff693eac24131a5e839"
   const parts = signature.split(',')
   const ts = parts.find(p => p.startsWith('ts='))?.split('=')[1]
   const v1 = parts.find(p => p.startsWith('v1='))?.split('=')[1]
   
-  if (!ts || !v1) return false
-  
-  // Parse body to extract ID from different formats
-  const parsedBody = JSON.parse(body)
-  let id = parsedBody.id || parsedBody.data?.id
-  
-  // Extract ID from resource URL if present
-  if (!id && parsedBody.resource) {
-    const match = parsedBody.resource.match(/\/(\d+)$/)
-    id = match ? match[1] : null
-  }
-  
-  if (!id) {
-    console.error('[MercadoPago Webhook] Unable to extract ID for signature verification')
+  if (!ts || !v1) {
+    console.log('[MercadoPago Webhook] Invalid signature format')
     return false
   }
   
-  const manifest = `id:${id};request-id:${headers().get('x-request-id')};ts:${ts};`
+  // Parse body to extract ID - the ID is case sensitive and must be lowercase if alphanumeric
+  const parsedBody = JSON.parse(body)
+  let dataId = parsedBody.id || parsedBody.data?.id
+  
+  // Extract ID from resource URL if present
+  if (!dataId && parsedBody.resource) {
+    const match = parsedBody.resource.match(/\/(\d+)$/)
+    dataId = match ? match[1] : null
+  }
+  
+  if (!dataId) {
+    console.log('[MercadoPago Webhook] Unable to extract data.id for signature verification')
+    return false
+  }
+  
+  // Convert alphanumeric IDs to lowercase as per MercadoPago documentation
+  const id = String(dataId).toLowerCase()
+  
+  // Build manifest according to MercadoPago specification
+  // Template: id:[data.id];request-id:[x-request-id];ts:[ts];
+  let manifest = `id:${id};`
+  if (xRequestId) {
+    manifest += `request-id:${xRequestId};`
+  }
+  manifest += `ts:${ts};`
+  
+  console.log('[MercadoPago Webhook] Signature verification details:', {
+    extractedId: id,
+    xRequestId,
+    ts,
+    manifest,
+    expectedHash: v1
+  })
+  
+  // Generate HMAC-SHA256 hash
   const hmac = crypto.createHmac('sha256', secret)
   hmac.update(manifest)
   const calculatedSignature = hmac.digest('hex')
+  
+  console.log('[MercadoPago Webhook] Calculated signature:', calculatedSignature)
   
   return calculatedSignature === v1
 }
@@ -44,6 +73,7 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.text()
     const signature = (await headers()).get('x-signature')
+    const xRequestId = (await headers()).get('x-request-id')
     
     // Parse body to check structure
     let parsedBody: any
@@ -61,23 +91,28 @@ export async function POST(request: NextRequest) {
       topic: parsedBody.topic,
       type: parsedBody.type,
       action: parsedBody.action,
-      keys: Object.keys(parsedBody)
+      keys: Object.keys(parsedBody),
+      hasSignature: !!signature,
+      hasRequestId: !!xRequestId
     })
     
-    // Verify signature in production
-    // TEMPORARIAMENTE DESABILITADO: Verificação de assinatura falhando
-    // TODO: Investigar por que a assinatura está sempre inválida
-    if (false && process.env.NODE_ENV === 'production' && process.env.MERCADOPAGO_WEBHOOK_SECRET) {
+    // Verify signature in production with proper implementation
+    if (process.env.NODE_ENV === 'production' && process.env.MERCADOPAGO_WEBHOOK_SECRET) {
       const isValid = verifyMercadoPagoSignature(
         body,
         signature,
+        xRequestId,
         process.env.MERCADOPAGO_WEBHOOK_SECRET
       )
       
       if (!isValid) {
-        console.error('[MercadoPago Webhook] Invalid signature')
+        console.error('[MercadoPago Webhook] Invalid signature - rejecting webhook')
         return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
       }
+      
+      console.log('[MercadoPago Webhook] Signature verification passed')
+    } else {
+      console.log('[MercadoPago Webhook] Signature verification skipped (development mode or missing secret)')
     }
     
     // MercadoPago IPN format: { id: "...", topic: "payment" }
