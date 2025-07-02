@@ -30,13 +30,24 @@ export async function POST(request: NextRequest) {
     const body = await request.text()
     const signature = (await headers()).get('x-signature')
     
-    // Log webhook calls in development
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('[MercadoPago Webhook] Received:', { 
-        body: JSON.parse(body), 
-        signature 
-      })
+    // Parse body to check structure
+    let parsedBody: any
+    try {
+      parsedBody = JSON.parse(body)
+    } catch (e) {
+      console.error('[MercadoPago Webhook] Invalid JSON body:', body)
+      return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
+    
+    // Log webhook structure
+    console.log('[MercadoPago Webhook] Received structure:', {
+      hasId: !!parsedBody.id,
+      hasDataId: !!parsedBody.data?.id,
+      topic: parsedBody.topic,
+      type: parsedBody.type,
+      action: parsedBody.action,
+      keys: Object.keys(parsedBody)
+    })
     
     // Verify signature in production
     if (process.env.NODE_ENV === 'production' && process.env.MERCADOPAGO_WEBHOOK_SECRET) {
@@ -52,8 +63,14 @@ export async function POST(request: NextRequest) {
       }
     }
     
-    const data = JSON.parse(body)
-    const result = await handleMercadoPagoWebhook(data)
+    // MercadoPago IPN format: { id: "...", topic: "payment" }
+    // MercadoPago Webhooks format: { data: { id: "..." }, type: "payment" }
+    const webhookData = {
+      id: parsedBody.id || parsedBody.data?.id || parsedBody.resource,
+      topic: parsedBody.topic || parsedBody.type
+    }
+    
+    const result = await handleMercadoPagoWebhook(webhookData)
     
     console.log('[MercadoPago Webhook] Processing result:', result)
     
