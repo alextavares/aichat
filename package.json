@@ -64,7 +64,6 @@
     "openai": "^4.67.3",
     "pdf-parse": "^1.1.1",
     "postcss": "^8.4.49",
-    "puppeteer": "^24.10.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hook-form": "^7.58.1",
@@ -90,6 +89,7 @@
     "jest-environment-jsdom": "^30.0.2",
     "node-mocks-http": "^1.17.2",
     "prisma": "^5.19.1",
+    "puppeteer": "^24.11.2",
     "ts-jest": "^29.4.0",
     "ts-node": "^10.9.2",
     "typescript": "5.8.3"

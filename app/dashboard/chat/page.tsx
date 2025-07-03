@@ -77,46 +77,47 @@ interface FileAttachment {
 
 // Categorias de modelos para melhor organização
 const MODEL_CATEGORIES = {
-  OPENAI: {
-    name: 'OpenAI',
+  ADVANCED: {
+    name: 'Modelos Avançados',
     icon: Sparkles,
+    models: [
+      { id: 'gpt-4.1', name: 'GPT-4.1', tier: 'PRO' },
+      { id: 'gpt-4o', name: 'GPT-4o', tier: 'PRO' },
+      { id: 'claude-4-sonnet', name: 'Claude 4 Sonnet', tier: 'PRO' },
+      { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', tier: 'PRO' },
+      { id: 'llama-4-maverick', name: 'Llama 4 Maverick', tier: 'PRO' },
+      { id: 'perplexity-sonar', name: 'Perplexity Sonar', tier: 'PRO' },
+      { id: 'sabia-3.1', name: 'Sabiá 3.1', tier: 'FREE' },
+      { id: 'mistral-large-2', name: 'Mistral Large 2', tier: 'PRO' },
+      { id: 'grok-3', name: 'Grok 3', tier: 'PRO' },
+      { id: 'amazon-nova-premier', name: 'Amazon Nova Premier', tier: 'PRO' },
+    ]
+  },
+  REASONING: {
+    name: 'Raciocínio Profundo',
+    icon: Brain,
+    models: [
+      { id: 'o3', name: 'o3', tier: 'PRO' },
+      { id: 'o4-mini', name: 'o4 Mini', tier: 'PRO' },
+      { id: 'qwen-qwq', name: 'Qwen QwQ', tier: 'FREE' },
+      { id: 'claude-4-sonnet-thinking', name: 'Claude 4 Sonnet Thinking', tier: 'PRO' },
+      { id: 'deepseek-r1-small', name: 'Deepseek R1 Small', tier: 'FREE' },
+      { id: 'deepseek-r1', name: 'Deepseek R1', tier: 'PRO' },
+      { id: 'grok-3-mini', name: 'Grok 3 Mini', tier: 'PRO' },
+    ]
+  },
+  CLASSIC: {
+    name: 'Modelos Clássicos',
+    icon: Zap,
     models: [
       { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', tier: 'FREE' },
       { id: 'gpt-4', name: 'GPT-4', tier: 'PRO' },
-      { id: 'gpt-4-turbo', name: 'GPT-4 Turbo', tier: 'PRO' },
-      { id: 'gpt-4-vision-preview', name: 'GPT-4 Vision', tier: 'PRO' },
-    ]
-  },
-  ANTHROPIC: {
-    name: 'Claude',
-    icon: Brain,
-    models: [
-      { id: 'claude-3-haiku', name: 'Claude 3 Haiku', tier: 'FREE' },
       { id: 'claude-3-sonnet', name: 'Claude 3 Sonnet', tier: 'PRO' },
-      { id: 'claude-3-opus', name: 'Claude 3 Opus', tier: 'ENTERPRISE' },
-    ]
-  },
-  GOOGLE: {
-    name: 'Google',
-    icon: Sparkles,
-    models: [
+      { id: 'claude-3-haiku', name: 'Claude 3 Haiku', tier: 'FREE' },
       { id: 'gemini-pro', name: 'Gemini Pro', tier: 'PRO' },
-    ]
-  },
-  META: {
-    name: 'Llama',
-    icon: Brain,
-    models: [
-      { id: 'llama-2-13b', name: 'Llama 2 13B', tier: 'FREE' },
       { id: 'llama-2-70b', name: 'Llama 2 70B', tier: 'PRO' },
-    ]
-  },
-  MISTRAL: {
-    name: 'Mistral',
-    icon: Zap,
-    models: [
-      { id: 'mistral-7b', name: 'Mistral 7B', tier: 'FREE' },
       { id: 'mixtral-8x7b', name: 'Mixtral 8x7B', tier: 'PRO' },
+      { id: 'mistral-7b', name: 'Mistral 7B', tier: 'FREE' },
     ]
   },
   CODE: {
@@ -125,14 +126,7 @@ const MODEL_CATEGORIES = {
     models: [
       { id: 'phind-codellama-34b', name: 'Phind CodeLlama', tier: 'PRO' },
       { id: 'deepseek-coder', name: 'DeepSeek Coder', tier: 'PRO' },
-    ]
-  },
-  OPENSOURCE: {
-    name: 'Open Source',
-    icon: Brain,
-    models: [
-      { id: 'nous-hermes-2', name: 'Nous Hermes 2', tier: 'PRO' },
-      { id: 'openhermes-2.5', name: 'OpenHermes 2.5', tier: 'PRO' },
+      { id: 'qwen-2.5-coder', name: 'Qwen 2.5 Coder', tier: 'PRO' },
     ]
   }
 }
@@ -266,12 +260,13 @@ export default function ChatPage() {
     }
   }, [])
 
-  // Load template or conversation if specified in URL
+  // Load template, conversation, or prompt if specified in URL
   useEffect(() => {
     if (hasLoadedRef.current) return
     
     const templateId = searchParams.get('template')
     const conversationId = searchParams.get('conversation')
+    const promptParam = searchParams.get('prompt')
     
     if (templateId && templateId.length > 0) {
       hasLoadedRef.current = true
@@ -279,6 +274,13 @@ export default function ChatPage() {
     } else if (conversationId && conversationId.length > 0) {
       hasLoadedRef.current = true
       loadConversation(conversationId)
+    } else if (promptParam && promptParam.length > 0) {
+      hasLoadedRef.current = true
+      setInput(decodeURIComponent(promptParam))
+      // Focus the textarea after setting the prompt
+      setTimeout(() => {
+        textareaRef.current?.focus()
+      }, 100)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

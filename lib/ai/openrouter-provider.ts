@@ -18,13 +18,18 @@ export class OpenRouterProvider implements AIProvider {
     'gpt-3.5-turbo': 'openai/gpt-3.5-turbo',
     'gpt-4': 'openai/gpt-4',
     'gpt-4-turbo': 'openai/gpt-4-turbo-preview',
+    'gpt-4.1': 'openai/gpt-4-turbo-preview',
     'gpt-4o': 'openai/gpt-4o',
     'gpt-4o-mini': 'openai/gpt-4o-mini',
+    'o3': 'openai/o1-preview',
+    'o4-mini': 'openai/o1-mini',
     
     // Modelos Anthropic
     'claude-3-opus': 'anthropic/claude-3-opus',
     'claude-3-sonnet': 'anthropic/claude-3-sonnet-20240229',
     'claude-3.5-sonnet': 'anthropic/claude-3.5-sonnet',
+    'claude-4-sonnet': 'anthropic/claude-3.5-sonnet',
+    'claude-4-sonnet-thinking': 'anthropic/claude-3.5-sonnet',
     'claude-3-haiku': 'anthropic/claude-3-haiku-20240307',
     'claude-3.5-haiku': 'anthropic/claude-3.5-haiku',
     'claude-2.1': 'anthropic/claude-2.1',
@@ -33,8 +38,9 @@ export class OpenRouterProvider implements AIProvider {
     // Modelos Google
     'gemini-pro': 'google/gemini-pro',
     'gemini-pro-vision': 'google/gemini-pro-vision',
-    'gemini-2-flash': 'google/gemini-2.5-flash',
-    'gemini-2-pro': 'google/gemini-2.5-pro',
+    'gemini-2-flash': 'google/gemini-2.0-flash-exp',
+    'gemini-2-pro': 'google/gemini-2.0-pro-exp',
+    'gemini-2.5-pro': 'google/gemini-2.0-pro-exp',
     'gemini-2-flash-free': 'google/gemini-2.0-flash-exp:free',
     'palm-2': 'google/palm-2-chat-bison',
     
@@ -42,6 +48,7 @@ export class OpenRouterProvider implements AIProvider {
     'llama-2-70b': 'meta-llama/llama-2-70b-chat',
     'llama-2-13b': 'meta-llama/llama-2-13b-chat',
     'codellama-70b': 'meta-llama/codellama-70b-instruct',
+    'llama-4-maverick': 'meta-llama/llama-3.3-70b-instruct',
     
     // Modelos Mistral
     'mixtral-8x7b': 'mistralai/mixtral-8x7b-instruct',
@@ -72,7 +79,7 @@ export class OpenRouterProvider implements AIProvider {
     
     // Modelos Perplexity
     'perplexity-sonar-pro': 'perplexity/sonar-pro',
-    'perplexity-sonar': 'perplexity/sonar',
+    'perplexity-sonar': 'perplexity/sonar-pro',
     'perplexity-reasoning': 'perplexity/sonar-reasoning-pro',
     
     // Modelos Llama atualizados
@@ -86,12 +93,40 @@ export class OpenRouterProvider implements AIProvider {
     'qwen-2.5-coder': 'qwen/qwen-2.5-coder-32b-instruct',
     
     // Mistral atualizado
-    'mistral-large-2': 'mistralai/mistral-large-2411'
+    'mistral-large-2': 'mistralai/mistral-large-2411',
+    
+    // Modelos Sabiá (Maritaca AI)
+    'sabia-3.1': 'maritaca/sabia-3',
+    
+    // Amazon Nova
+    'amazon-nova-premier': 'amazon/nova-pro-v1'
   }
 
   // Informações sobre os modelos para exibição
   getModelInfo() {
     return {
+      // Modelos OpenAI
+      'gpt-4.1': {
+        name: 'GPT-4.1',
+        description: 'Modelo mais recente e poderoso da OpenAI',
+        category: 'advanced',
+        contextWindow: 128000,
+        strengths: ['Raciocínio avançado', 'Multimodal', 'Velocidade']
+      },
+      'o3': {
+        name: 'o3',
+        description: 'Modelo de raciocínio profundo',
+        category: 'reasoning',
+        contextWindow: 128000,
+        strengths: ['Raciocínio step-by-step', 'Resolução de problemas', 'Matemática']
+      },
+      'o4-mini': {
+        name: 'o4 Mini',
+        description: 'Modelo de raciocínio otimizado',
+        category: 'reasoning',
+        contextWindow: 128000,
+        strengths: ['Raciocínio rápido', 'Eficiência', 'Precisão']
+      },
       'claude-3-opus': {
         name: 'Claude 3 Opus',
         description: 'Modelo mais poderoso da Anthropic',
@@ -199,6 +234,20 @@ export class OpenRouterProvider implements AIProvider {
         contextWindow: 200000,
         strengths: ['Velocidade', 'Precisão', 'Eficiência']
       },
+      'claude-4-sonnet': {
+        name: 'Claude 4 Sonnet',
+        description: 'Modelo mais recente da Anthropic',
+        category: 'advanced',
+        contextWindow: 200000,
+        strengths: ['Raciocínio avançado', 'Análise profunda', 'Código']
+      },
+      'claude-4-sonnet-thinking': {
+        name: 'Claude 4 Sonnet Thinking',
+        description: 'Claude com modo de raciocínio avançado',
+        category: 'reasoning',
+        contextWindow: 200000,
+        strengths: ['Raciocínio profundo', 'Análise detalhada', 'Explicações']
+      },
       // Gemini 2
       'gemini-2-flash': {
         name: 'Gemini 2.5 Flash',
@@ -210,6 +259,13 @@ export class OpenRouterProvider implements AIProvider {
       'gemini-2-pro': {
         name: 'Gemini 2.5 Pro',
         description: 'Modelo avançado do Google',
+        category: 'advanced',
+        contextWindow: 1048576,
+        strengths: ['Contexto gigante', 'Análise profunda', 'Multimodal']
+      },
+      'gemini-2.5-pro': {
+        name: 'Gemini 2.5 Pro',
+        description: 'Modelo avançado do Google com contexto massivo',
         category: 'advanced',
         contextWindow: 1048576,
         strengths: ['Contexto gigante', 'Análise profunda', 'Multimodal']
@@ -288,6 +344,49 @@ export class OpenRouterProvider implements AIProvider {
         category: 'code',
         contextWindow: 32768,
         strengths: ['Código', 'Debug', 'Arquitetura']
+      },
+      // Novos modelos
+      'llama-4-maverick': {
+        name: 'Llama 4 Maverick',
+        description: 'Modelo open source mais poderoso da Meta',
+        category: 'advanced',
+        contextWindow: 131072,
+        strengths: ['Open source', 'Versatilidade', 'Performance']
+      },
+      'perplexity-sonar': {
+        name: 'Perplexity Sonar',
+        description: 'Modelo com pesquisa web integrada',
+        category: 'advanced',
+        contextWindow: 200000,
+        strengths: ['Pesquisa web', 'Atualidade', 'Fontes']
+      },
+      'sabia-3.1': {
+        name: 'Sabiá 3.1',
+        description: 'Modelo brasileiro otimizado para português',
+        category: 'advanced',
+        contextWindow: 32768,
+        strengths: ['Português nativo', 'Cultura brasileira', 'Regionalização']
+      },
+      'amazon-nova-premier': {
+        name: 'Amazon Nova Premier',
+        description: 'Modelo mais poderoso da Amazon',
+        category: 'advanced',
+        contextWindow: 300000,
+        strengths: ['Capacidade máxima', 'Integração AWS', 'Performance']
+      },
+      'qwen-qwq': {
+        name: 'Qwen QwQ',
+        description: 'Modelo de raciocínio step-by-step',
+        category: 'reasoning',
+        contextWindow: 131072,
+        strengths: ['Raciocínio detalhado', 'Matemática', 'Lógica']
+      },
+      'deepseek-r1-small': {
+        name: 'Deepseek R1 Small',
+        description: 'Modelo de raciocínio eficiente',
+        category: 'reasoning',
+        contextWindow: 128000,
+        strengths: ['Raciocínio rápido', 'Eficiência', 'Custo-benefício']
       }
     }
   }
@@ -464,26 +563,37 @@ export class OpenRouterProvider implements AIProvider {
       'cinematika-7b': { input: 0.00006, output: 0.00006 },
       'neural-chat-7b': { input: 0.00006, output: 0.00006 },
       // Novos modelos
+      'gpt-4.1': { input: 0.005, output: 0.015 },
       'gpt-4o': { input: 0.0025, output: 0.01 },
       'gpt-4o-mini': { input: 0.00015, output: 0.0006 },
+      'o3': { input: 0.015, output: 0.06 },
+      'o4-mini': { input: 0.003, output: 0.012 },
       'claude-3.5-sonnet': { input: 0.003, output: 0.015 },
+      'claude-4-sonnet': { input: 0.003, output: 0.015 },
+      'claude-4-sonnet-thinking': { input: 0.003, output: 0.015 },
       'claude-3.5-haiku': { input: 0.0008, output: 0.004 },
       'gemini-2-flash': { input: 0.0003, output: 0.0025 },
       'gemini-2-pro': { input: 0.00125, output: 0.01 },
+      'gemini-2.5-pro': { input: 0.00125, output: 0.01 },
       'gemini-2-flash-free': { input: 0.0, output: 0.0 },
       'grok-3': { input: 0.003, output: 0.015 },
       'grok-3-mini': { input: 0.0003, output: 0.0005 },
       'grok-2-vision': { input: 0.002, output: 0.01 },
       'perplexity-sonar-pro': { input: 0.003, output: 0.015 },
-      'perplexity-sonar': { input: 0.001, output: 0.001 },
+      'perplexity-sonar': { input: 0.003, output: 0.015 },
       'perplexity-reasoning': { input: 0.002, output: 0.008 },
       'llama-3.3-70b': { input: 0.000039, output: 0.00012 },
       'llama-3.2-90b-vision': { input: 0.0012, output: 0.0012 },
       'llama-3.1-405b': { input: 0.0008, output: 0.0008 },
+      'llama-4-maverick': { input: 0.0008, output: 0.0008 },
+      'qwen-qwq': { input: 0.000075, output: 0.00015 },
       'qwq-32b': { input: 0.000075, output: 0.00015 },
       'qwen-2.5-72b': { input: 0.00012, output: 0.00039 },
       'qwen-2.5-coder': { input: 0.00006, output: 0.00015 },
-      'mistral-large-2': { input: 0.002, output: 0.006 }
+      'mistral-large-2': { input: 0.002, output: 0.006 },
+      'sabia-3.1': { input: 0.002, output: 0.008 },
+      'amazon-nova-premier': { input: 0.008, output: 0.032 },
+      'deepseek-r1-small': { input: 0.00014, output: 0.00055 }
     }
 
     const modelCosts = costs[model] || { input: 0.001, output: 0.001 }
@@ -498,6 +608,14 @@ export class OpenRouterProvider implements AIProvider {
   getAvailableModels(): AIModel[] {
     return [
       // Modelos OpenAI
+      {
+        id: 'gpt-4.1',
+        name: 'GPT-4.1',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000005,
+        costPerOutputToken: 0.000015
+      },
       {
         id: 'gpt-4o',
         name: 'GPT-4o',
@@ -534,6 +652,14 @@ export class OpenRouterProvider implements AIProvider {
       {
         id: 'claude-3.5-sonnet',
         name: 'Claude 3.5 Sonnet',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000003,
+        costPerOutputToken: 0.000015
+      },
+      {
+        id: 'claude-4-sonnet',
+        name: 'Claude 4 Sonnet',
         provider: 'openrouter',
         maxTokens: 4096,
         costPerInputToken: 0.000003,
@@ -759,6 +885,14 @@ export class OpenRouterProvider implements AIProvider {
         costPerOutputToken: 0.00000012
       },
       {
+        id: 'llama-4-maverick',
+        name: 'Llama 4 Maverick',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.0000008,
+        costPerOutputToken: 0.0000008
+      },
+      {
         id: 'llama-3.1-405b',
         name: 'Llama 3.1 405B',
         provider: 'openrouter',
@@ -799,6 +933,79 @@ export class OpenRouterProvider implements AIProvider {
         maxTokens: 4096,
         costPerInputToken: 0.00000006,
         costPerOutputToken: 0.00000015
+      },
+      // Novos modelos
+      {
+        id: 'o3',
+        name: 'o3',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000015,
+        costPerOutputToken: 0.00006
+      },
+      {
+        id: 'o4-mini',
+        name: 'o4 Mini',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000003,
+        costPerOutputToken: 0.000012
+      },
+      {
+        id: 'gemini-2.5-pro',
+        name: 'Gemini 2.5 Pro',
+        provider: 'openrouter',
+        maxTokens: 8192,
+        costPerInputToken: 0.00000125,
+        costPerOutputToken: 0.00001
+      },
+      {
+        id: 'perplexity-sonar',
+        name: 'Perplexity Sonar',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000003,
+        costPerOutputToken: 0.000015
+      },
+      {
+        id: 'sabia-3.1',
+        name: 'Sabiá 3.1',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000002,
+        costPerOutputToken: 0.000008
+      },
+      {
+        id: 'amazon-nova-premier',
+        name: 'Amazon Nova Premier',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000008,
+        costPerOutputToken: 0.000032
+      },
+      {
+        id: 'qwen-qwq',
+        name: 'Qwen QwQ',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000000075,
+        costPerOutputToken: 0.00000015
+      },
+      {
+        id: 'claude-4-sonnet-thinking',
+        name: 'Claude 4 Sonnet Thinking',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.000003,
+        costPerOutputToken: 0.000015
+      },
+      {
+        id: 'deepseek-r1-small',
+        name: 'Deepseek R1 Small',
+        provider: 'openrouter',
+        maxTokens: 4096,
+        costPerInputToken: 0.00000014,
+        costPerOutputToken: 0.00000055
       }
     ]
   }

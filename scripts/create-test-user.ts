@@ -26,7 +26,7 @@ async function createTestUser() {
         email,
         name: 'Test User',
         passwordHash: hashedPassword,
-        planType: 'FREE',
+        planType: 'PRO',
         profession: 'Developer',
         organization: 'Test Organization'
       }

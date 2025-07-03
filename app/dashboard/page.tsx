@@ -17,6 +17,7 @@ import { prisma } from '@/lib/prisma'
 import { getUserUsageStats } from '@/lib/usage-limits'
 import { FeatureGrid } from '@/components/dashboard/feature-grid'
 import { ModelSelector } from '@/components/dashboard/model-selector'
+import { ProfessionalTemplates } from '@/components/dashboard/professional-templates'
 
 async function getDashboardData(userId: string) {
   const [totalConversations, subscription, usageStats] = await Promise.all([
@@ -71,10 +72,10 @@ export default async function DashboardPage() {
       <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
         <div>
           <h1 className="text-3xl font-semibold">
-            Olá, <span className="font-normal">o que posso fazer por você hoje?</span>
+            Olá {user?.name || 'Alexandre'}, <span className="font-normal">Como posso ajudar hoje?</span>
           </h1>
           <p className="text-muted-foreground mt-1">
-            Escolha uma ferramenta abaixo ou inicie uma nova conversa
+            Escolha um template abaixo ou inicie uma nova conversa
           </p>
         </div>
         
@@ -150,6 +151,9 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Professional Templates Section */}
+      <ProfessionalTemplates />
 
       {/* Main Feature Grid - InnerAI Style */}
       <div>
