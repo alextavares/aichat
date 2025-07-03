@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
         }
       })
 
-      const dailyMessageLimit = 10 // Para plano FREE
+      const dailyMessageLimit = 10000 // Increased for testing
       if (todayUsage && todayUsage.messagesCount >= dailyMessageLimit) {
         return NextResponse.json(
           { message: "Limite diário de mensagens atingido. Faça upgrade para o plano Pro." },
