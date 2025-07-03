@@ -212,7 +212,12 @@ export async function createCheckoutSession(params: CreateCheckoutParams) {
           pending: params.successUrl,
         },
         auto_return: 'approved',
-        external_reference: params.userId,
+        external_reference: JSON.stringify({
+          userId: params.userId,
+          planId: params.planId,
+          billingCycle: params.billingCycle || 'monthly',
+          timestamp: new Date().toISOString()
+        }),
         metadata: {
           user_id: params.userId,
           plan_id: params.planId,
