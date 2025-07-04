@@ -16,7 +16,7 @@
 3. Adicione esta variável:
 
 ```
-OPENROUTER_API_KEY=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
+OPENROUTER_API_KEY=sk-or-v1-SUA_CHAVE_AQUI
 ```
 
 4. Clique em **Save** (isso fará redeploy automático)
