@@ -18,6 +18,7 @@ export async function middleware(request: NextRequest) {
                           request.nextUrl.pathname.startsWith('/api/test-stream-public') ||
                           request.nextUrl.pathname.startsWith('/api/public/') ||
                           request.nextUrl.pathname === '/api/health' ||
+                          request.nextUrl.pathname === '/api/public-test-chat' ||
                           request.nextUrl.pathname.startsWith('/api/mercadopago/webhook') ||
                           request.nextUrl.pathname.startsWith('/api/stripe/webhook') ||
                           request.nextUrl.pathname === '/api/test-webhook' ||
