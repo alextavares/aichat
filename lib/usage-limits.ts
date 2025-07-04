@@ -16,7 +16,7 @@ export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
   FREE: {
     dailyMessages: null, // unlimited for fast models
     monthlyTokens: null, // unlimited for fast models
-    monthlyAdvancedMessages: 50000, // increased for testing
+    monthlyAdvancedMessages: 500000, // increased for testing
     modelsAllowed: {
       fast: [
         'gpt-4o-mini',
@@ -40,7 +40,7 @@ export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
         'mistral-large-2'
       ]
     },
-    monthlyCredits: 50000, // increased for testing
+    monthlyCredits: 500000, // increased for testing
   },
   PRO: {
     dailyMessages: null, // unlimited
@@ -82,7 +82,7 @@ export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
         'qwen-2.5-72b'
       ]
     },
-    monthlyCredits: 100000, // increased for testing
+    monthlyCredits: 1000000, // increased for testing
   },
   ENTERPRISE: {
     dailyMessages: null, // unlimited
