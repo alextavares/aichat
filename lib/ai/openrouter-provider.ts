@@ -5,8 +5,8 @@ export class OpenRouterProvider implements AIProvider {
   private apiKey: string
   private baseURL = 'https://openrouter.ai/api/v1'
 
-  constructor(apiKey: string = process.env.OPENROUTER_API_KEY || '') {
-    this.apiKey = apiKey
+  constructor(apiKey?: string) {
+    this.apiKey = apiKey || process.env.OPENROUTER_API_KEY || ''
     if (!this.apiKey) {
       console.warn('OpenRouter API key not configured')
     }
@@ -602,6 +602,10 @@ export class OpenRouterProvider implements AIProvider {
   }
 
   isConfigured(): boolean {
+    // Verificar novamente a variável de ambiente se não tiver chave
+    if (!this.apiKey && process.env.OPENROUTER_API_KEY) {
+      this.apiKey = process.env.OPENROUTER_API_KEY
+    }
     return !!this.apiKey
   }
 
