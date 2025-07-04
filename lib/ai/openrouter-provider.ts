@@ -4,12 +4,47 @@ export class OpenRouterProvider implements AIProvider {
   public readonly id = 'openrouter'
   private apiKey: string
   private baseURL = 'https://openrouter.ai/api/v1'
+  private maxRetries = 3
+  private retryDelay = 1000 // 1 segundo
 
   constructor(apiKey?: string) {
     this.apiKey = apiKey || process.env.OPENROUTER_API_KEY || ''
     if (!this.apiKey) {
-      console.warn('OpenRouter API key not configured')
+      console.warn('[OpenRouter] API key not configured')
     }
+  }
+
+  // Método para fazer retry com exponential backoff
+  private async retryRequest<T>(
+    operation: () => Promise<T>,
+    retries = this.maxRetries
+  ): Promise<T> {
+    let lastError: Error | null = null
+    
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        console.log(`[OpenRouter] Attempt ${attempt}/${retries}`)
+        return await operation()
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown error')
+        console.warn(`[OpenRouter] Attempt ${attempt} failed:`, lastError.message)
+        
+        // Não fazer retry em erros de autenticação ou quota
+        if (lastError.message.includes('401') || 
+            lastError.message.includes('quota') || 
+            lastError.message.includes('billing')) {
+          throw lastError
+        }
+        
+        if (attempt < retries) {
+          const delay = this.retryDelay * Math.pow(2, attempt - 1) // Exponential backoff
+          console.log(`[OpenRouter] Waiting ${delay}ms before retry...`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      }
+    }
+    
+    throw lastError || new Error('All retries failed')
   }
 
   // Mapa de modelos com nomes amigáveis para o usuário
@@ -396,58 +431,90 @@ export class OpenRouterProvider implements AIProvider {
   }
 
   async generateResponse(messages: AIMessage[], model: string): Promise<AIResponse> {
-    const openRouterModel = this.getOpenRouterModel(model)
-    
-    try {
-      const response = await fetch(`${this.baseURL}/chat/completions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-          'X-Title': 'InnerAI Clone'
-        },
-        body: JSON.stringify({
-          model: openRouterModel,
-          messages: messages.map(msg => ({
-            role: msg.role === 'user' ? 'user' : 'assistant',
-            content: msg.content
-          })),
-          temperature: 0.7,
-          max_tokens: 4096,
-        })
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.error?.message || 'OpenRouter API error')
-      }
-
-      const data = await response.json()
-      
-      // Calcular custos aproximados (OpenRouter fornece isso na resposta)
-      const usage = data.usage || {}
-      const promptTokens = usage.prompt_tokens || 0
-      const completionTokens = usage.completion_tokens || 0
-      const totalTokens = promptTokens + completionTokens
-      
-      // OpenRouter retorna o custo real na resposta
-      const cost = data.usage?.total_cost || this.estimateCost(model, promptTokens, completionTokens)
-
-      return {
-        content: data.choices[0].message.content,
-        tokensUsed: {
-          input: promptTokens,
-          output: completionTokens,
-          total: totalTokens
-        },
-        cost,
-        model: openRouterModel
-      }
-    } catch (error) {
-      console.error('OpenRouter API error:', error)
-      throw error
+    if (!this.apiKey) {
+      throw new Error('[OpenRouter] API key not configured')
     }
+
+    const openRouterModel = this.getOpenRouterModel(model)
+    console.log(`[OpenRouter] Generating response with model: ${openRouterModel}`)
+    
+    return this.retryRequest(async () => {
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 30000) // 30s timeout
+      
+      try {
+        const response = await fetch(`${this.baseURL}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+            'X-Title': 'InnerAI Clone'
+          },
+          body: JSON.stringify({
+            model: openRouterModel,
+            messages: messages.map(msg => ({
+              role: msg.role === 'user' ? 'user' : 'assistant',
+              content: msg.content
+            })),
+            temperature: 0.7,
+            max_tokens: 4096,
+          }),
+          signal: controller.signal
+        })
+
+        clearTimeout(timeoutId)
+
+        if (!response.ok) {
+          const errorText = await response.text()
+          let errorMessage = `HTTP ${response.status}: ${response.statusText}`
+          
+          try {
+            const errorData = JSON.parse(errorText)
+            errorMessage = errorData.error?.message || errorMessage
+          } catch {
+            // Se não conseguir parsear, usar a mensagem de status HTTP
+          }
+          
+          console.error(`[OpenRouter] API Error: ${errorMessage}`)
+          throw new Error(errorMessage)
+        }
+
+        const data = await response.json()
+        
+        if (!data.choices?.[0]?.message?.content) {
+          throw new Error('[OpenRouter] Invalid response format')
+        }
+        
+        // Calcular custos aproximados (OpenRouter fornece isso na resposta)
+        const usage = data.usage || {}
+        const promptTokens = usage.prompt_tokens || 0
+        const completionTokens = usage.completion_tokens || 0
+        const totalTokens = promptTokens + completionTokens
+        
+        // OpenRouter retorna o custo real na resposta
+        const cost = data.usage?.total_cost || this.estimateCost(model, promptTokens, completionTokens)
+
+        console.log(`[OpenRouter] Success: ${completionTokens} tokens, $${cost.toFixed(6)}`)
+
+        return {
+          content: data.choices[0].message.content,
+          tokensUsed: {
+            input: promptTokens,
+            output: completionTokens,
+            total: totalTokens
+          },
+          cost,
+          model: openRouterModel
+        }
+      } catch (error) {
+        clearTimeout(timeoutId)
+        if (error instanceof Error && error.name === 'AbortError') {
+          throw new Error('[OpenRouter] Request timeout after 30 seconds')
+        }
+        throw error
+      }
+    })
   }
 
   async *streamResponse(

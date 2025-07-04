@@ -76,7 +76,9 @@ export async function POST(request: NextRequest) {
       content: msg.content
     }))
 
+    console.log(`[Chat API] Requesting AI response for user ${user.id} with model ${model}`)
     const aiResponse = await aiService.generateResponse(aiMessages, model)
+    console.log(`[Chat API] AI response received: ${aiResponse.content.length} chars, ${aiResponse.tokensUsed.total} tokens`)
 
     // Criar ou atualizar conversa
     let conversation
@@ -169,7 +171,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error: any) {
-    console.error("Chat API error:", error)
+    console.error("[Chat API] Error:", error)
     
     // Tratamento específico de erros
     if (error.message?.includes('API key not configured')) {
@@ -185,13 +187,26 @@ export async function POST(request: NextRequest) {
         { status: 503 }
       )
     }
+
+    if (error.message?.includes('timeout')) {
+      return NextResponse.json(
+        { message: "Tempo limite excedido. Tente novamente." },
+        { status: 408 }
+      )
+    }
+
+    if (error.message?.includes('rate limit') || error.message?.includes('quota')) {
+      return NextResponse.json(
+        { message: "Limite de uso temporariamente excedido. Tente novamente em alguns minutos." },
+        { status: 429 }
+      )
+    }
     
     // Log detalhado para debug
-    console.error("Detalhes do erro:", {
+    console.error("[Chat API] Detailed error:", {
       message: error.message,
       stack: error.stack,
-      model: model,
-      userId: session?.user?.id
+      timestamp: new Date().toISOString()
     })
     
     return NextResponse.json(

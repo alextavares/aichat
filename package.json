@@ -19,6 +19,8 @@
     "test:integration": "jest tests/integration",
     "test:e2e": "playwright test",
     "test:all": "./run-tests.sh",
+    "diagnose": "node scripts/diagnose-chat-system.js",
+    "diagnose:production": "BASE_URL=https://seahorse-app-k5pag.ondigitalocean.app node scripts/diagnose-chat-system.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {

@@ -28,9 +28,31 @@ class AIService {
       stream?: boolean
     }
   ): Promise<AIResponse> {
-    // Determine provider based on model
-    const provider = this.getProviderForModel(model)
-    return provider.generateResponse(messages, model, options)
+    console.log(`[AIService] Generating response for model: ${model}`)
+    
+    try {
+      // Primeiro, tentar o provider específico para o modelo
+      const provider = this.getProviderForModel(model)
+      console.log(`[AIService] Using provider: ${provider.id}`)
+      return await provider.generateResponse(messages, model, options)
+      
+    } catch (error) {
+      console.warn(`[AIService] Primary provider failed:`, error)
+      
+      // Tentar fallback se disponível
+      try {
+        const fallbackProvider = this.getFallbackProvider(model)
+        if (fallbackProvider) {
+          console.log(`[AIService] Trying fallback provider: ${fallbackProvider.id}`)
+          return await fallbackProvider.generateResponse(messages, model, options)
+        }
+      } catch (fallbackError) {
+        console.error(`[AIService] Fallback provider also failed:`, fallbackError)
+      }
+      
+      // Se tudo falhou, lançar o erro original
+      throw error
+    }
   }
 
   async streamResponse(
@@ -181,6 +203,29 @@ class AIService {
     }
     
     throw new Error(`No configured provider found for model: ${model}`)
+  }
+
+  private getFallbackProvider(model: string): AIProvider | null {
+    // Tentar outros providers disponíveis como fallback
+    const allProviders = Array.from(this.providers.values())
+    
+    for (const provider of allProviders) {
+      try {
+        if (provider.isConfigured()) {
+          // Verificar se o provider tem o modelo ou pode usar um similar
+          const availableModels = provider.getAvailableModels()
+          const hasModel = availableModels.some(m => m.id === model)
+          
+          if (hasModel) {
+            return provider
+          }
+        }
+      } catch (error) {
+        console.warn(`[AIService] Error checking fallback provider ${provider.id}:`, error)
+      }
+    }
+    
+    return null
   }
 
 }
