@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get active subscription
-    const subscription = await prisma.subscription.findFirst({
+    let subscription = await prisma.subscription.findFirst({
       where: {
         userId: session.user.id,
         status: 'ACTIVE',

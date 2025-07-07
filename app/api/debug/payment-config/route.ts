@@ -33,7 +33,11 @@ export async function GET() {
     }
 
     // Testar conexão com MercadoPago
-    let mercadopagoTest = {
+    let mercadopagoTest: {
+      canConnect: boolean;
+      error: string | null;
+      response: { status: number; statusText: string } | null;
+    } = {
       canConnect: false,
       error: null,
       response: null

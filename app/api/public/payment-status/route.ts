@@ -8,7 +8,7 @@ export async function GET() {
                    'NOT_SET'
   
   // Teste básico de conectividade
-  let apiTest = { success: false, error: null }
+  let apiTest: { success: boolean; error: string | null } = { success: false, error: null }
   
   if (hasToken) {
     try {

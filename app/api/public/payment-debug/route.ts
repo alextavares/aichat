@@ -16,7 +16,13 @@ export async function GET() {
   }
   
   // Testar API do MercadoPago com mais detalhes
-  let apiTest = {
+  let apiTest: {
+    success: boolean;
+    status: number | null;
+    error: string | null;
+    headers: { [k: string]: string } | null;
+    userData?: any;
+  } = {
     success: false,
     status: null,
     error: null,
