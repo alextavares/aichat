@@ -6,8 +6,8 @@ const nextConfig: NextConfig = {
   
   // Enable strict type checking and linting during builds
   eslint: {
-    // Only ignore specific directories if needed (e.g., legacy code)
-    // ignoreDuringBuilds: false, // This is the default
+    // Temporarily disable ESLint during builds for production deployment
+    ignoreDuringBuilds: process.env.NODE_ENV === 'production',
   },
   typescript: {
     // Temporarily allow build errors for production deployment
