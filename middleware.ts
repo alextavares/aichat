@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+import { getServerSession } from 'next-auth'
+import { authOptions } from './lib/auth'
 
 export async function middleware(request: NextRequest) {
-  const token = await getToken({ req: request })
-  const isAuth = !!token
+  // For database sessions, we need to check the session cookie differently
+  const sessionToken = request.cookies.get('next-auth.session-token')?.value || 
+                      request.cookies.get('__Secure-next-auth.session-token')?.value
+  
+  // Simple existence check for now - NextAuth will validate the session properly in API routes
+  const isAuth = !!sessionToken
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth')
   const isPublicPage = request.nextUrl.pathname === '/' || 
                       request.nextUrl.pathname === '/demo-chat' ||
