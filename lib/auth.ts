@@ -107,7 +107,7 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     },
-    async signIn({ user, account, profile, email, credentials }) {
+    async signIn() {
       // Allow sign in
       return true
     }

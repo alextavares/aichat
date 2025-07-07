@@ -285,7 +285,15 @@ export async function handleStripeWebhook(event: Stripe.Event) {
   }
 }
 
-async function retryPaymentFetch(paymentId: string, maxRetries = 3, delay = 2000): Promise<any> {
+interface MercadoPagoPaymentResponse {
+  id: string;
+  status: string;
+  payment_type_id?: string;
+  external_reference?: string;
+  metadata?: Record<string, unknown>;
+}
+
+async function retryPaymentFetch(paymentId: string, maxRetries = 3, delay = 2000): Promise<MercadoPagoPaymentResponse> {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       console.log(`[MercadoPago] Fetching payment attempt ${attempt}/${maxRetries} for ID: ${paymentId}`)
@@ -297,8 +305,8 @@ async function retryPaymentFetch(paymentId: string, maxRetries = 3, delay = 2000
         external_reference: payment.external_reference
       })
       return payment
-    } catch (error: any) {
-      console.log(`[MercadoPago] Attempt ${attempt} failed:`, error.message)
+    } catch (error: unknown) {
+      console.log(`[MercadoPago] Attempt ${attempt} failed:`, error instanceof Error ? error.message : String(error))
       
       if (attempt === maxRetries) {
         throw error // Re-throw on final attempt
@@ -310,9 +318,17 @@ async function retryPaymentFetch(paymentId: string, maxRetries = 3, delay = 2000
       delay *= 1.5 // Exponential backoff
     }
   }
+  
+  // This should never be reached due to the throw in the final attempt, but TypeScript requires it
+  throw new Error(`Failed to fetch payment after ${maxRetries} attempts`)
 }
 
-export async function handleMercadoPagoWebhook(data: any) {
+interface MercadoPagoWebhookData {
+  id: string;
+  topic?: string;
+}
+
+export async function handleMercadoPagoWebhook(data: MercadoPagoWebhookData) {
   // MercadoPago sends notification with data.id and data.topic
   if (!data || !data.id) {
     console.error('[MercadoPago] Invalid webhook data:', data)
@@ -327,10 +343,10 @@ export async function handleMercadoPagoWebhook(data: any) {
       
       if (payment.status === 'approved') {
         // Parse external_reference if it's a JSON string
-        let parsedRef: any = {}
+        let parsedRef: Record<string, unknown> = {}
         try {
           parsedRef = JSON.parse(payment.external_reference || '{}')
-        } catch (e) {
+        } catch {
           console.error('[MercadoPago] Failed to parse external_reference:', payment.external_reference)
         }
 
@@ -343,10 +359,10 @@ export async function handleMercadoPagoWebhook(data: any) {
         }
       } else {
         // Return status for pending/rejected payments too for logging
-        let parsedRef: any = {}
+        let parsedRef: Record<string, unknown> = {}
         try {
           parsedRef = JSON.parse(payment.external_reference || '{}')
-        } catch (e) {
+        } catch {
           console.error('[MercadoPago] Failed to parse external_reference:', payment.external_reference)
         }
 

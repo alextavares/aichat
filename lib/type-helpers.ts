@@ -4,7 +4,7 @@
  */
 
 // Safe type assertion for API responses
-export function assertType<T>(value: any): T {
+export function assertType<T>(value: unknown): T {
   return value as T;
 }
 
@@ -22,4 +22,5 @@ export function getEnvVar(key: string, defaultValue?: string): string {
   return value || defaultValue!;
 }
 
-export default { assertType, parseJsonAs, getEnvVar };
+const typeHelpers = { assertType, parseJsonAs, getEnvVar };
+export default typeHelpers;

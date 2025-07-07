@@ -150,7 +150,7 @@ export function getModelType(model: string): 'fast' | 'advanced' | null {
   return null
 }
 
-export async function checkUsageLimits(userId: string, model?: string, modelType?: 'fast' | 'advanced') {
+export async function checkUsageLimits(userId: string, model?: string) {
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: { planType: true },
@@ -174,7 +174,6 @@ export async function checkUsageLimits(userId: string, model?: string, modelType
     }
     
     // Determine if model is fast or advanced
-    const isFastModel = limits.modelsAllowed.fast.includes(model)
     const isAdvancedModel = limits.modelsAllowed.advanced.includes(model)
     
     // For advanced models, check monthly limit for FREE plan

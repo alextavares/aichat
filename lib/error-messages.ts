@@ -56,28 +56,32 @@ export const ErrorMessages = {
 }
 
 // Helper function to get user-friendly error message
-export function getUserFriendlyError(error: any): string {
+export function getUserFriendlyError(error: unknown): string {
   // Check for specific error codes or messages
-  if (error.code === 'P2002') {
+  if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
     return ErrorMessages.AUTH.EMAIL_ALREADY_EXISTS
   }
   
-  if (error.code === 'P2025') {
+  if (error && typeof error === 'object' && 'code' in error && error.code === 'P2025') {
     return ErrorMessages.DATABASE.RECORD_NOT_FOUND
   }
   
-  if (error.message?.includes('connect')) {
-    return ErrorMessages.DATABASE.CONNECTION_ERROR
+  if (error && typeof error === 'object' && 'message' in error && typeof error.message === 'string') {
+    if (error.message.includes('connect')) {
+      return ErrorMessages.DATABASE.CONNECTION_ERROR
+    }
+    
+    if (error.message.includes('timeout')) {
+      return ErrorMessages.NETWORK.TIMEOUT
+    }
+    
+    if (error.message.includes('Network')) {
+      return ErrorMessages.NETWORK.NO_INTERNET
+    }
+    
+    return error.message
   }
   
-  if (error.message?.includes('timeout')) {
-    return ErrorMessages.NETWORK.TIMEOUT
-  }
-  
-  if (error.message?.includes('Network')) {
-    return ErrorMessages.NETWORK.NO_INTERNET
-  }
-  
-  // Default to the error message or generic error
-  return error.message || ErrorMessages.GENERIC.UNKNOWN_ERROR
+  // Default to generic error
+  return ErrorMessages.GENERIC.UNKNOWN_ERROR
 }
