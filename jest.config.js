@@ -36,8 +36,14 @@ const config = {
   maxWorkers: '50%',
   verbose: true,
   transformIgnorePatterns: [
-    'node_modules/(?!(jose|openid-client|@auth|next-auth)/)',
+    'node_modules/(?!(jose|openid-client|@auth|next-auth|@mercadopago|uuid)/)',
   ],
+  extensionsToTreatAsEsm: ['.ts', '.tsx'],
+  globals: {
+    'ts-jest': {
+      useESM: true,
+    },
+  },
 };
 
 module.exports = config;
