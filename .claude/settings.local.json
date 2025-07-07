@@ -213,7 +213,8 @@
       "Bash(mcp list:*)",
       "Bash(mcp:*)",
       "Bash(git branch:*)",
-      "Bash(NODE_ENV=production npm run build)"
+      "Bash(NODE_ENV=production npm run build)",
+      "Bash(BASE_URL=https://seahorse-app-k5pag.ondigitalocean.app npm run diagnose:production)"
     ],
     "deny": []
   }

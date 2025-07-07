@@ -90,7 +90,7 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers,
   session: {
-    strategy: "database", // Fix: Use database sessions with PrismaAdapter
+    strategy: "jwt", // Fix: Use JWT strategy to support CredentialsProvider
     maxAge: 7 * 24 * 60 * 60, // 7 days (more secure than 30 days)
     updateAge: 24 * 60 * 60, // 24 hours
   },
@@ -98,12 +98,21 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async session({ session, user }) {
-      // Database sessions receive user object instead of token
+    async jwt({ token, user }) {
+      // When user signs in, add user info to JWT token
       if (user) {
-        session.user.id = user.id
-        session.user.email = user.email
-        session.user.name = user.name
+        token.id = user.id
+        token.email = user.email
+        token.name = user.name
+      }
+      return token
+    },
+    async session({ session, token }) {
+      // JWT sessions receive token object
+      if (token) {
+        session.user.id = token.id as string
+        session.user.email = token.email as string
+        session.user.name = token.name as string
       }
       return session
     },
