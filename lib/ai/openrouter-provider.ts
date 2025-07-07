@@ -520,14 +520,12 @@ export class OpenRouterProvider implements AIProvider {
   async *streamResponse(
     messages: AIMessage[], 
     model: string,
-    options?: {
+    _options?: {
       maxTokens?: number
       temperature?: number
     }
   ): AsyncGenerator<string> {
     const openRouterModel = this.getOpenRouterModel(model)
-    let fullContent = ''
-    let tokensUsed = { input: 0, output: 0, total: 0 }
 
     try {
       const response = await fetch(`${this.baseURL}/chat/completions`, {
@@ -578,19 +576,9 @@ export class OpenRouterProvider implements AIProvider {
               const parsed = JSON.parse(data)
               const token = parsed.choices[0]?.delta?.content
               if (token) {
-                fullContent += token
                 yield token
               }
-
-              // OpenRouter envia usage no final
-              if (parsed.usage) {
-                tokensUsed = {
-                  input: parsed.usage.prompt_tokens || 0,
-                  output: parsed.usage.completion_tokens || 0,
-                  total: parsed.usage.total_tokens || 0
-                }
-              }
-            } catch (e) {
+            } catch {
               // Ignorar erros de parsing
             }
           }
