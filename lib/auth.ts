@@ -111,5 +111,8 @@ export const authOptions: NextAuthOptions = {
       // Allow sign in
       return true
     }
-  }
+  },
+  // Add explicit configuration
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development'
 }
