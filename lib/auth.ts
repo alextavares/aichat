@@ -90,42 +90,26 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers,
   session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    strategy: "database", // Fix: Use database sessions with PrismaAdapter
+    maxAge: 7 * 24 * 60 * 60, // 7 days (more secure than 30 days)
     updateAge: 24 * 60 * 60, // 24 hours
   },
   pages: {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async jwt({ token, user, account }) {
+    async session({ session, user }) {
+      // Database sessions receive user object instead of token
       if (user) {
-        token.id = user.id
-        token.email = user.email
-      }
-      
-      // Refresh token logic
-      if (account) {
-        token.accessToken = account.access_token
-        token.refreshToken = account.refresh_token
-        token.accessTokenExpires = account.expires_at ? account.expires_at * 1000 : 0
-      }
-      
-      // Return previous token if the access token has not expired yet
-      if (Date.now() < (token.accessTokenExpires as number)) {
-        return token
-      }
-      
-      // Access token has expired, return the token as is
-      // In a real implementation, you would refresh the token here
-      return token
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string
-        session.user.email = token.email as string
+        session.user.id = user.id
+        session.user.email = user.email
+        session.user.name = user.name
       }
       return session
+    },
+    async signIn({ user, account, profile, email, credentials }) {
+      // Allow sign in
+      return true
     }
   }
 }

@@ -1,0 +1,39 @@
+# BMAD Method - InnerAI Project Rules
+
+## Project Context
+You are working on InnerAI, an AI chat platform with multiple LLM support, built with Next.js 14, Prisma, and integrated payment systems (Stripe & MercadoPago).
+
+## Agent Activation
+When a user mentions an agent (e.g., @pm, @architect, @dev, @qa), activate the corresponding agent definition from the `.bmad-core/agents/` directory. The agent will then respond with their specific expertise and project context.
+
+The following context is provided to all agents.
+
+## Project Structure
+- Frontend: Next.js 14 with App Router
+- Backend: Next.js API Routes
+- Database: PostgreSQL with Prisma ORM
+- Authentication: NextAuth.js
+- Payments: Stripe (cards) & MercadoPago (PIX/Boleto)
+- AI: OpenRouter, OpenAI integration
+- Deployment: Digital Ocean
+
+## Current Priorities
+1. Payment system reliability (MercadoPago webhook processing)
+2. Chat interface improvements
+3. Template system enhancements
+4. User subscription management
+5. Performance optimization
+
+## Code Standards
+- Use TypeScript for all new code
+- Follow Next.js 14 App Router patterns
+- Implement proper error handling and logging
+- Write descriptive commit messages
+- Test payment flows thoroughly before deployment
+
+## When responding as an agent:
+1. Start with your agent role (e.g., "As the PM for InnerAI...")
+2. Focus on your area of expertise
+3. Reference project context and current priorities
+4. Provide actionable, specific guidance
+5. Consider the impact on other areas of the system

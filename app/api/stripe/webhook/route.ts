@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { handleStripeWebhook } from '@/lib/payment-service'
+import { stripe } from '@/lib/stripe'
 import type Stripe from 'stripe'
 import { SubscriptionStatus, PlanType } from '@prisma/client' // Import Prisma enums
 
@@ -79,7 +80,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Production mode - verify signature
-    const event = stripe.webhooks.constructEvent(
+    const stripeInstance = stripe() // Call the function to get Stripe instance
+    const event = stripeInstance.webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
@@ -169,14 +171,14 @@ export async function POST(request: NextRequest) {
         if (stripeSubscription.cancel_at_period_end && stripeSubscription.status === 'active') {
           // Subscription is set to cancel at period end, but still active.
           // Update expiresAt to current_period_end. User retains access.
-          dataToUpdate.expiresAt = new Date(stripeSubscription.current_period_end * 1000)
+          dataToUpdate.expiresAt = new Date((stripeSubscription as any).current_period_end * 1000)
           // Status remains ACTIVE until Stripe sends a new event when it's actually cancelled.
           dataToUpdate.status = SubscriptionStatus.ACTIVE
         } else {
            // For other status updates, if Stripe provides a current_period_end, use it.
            // This can be relevant if a subscription reactivates or changes.
-           if (stripeSubscription.current_period_end) {
-             dataToUpdate.expiresAt = new Date(stripeSubscription.current_period_end * 1000);
+           if ((stripeSubscription as any).current_period_end) {
+             dataToUpdate.expiresAt = new Date((stripeSubscription as any).current_period_end * 1000);
            }
         }
 

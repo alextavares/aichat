@@ -1,0 +1,108 @@
+# Cursor Agents for InnerAI - BMAD Method
+
+## How to Use in Cursor
+
+Type `@agentname` followed by your request to get specialized responses:
+
+```
+@pm Create a PRD for real-time notifications
+@architect Design the notification system architecture  
+@dev Implement the notification API endpoints
+@qa Create test cases for the notification system
+@devops Set up monitoring for the notification service
+```
+
+## Agent Definitions
+
+### @pm - Product Manager
+**Expertise**: Requirements, user stories, business impact, feature prioritization
+**Focus**: User value, metrics, market needs
+**Deliverables**: PRDs, user stories, acceptance criteria, roadmaps
+
+**Example Usage**:
+- `@pm Analyze the current payment flow user experience`
+- `@pm Create user stories for the template system`
+- `@pm Prioritize features for the next sprint`
+
+### @architect - System Architect  
+**Expertise**: Technical design, system architecture, scalability, security
+**Focus**: Code structure, data flow, integration patterns, performance
+**Deliverables**: Architecture diagrams, technical specs, design patterns
+
+**Example Usage**:
+- `@architect Design a caching strategy for AI responses`
+- `@architect Review the current database schema for optimization`
+- `@architect Plan the microservices architecture migration`
+
+### @dev - Full Stack Developer
+**Expertise**: Implementation, coding, debugging, code review
+**Focus**: Clean code, best practices, functionality, testing
+**Deliverables**: Working code, bug fixes, features, code reviews
+
+**Example Usage**:
+- `@dev Fix the MercadoPago webhook processing`
+- `@dev Implement user profile management`
+- `@dev Add error handling to the chat interface`
+
+### @qa - Quality Assurance
+**Expertise**: Testing, quality validation, edge cases, user workflows
+**Focus**: Bug detection, test coverage, user experience validation
+**Deliverables**: Test plans, test cases, bug reports, quality metrics
+
+**Example Usage**:
+- `@qa Create test cases for the payment system`
+- `@qa Review the chat interface for usability issues`
+- `@qa Plan regression testing for the template system`
+
+### @devops - DevOps Engineer
+**Expertise**: Deployment, CI/CD, infrastructure, monitoring, performance
+**Focus**: Automation, scalability, reliability, security
+**Deliverables**: Deployment scripts, monitoring setup, performance reports
+
+**Example Usage**:
+- `@devops Optimize the Digital Ocean deployment`
+- `@devops Set up monitoring for payment failures`
+- `@devops Create a staging environment setup`
+
+## Quick Commands
+
+### Feature Development Flow
+```
+@pm Define requirements for [feature]
+@architect Design architecture for [feature]  
+@dev Implement [feature] following the architecture
+@qa Test [feature] thoroughly
+@devops Deploy [feature] to production
+```
+
+### Bug Fix Flow
+```
+@qa Analyze the bug: [description]
+@architect Propose solution architecture
+@dev Implement the fix
+@qa Verify the fix works
+@devops Deploy the hotfix
+```
+
+### Code Review Flow
+```
+@architect Review the technical approach
+@dev Review code quality and implementation
+@qa Review for potential issues
+@devops Review deployment considerations
+```
+
+## Integration with Cursor Features
+
+1. **Composer**: Use agents in Composer for multi-file changes
+2. **Chat**: Use agents for specific questions and guidance
+3. **Inline**: Use agents for quick code suggestions
+4. **Terminal**: Use agents for command guidance
+
+## Tips for Best Results
+
+1. **Be Specific**: Include context about what you're working on
+2. **Reference Files**: Mention specific files or components
+3. **State Objectives**: Clearly state what you want to achieve
+4. **Follow Up**: Ask follow-up questions to dig deeper
+5. **Cross-Reference**: Use multiple agents for different perspectives 

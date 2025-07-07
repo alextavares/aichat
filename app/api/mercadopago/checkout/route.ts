@@ -13,6 +13,11 @@ const client = new MercadoPagoConfig({
 const preference = new Preference(client)
 
 export async function POST(req: NextRequest) {
+  // Declare variables at function scope to be accessible in catch block
+  let planId: string = '';
+  let paymentMethod: string = '';
+  let billingCycle: string = 'monthly';
+  
   try {
     const session = await getServerSession(authOptions)
     
@@ -23,7 +28,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { planId, paymentMethod, installments, billingCycle } = await req.json()
+    const requestData = await req.json();
+    planId = requestData.planId;
+    paymentMethod = requestData.paymentMethod;
+    billingCycle = requestData.billingCycle;
+    const installments = requestData.installments;
     
     // Find the plan
     const plan = PAYMENT_PLANS.find(p => p.id === planId)

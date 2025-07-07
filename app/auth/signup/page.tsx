@@ -146,7 +146,7 @@ export default function SignUp() {
                   Nome completo
                 </label>
                 <Input
-                  id="name" data-testid="name-input" data-testid="name-input"
+                  id="name" data-testid="name-input"
                   name="name"
                   type="text"
                   value={formData.name}
@@ -160,7 +160,7 @@ export default function SignUp() {
                   Email
                 </label>
                 <Input
-                  id="email" data-testid="email-input" data-testid="email-input"
+                  id="email" data-testid="email-input"
                   name="email"
                   type="email"
                   value={formData.email}
@@ -206,7 +206,7 @@ export default function SignUp() {
                   Senha
                 </label>
                 <Input
-                  id="password" data-testid="password-input" data-testid="password-input"
+                  id="password" data-testid="password-input"
                   name="password"
                   type="password"
                   value={formData.password}
@@ -220,7 +220,7 @@ export default function SignUp() {
                   Confirmar senha
                 </label>
                 <Input
-                  id="confirmPassword" data-testid="confirm-password-input" data-testid="confirm-password-input"
+                  id="confirmPassword" data-testid="confirm-password-input"
                   name="confirmPassword"
                   type="password"
                   value={formData.confirmPassword}
