@@ -211,7 +211,9 @@
       "Bash(export PATH=\"$HOME/bin:$PATH\")",
       "Bash(~/bin/doctl:*)",
       "Bash(mcp list:*)",
-      "Bash(mcp:*)"
+      "Bash(mcp:*)",
+      "Bash(git branch:*)",
+      "Bash(NODE_ENV=production npm run build)"
     ],
     "deny": []
   }

@@ -22,6 +22,9 @@
     "test:all": "./run-tests.sh",
     "diagnose": "node scripts/diagnose-chat-system.js",
     "diagnose:production": "BASE_URL=https://seahorse-app-k5pag.ondigitalocean.app node scripts/diagnose-chat-system.js",
+    "pre-deploy": "node scripts/pre-deployment-check.js",
+    "deploy-production": "node scripts/deploy-production.js",
+    "deploy-ready": "npm run deploy-production && echo 'Ready for production deployment!'",
     "postinstall": "prisma generate"
   },
   "dependencies": {

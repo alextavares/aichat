@@ -6,7 +6,7 @@ services:
       repo: ${GITHUB_REPO}
       branch: main
       deploy_on_push: true
-    build_command: npm ci && npm run build && npx prisma generate
+    build_command: npm ci && npx prisma generate && npm run build
     run_command: npm start
     environment_slug: node-js
     instance_size_slug: professional-xs
@@ -44,6 +44,17 @@ services:
       - key: MERCADOPAGO_WEBHOOK_SECRET
         type: SECRET
         value: ${MERCADOPAGO_WEBHOOK_SECRET}
+      - key: STRIPE_SECRET_KEY
+        type: SECRET
+        value: ${STRIPE_SECRET_KEY}
+      - key: NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+        value: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY}
+      - key: STRIPE_WEBHOOK_SECRET
+        type: SECRET
+        value: ${STRIPE_WEBHOOK_SECRET}
+      - key: OPENROUTER_API_KEY
+        type: SECRET
+        value: ${OPENROUTER_API_KEY}
 
 databases:
   - name: innerai-db
