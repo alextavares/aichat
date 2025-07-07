@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { headers } from 'next/headers'
 import { prisma } from '@/lib/prisma'
 import { handleStripeWebhook } from '@/lib/payment-service'
+import { stripe } from '@/lib/stripe'
 import type Stripe from 'stripe'
 import { SubscriptionStatus, PlanType } from '@prisma/client' // Import Prisma enums
 
@@ -79,7 +80,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Production mode - verify signature
-    const event = stripe.webhooks.constructEvent(
+    const stripeInstance = stripe() // Call the function to get Stripe instance
+    const event = stripeInstance.webhooks.constructEvent(
       body,
       signature,
       process.env.STRIPE_WEBHOOK_SECRET
