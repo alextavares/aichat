@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getServerSession } from 'next-auth'
-import { authOptions } from './lib/auth'
 
 export async function middleware(request: NextRequest) {
   // For database sessions, we need to check the session cookie differently
