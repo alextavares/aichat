@@ -11,7 +11,7 @@ export async function GET() {
       }
     ]
 
-    const response = await aiService.generateResponse(messages, "gpt-3.5-turbo", {
+    const response = await aiService.generateResponse(messages, "claude-3.5-haiku", {
       maxTokens: 100,
       temperature: 0.7
     })
