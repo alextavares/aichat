@@ -188,10 +188,9 @@ export async function checkUsageLimits(userId: string, model?: string) {
           date: {
             gte: startOfMonth,
           },
-          model: {
-            name: {
-              in: limits.modelsAllowed.advanced
-            }
+          // Temporarily check modelId directly since foreign key is removed
+          modelId: {
+            in: limits.modelsAllowed.advanced
           }
         },
         _sum: {
@@ -394,10 +393,9 @@ export async function getUserUsageStats(userId: string) {
       date: {
         gte: startOfMonth,
       },
-      model: {
-        name: {
-          in: limits.modelsAllowed.advanced
-        }
+      // Temporarily check modelId directly since foreign key is removed
+      modelId: {
+        in: limits.modelsAllowed.advanced
       }
     },
     _sum: {
