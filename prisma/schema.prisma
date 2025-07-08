@@ -62,7 +62,7 @@ model AIModel {
   // Temporarily remove back-relations until we re-add foreign keys
   // conversations      Conversation[]
   // messages           Message[]
-  userUsage          UserUsage[]
+  // userUsage          UserUsage[]
 
   @@map("ai_models")
 }
@@ -77,7 +77,8 @@ model UserUsage {
   outputTokensUsed Int      @default(0) @map("output_tokens_used")
   costIncurred     Decimal  @default(0) @map("cost_incurred") @db.Decimal(10, 4)
   createdAt        DateTime @default(now()) @map("created_at")
-  model            AIModel  @relation(fields: [modelId], references: [id])
+  // Temporarily remove foreign key constraint to allow any model string
+  // model            AIModel  @relation(fields: [modelId], references: [id])
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, modelId, date])
