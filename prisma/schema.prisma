@@ -59,8 +59,9 @@ model AIModel {
   createdAt          DateTime          @default(now()) @map("created_at")
   errorLogs          AIErrorLog[]
   responseCache      AIResponseCache[]
-  conversations      Conversation[]
-  messages           Message[]
+  // Temporarily remove back-relations until we re-add foreign keys
+  // conversations      Conversation[]
+  // messages           Message[]
   userUsage          UserUsage[]
 
   @@map("ai_models")
@@ -105,7 +106,8 @@ model Conversation {
   isArchived Boolean   @default(false) @map("is_archived")
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")
-  model      AIModel?  @relation(fields: [modelUsed], references: [id])
+  // Temporarily remove foreign key constraint to allow any model string
+  // model      AIModel?  @relation(fields: [modelUsed], references: [id])
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages   Message[]
 
@@ -122,7 +124,8 @@ model Message {
   metadata        Json?
   createdAt       DateTime          @default(now()) @map("created_at")
   conversation    Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  model           AIModel?          @relation(fields: [modelUsed], references: [id])
+  // Temporarily remove foreign key constraint to allow any model string
+  // model           AIModel?          @relation(fields: [modelUsed], references: [id])
   messageFeedback MessageFeedback[]
 
   @@map("messages")
