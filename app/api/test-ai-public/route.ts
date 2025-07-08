@@ -4,6 +4,14 @@ import { aiService } from "@/lib/ai/ai-service"
 // Endpoint público apenas para testes
 export async function GET() {
   try {
+    // Debug: verificar se as chaves estão sendo carregadas
+    console.log('🔍 Debug - Environment variables check:')
+    console.log('OPENROUTER_API_KEY exists:', !!process.env.OPENROUTER_API_KEY)
+    console.log('OPENROUTER_API_KEY length:', process.env.OPENROUTER_API_KEY?.length || 0)
+    console.log('OPENROUTER_API_KEY prefix:', process.env.OPENROUTER_API_KEY?.substring(0, 8) || 'undefined')
+    console.log('OPENAI_API_KEY exists:', !!process.env.OPENAI_API_KEY)
+    console.log('OPENAI_API_KEY length:', process.env.OPENAI_API_KEY?.length || 0)
+    
     const messages = [
       {
         role: 'user' as const,
