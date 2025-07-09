@@ -75,49 +75,46 @@ interface FileAttachment {
   content: string // base64 for images, text content for documents
 }
 
-// Categorias de modelos para melhor organização
+// Categorias de modelos para melhor organização seguindo a estrutura da imagem
 const MODEL_CATEGORIES = {
+  FAST: {
+    name: 'Modelos Rápidos (Ilimitados)',
+    icon: Zap,
+    models: [
+      { id: 'gpt-4o-mini', name: 'GPT-4o Mini', tier: 'FREE' },
+      { id: 'claude-3.5-haiku', name: 'Claude 3.5 Haiku', tier: 'FREE' },
+      { id: 'gemini-2-flash-free', name: 'Gemini 2 Flash Free', tier: 'FREE' },
+      { id: 'mistral-7b', name: 'Mistral 7B', tier: 'FREE' },
+      { id: 'deepseek-r1-small', name: 'Deepseek R1 Small', tier: 'FREE' },
+      { id: 'qwen-qwq', name: 'Qwen QwQ', tier: 'FREE' },
+      { id: 'llama-2-13b', name: 'Llama 2 13B', tier: 'LITE' },
+      { id: 'llama-3.3-70b', name: 'Llama 3.3 70B', tier: 'LITE' },
+      { id: 'deepseek-r1', name: 'Deepseek R1', tier: 'LITE' },
+      { id: 'grok-3-mini', name: 'Grok 3 Mini', tier: 'LITE' },
+      { id: 'perplexity-sonar', name: 'Perplexity Sonar', tier: 'LITE' },
+      { id: 'sabia-3.1', name: 'Sabiá 3.1', tier: 'LITE' },
+    ]
+  },
   ADVANCED: {
     name: 'Modelos Avançados',
     icon: Sparkles,
     models: [
+      { id: 'gpt-4o', name: 'GPT-4o', tier: 'LITE' },
+      { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', tier: 'LITE' },
+      { id: 'claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', tier: 'LITE' },
+      { id: 'claude-4-sonnet', name: 'Claude 4 Sonnet', tier: 'LITE' },
+      { id: 'gemini-2-pro', name: 'Gemini 2 Pro', tier: 'LITE' },
+      { id: 'grok-3', name: 'Grok 3', tier: 'LITE' },
+      { id: 'perplexity-sonar-pro', name: 'Perplexity Sonar Pro', tier: 'LITE' },
+      { id: 'perplexity-reasoning', name: 'Perplexity Reasoning', tier: 'LITE' },
+      { id: 'mistral-large-2', name: 'Mistral Large 2', tier: 'LITE' },
       { id: 'gpt-4.1', name: 'GPT-4.1', tier: 'PRO' },
-      { id: 'gpt-4o', name: 'GPT-4o', tier: 'PRO' },
-      { id: 'claude-4-sonnet', name: 'Claude 4 Sonnet', tier: 'PRO' },
+      { id: 'claude-4-sonnet-thinking', name: 'Claude 4 Sonnet Thinking', tier: 'PRO' },
       { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro', tier: 'PRO' },
       { id: 'llama-4-maverick', name: 'Llama 4 Maverick', tier: 'PRO' },
-      { id: 'perplexity-sonar', name: 'Perplexity Sonar', tier: 'PRO' },
-      { id: 'sabia-3.1', name: 'Sabiá 3.1', tier: 'FREE' },
-      { id: 'mistral-large-2', name: 'Mistral Large 2', tier: 'PRO' },
-      { id: 'grok-3', name: 'Grok 3', tier: 'PRO' },
       { id: 'amazon-nova-premier', name: 'Amazon Nova Premier', tier: 'PRO' },
-    ]
-  },
-  REASONING: {
-    name: 'Raciocínio Profundo',
-    icon: Brain,
-    models: [
       { id: 'o3', name: 'o3', tier: 'PRO' },
       { id: 'o4-mini', name: 'o4 Mini', tier: 'PRO' },
-      { id: 'qwen-qwq', name: 'Qwen QwQ', tier: 'FREE' },
-      { id: 'claude-4-sonnet-thinking', name: 'Claude 4 Sonnet Thinking', tier: 'PRO' },
-      { id: 'deepseek-r1-small', name: 'Deepseek R1 Small', tier: 'FREE' },
-      { id: 'deepseek-r1', name: 'Deepseek R1', tier: 'PRO' },
-      { id: 'grok-3-mini', name: 'Grok 3 Mini', tier: 'PRO' },
-    ]
-  },
-  CLASSIC: {
-    name: 'Modelos Clássicos',
-    icon: Zap,
-    models: [
-      { id: 'gpt-4', name: 'GPT-4', tier: 'PRO' },
-      { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', tier: 'PRO' },
-      { id: 'claude-3-sonnet', name: 'Claude 3 Sonnet', tier: 'PRO' },
-      { id: 'claude-3-haiku', name: 'Claude 3 Haiku', tier: 'FREE' },
-      { id: 'gemini-pro', name: 'Gemini Pro', tier: 'PRO' },
-      { id: 'llama-2-70b', name: 'Llama 2 70B', tier: 'PRO' },
-      { id: 'mixtral-8x7b', name: 'Mixtral 8x7B', tier: 'PRO' },
-      { id: 'mistral-7b', name: 'Mistral 7B', tier: 'FREE' },
     ]
   },
   CODE: {
@@ -135,8 +132,9 @@ const MODEL_CATEGORIES = {
 function getAvailableModels(planType: string) {
   const tierMap: Record<string, string[]> = {
     FREE: ['FREE'],
-    PRO: ['FREE', 'PRO'],
-    ENTERPRISE: ['FREE', 'PRO', 'ENTERPRISE']
+    LITE: ['FREE', 'LITE'],
+    PRO: ['FREE', 'LITE', 'PRO'],
+    ENTERPRISE: ['FREE', 'LITE', 'PRO', 'ENTERPRISE']
   }
   
   const allowedTiers = tierMap[planType] || ['FREE']

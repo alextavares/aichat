@@ -14,9 +14,26 @@ export interface UsageLimits {
 
 export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
   FREE: {
+    dailyMessages: 50, // 50 messages per day for free users
+    monthlyTokens: null,
+    monthlyAdvancedMessages: 0, // No advanced models for free
+    modelsAllowed: {
+      fast: [
+        'gpt-4o-mini',
+        'claude-3.5-haiku',
+        'gemini-2-flash-free',
+        'mistral-7b',
+        'deepseek-r1-small',
+        'qwen-qwq'
+      ],
+      advanced: [] // No advanced models for free users
+    },
+    monthlyCredits: null,
+  },
+  LITE: {
     dailyMessages: null, // unlimited for fast models
-    monthlyTokens: null, // unlimited for fast models
-    monthlyAdvancedMessages: 500000, // increased for testing
+    monthlyTokens: null, // unlimited for fast models  
+    monthlyAdvancedMessages: 120, // 120 messages per month with advanced models
     modelsAllowed: {
       fast: [
         'gpt-4o-mini',
@@ -34,7 +51,9 @@ export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
       ],
       advanced: [
         'gpt-4o',
+        'gpt-3.5-turbo',
         'claude-3.5-sonnet',
+        'claude-4-sonnet',
         'gemini-2-pro',
         'grok-3',
         'perplexity-sonar-pro',
@@ -42,7 +61,7 @@ export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
         'mistral-large-2'
       ]
     },
-    monthlyCredits: 500000, // increased for testing
+    monthlyCredits: null,
   },
   PRO: {
     dailyMessages: null, // unlimited

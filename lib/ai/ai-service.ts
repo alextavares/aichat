@@ -130,15 +130,21 @@ class AIService {
     return models
   }
 
-  getModelsForPlan(planType: 'FREE' | 'PRO' | 'ENTERPRISE'): AIModel[] {
+  getModelsForPlan(planType: 'FREE' | 'LITE' | 'PRO' | 'ENTERPRISE'): AIModel[] {
     const allModels = this.getAllAvailableModels()
     
     switch (planType) {
       case 'FREE':
         return allModels.filter(model => 
           ['gpt-4o-mini', 'claude-3.5-haiku', 
-           'gemini-2-flash-free', 'mistral-7b', 'llama-2-13b', 'llama-3.3-70b', 
-           'deepseek-r1', 'deepseek-r1-small', 'grok-3-mini', 'perplexity-sonar', 'qwen-qwq', 'sabia-3.1'].includes(model.id)
+           'gemini-2-flash-free', 'mistral-7b', 'deepseek-r1-small', 'qwen-qwq'].includes(model.id)
+        )
+      case 'LITE':
+        return allModels.filter(model => 
+          ['gpt-4o-mini', 'claude-3.5-haiku', 'gemini-2-flash-free', 'mistral-7b', 'llama-2-13b', 'llama-3.3-70b', 
+           'deepseek-r1', 'deepseek-r1-small', 'grok-3-mini', 'perplexity-sonar', 'qwen-qwq', 'sabia-3.1',
+           'gpt-4o', 'gpt-3.5-turbo', 'claude-3.5-sonnet', 'claude-4-sonnet', 'gemini-2-pro', 'grok-3',
+           'perplexity-sonar-pro', 'perplexity-reasoning', 'mistral-large-2'].includes(model.id)
         )
       case 'PRO':
         return allModels.filter(model => 
