@@ -124,6 +124,7 @@ export class OpenRouterProvider implements AIProvider {
     
     // Modelos Qwen
     'qwq-32b': 'qwen/qwq-32b',
+    'qwen-qwq': 'qwen/qwq-32b', // Same model, different alias
     'qwen-2.5-72b': 'qwen/qwen-2.5-72b-instruct',
     'qwen-2.5-coder': 'qwen/qwen-2.5-coder-32b-instruct',
     
