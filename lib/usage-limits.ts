@@ -26,9 +26,11 @@ export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
         'llama-2-13b',
         'llama-3.3-70b',
         'deepseek-r1',
+        'deepseek-r1-small',
         'grok-3-mini',
         'perplexity-sonar',
-        'qwq-32b'
+        'qwen-qwq',
+        'sabia-3.1'
       ],
       advanced: [
         'gpt-4o',
@@ -60,7 +62,7 @@ export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
         'deepseek-r1',
         'grok-3-mini',
         'perplexity-sonar',
-        'qwq-32b',
+        'qwen-qwq',
         'qwen-2.5-coder'
       ],
       advanced: [
@@ -102,7 +104,7 @@ export const PLAN_LIMITS: Record<PlanType, UsageLimits> = {
         'deepseek-r1',
         'grok-3-mini',
         'perplexity-sonar',
-        'qwq-32b',
+        'qwen-qwq',
         'qwen-2.5-coder',
         'neural-chat-7b',
         'mythomist-7b'
