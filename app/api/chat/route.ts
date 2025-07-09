@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { aiService } from "@/lib/ai/ai-service"
 import { AIMessage } from "@/lib/ai/types"
+import { PLAN_LIMITS, getModelType } from "@/lib/usage-limits"
 
 export async function POST(request: NextRequest) {
   try {
@@ -49,22 +50,48 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verificar limites de uso (para usuários FREE)
-    if (user.planType === 'FREE') {
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
-
-      const todayUsage = await prisma.userUsage.findFirst({
+    // Verificação simplificada de limites para usuários FREE com modelos avançados
+    const limits = PLAN_LIMITS[user.planType]
+    const modelType = getModelType(model)
+    
+    if (user.planType === 'FREE' && modelType === 'advanced') {
+      const startOfMonth = new Date()
+      startOfMonth.setDate(1)
+      startOfMonth.setHours(0, 0, 0, 0)
+      
+      // Buscar apenas uso de modelos avançados
+      const monthlyAdvancedUsage = await prisma.userUsage.aggregate({
         where: {
           userId: user.id,
-          date: today
-        }
+          date: {
+            gte: startOfMonth,
+          },
+          modelId: {
+            in: limits.modelsAllowed.advanced
+          }
+        },
+        _sum: {
+          messagesCount: true,
+        },
       })
 
-      const dailyMessageLimit = 10000 // Increased for testing
-      if (todayUsage && todayUsage.messagesCount >= dailyMessageLimit) {
+      const advancedMessagesUsed = monthlyAdvancedUsage._sum.messagesCount || 0
+      const advancedLimit = limits.monthlyAdvancedMessages || 0
+      
+      console.log(`[Chat API] Advanced usage check: ${advancedMessagesUsed}/${advancedLimit} for model ${model}`)
+      
+      if (advancedMessagesUsed >= advancedLimit) {
         return NextResponse.json(
-          { message: "Limite diário de mensagens atingido. Faça upgrade para o plano Pro." },
+          { 
+            message: `Limite mensal de mensagens para modelos avançados atingido (${advancedMessagesUsed}/${advancedLimit}). Faça upgrade para o plano Pro para uso ilimitado.`,
+            usage: {
+              monthlyAdvancedMessages: {
+                used: advancedMessagesUsed,
+                limit: advancedLimit,
+              }
+            },
+            planType: user.planType
+          },
           { status: 429 }
         )
       }
@@ -128,40 +155,31 @@ export async function POST(request: NextRequest) {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    // Buscar registro existente
-    const existingUsage = await prisma.userUsage.findFirst({
+    // Usar upsert para evitar problemas de concorrência
+    await prisma.userUsage.upsert({
       where: {
-        userId: user.id,
-        modelId: model,
-        date: today
-      }
-    })
-
-    if (existingUsage) {
-      // Atualizar registro existente
-      await prisma.userUsage.update({
-        where: { id: existingUsage.id },
-        data: {
-          messagesCount: { increment: 1 },
-          inputTokensUsed: { increment: aiResponse.tokensUsed.input },
-          outputTokensUsed: { increment: aiResponse.tokensUsed.output },
-          costIncurred: { increment: aiResponse.cost }
-        }
-      })
-    } else {
-      // Criar novo registro
-      await prisma.userUsage.create({
-        data: {
+        userId_modelId_date: {
           userId: user.id,
           modelId: model,
           date: today,
-          messagesCount: 1,
-          inputTokensUsed: aiResponse.tokensUsed.input,
-          outputTokensUsed: aiResponse.tokensUsed.output,
-          costIncurred: aiResponse.cost
-        }
-      })
-    }
+        },
+      },
+      create: {
+        userId: user.id,
+        modelId: model,
+        date: today,
+        messagesCount: 1,
+        inputTokensUsed: aiResponse.tokensUsed.input,
+        outputTokensUsed: aiResponse.tokensUsed.output,
+        costIncurred: aiResponse.cost,
+      },
+      update: {
+        messagesCount: { increment: 1 },
+        inputTokensUsed: { increment: aiResponse.tokensUsed.input },
+        outputTokensUsed: { increment: aiResponse.tokensUsed.output },
+        costIncurred: { increment: aiResponse.cost },
+      },
+    })
 
     return NextResponse.json({
       message: aiResponse.content,
