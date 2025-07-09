@@ -110,8 +110,8 @@ const MODEL_CATEGORIES = {
     name: 'Modelos Clássicos',
     icon: Zap,
     models: [
-      { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', tier: 'FREE' },
       { id: 'gpt-4', name: 'GPT-4', tier: 'PRO' },
+      { id: 'gpt-3.5-turbo', name: 'GPT-3.5 Turbo', tier: 'PRO' },
       { id: 'claude-3-sonnet', name: 'Claude 3 Sonnet', tier: 'PRO' },
       { id: 'claude-3-haiku', name: 'Claude 3 Haiku', tier: 'FREE' },
       { id: 'gemini-pro', name: 'Gemini Pro', tier: 'PRO' },
@@ -208,6 +208,11 @@ export default function ChatPage() {
       fetchUserPlan()
     }
   }, [session])
+
+  // Reset chat disabled state when model changes
+  useEffect(() => {
+    setIsChatDisabledByLimit(false)
+  }, [selectedModel])
 
   const loadTemplate = useCallback(async (templateId: string) => {
     try {
@@ -610,6 +615,7 @@ class HttpError extends Error {
     setMessages([])
     setConversationId(null)
     setAttachments([])
+    setIsChatDisabledByLimit(false) // Reset limit state on new chat
     textareaRef.current?.focus()
   }
 
