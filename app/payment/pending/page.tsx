@@ -42,13 +42,8 @@ function PaymentPendingContent() {
   }, [searchParams])
 
   const handleDashboardClick = () => {
-    // If we have payment info with userId, try to go to login with pre-filled info
-    if (paymentInfo?.userId) {
-      // For now, redirect to login page with a return URL
-      router.push(`/auth/signin?callbackUrl=${encodeURIComponent('/dashboard')}&payment_pending=true`)
-    } else {
-      router.push('/dashboard')
-    }
+    // Always redirect to dashboard, NextAuth will handle authentication
+    router.push('/dashboard')
   }
 
   const getStatusIcon = () => {
@@ -123,7 +118,7 @@ function PaymentPendingContent() {
           
           <div className="flex flex-col gap-2">
             <Button onClick={handleDashboardClick} className="w-full">
-              {paymentInfo?.status === 'approved' ? 'Fazer Login e Acessar Dashboard' : 'Ir para o Dashboard'}
+              Ir para o Dashboard
             </Button>
             <Button variant="outline" onClick={() => router.push('/pricing')}>
               Ver Planos
