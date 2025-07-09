@@ -341,7 +341,8 @@ export async function handleMercadoPagoWebhook(data: MercadoPagoWebhookData) {
       
       console.log(`[MercadoPago] Payment status: ${payment.status}`)
       
-      if (payment.status === 'approved') {
+      // Handle both approved and pending payments
+      if (payment.status === 'approved' || payment.status === 'pending') {
         // Parse external_reference if it's a JSON string
         let parsedRef: Record<string, unknown> = {}
         try {
@@ -350,21 +351,27 @@ export async function handleMercadoPagoWebhook(data: MercadoPagoWebhookData) {
           console.error('[MercadoPago] Failed to parse external_reference:', payment.external_reference)
         }
 
+        console.log(`[MercadoPago] Processing payment ${payment.id} with status ${payment.status}`)
+        console.log(`[MercadoPago] Payment type: ${payment.payment_type_id || 'unknown'}`)
+        console.log(`[MercadoPago] External reference:`, parsedRef)
+
         return {
           userId: parsedRef.userId || payment.external_reference,
           planId: parsedRef.planId || payment.metadata?.plan_id,
           paymentId: payment.id,
-          status: 'approved',
+          status: payment.status,
           billingCycle: parsedRef.billingCycle || payment.metadata?.billing_cycle || 'monthly'
         }
       } else {
-        // Return status for pending/rejected payments too for logging
+        // Return status for rejected/failed payments for logging
         let parsedRef: Record<string, unknown> = {}
         try {
           parsedRef = JSON.parse(payment.external_reference || '{}')
         } catch {
           console.error('[MercadoPago] Failed to parse external_reference:', payment.external_reference)
         }
+
+        console.log(`[MercadoPago] Payment ${payment.id} status: ${payment.status} - not processing`)
 
         return {
           userId: parsedRef.userId || payment.external_reference,

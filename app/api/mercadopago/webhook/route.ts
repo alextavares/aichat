@@ -84,8 +84,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
     }
     
-    // Log webhook structure
-    console.log('[MercadoPago Webhook] Received structure:', {
+    // Log webhook structure and store for audit trail
+    const webhookLog = {
       hasId: !!parsedBody.id,
       hasDataId: !!parsedBody.data?.id,
       topic: parsedBody.topic,
@@ -93,8 +93,14 @@ export async function POST(request: NextRequest) {
       action: parsedBody.action,
       keys: Object.keys(parsedBody),
       hasSignature: !!signature,
-      hasRequestId: !!xRequestId
-    })
+      hasRequestId: !!xRequestId,
+      timestamp: new Date().toISOString()
+    }
+    
+    console.log('[MercadoPago Webhook] Received structure:', webhookLog)
+    
+    // Store webhook for debugging (simple console log for now)
+    console.log('[MercadoPago Webhook] Full body for audit:', JSON.stringify(parsedBody, null, 2))
     
     // Verify signature in production with proper implementation
     if (process.env.NODE_ENV === 'production' && process.env.MERCADOPAGO_WEBHOOK_SECRET && signature) {
@@ -106,10 +112,9 @@ export async function POST(request: NextRequest) {
       )
       
       if (!isValid) {
-        console.error('[MercadoPago Webhook] Invalid signature - but allowing for now to process real payments')
+        console.error('[MercadoPago Webhook] Invalid signature')
         console.error('[MercadoPago Webhook] Body preview:', body.substring(0, 200))
-        // TEMPORARILY allowing unsigned webhooks from MercadoPago production
-        // return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+        return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
       } else {
         console.log('[MercadoPago Webhook] Signature verification passed')
       }
@@ -142,49 +147,78 @@ export async function POST(request: NextRequest) {
     
     console.log('[MercadoPago Webhook] Processing result:', result)
     
-    if (result && result.status === 'approved') {
-      console.log('[MercadoPago Webhook] Payment approved, updating user:', result.userId)
+    if (result && (result.status === 'approved' || result.status === 'pending')) {
+      console.log(`[MercadoPago Webhook] Payment ${result.status}, processing for user:`, result.userId)
       
-      // Update user subscription
-      await prisma.user.update({
-        where: { id: result.userId },
-        data: { planType: result.planId.toUpperCase() as any }
-      })
-      
-      // Create subscription record
-      const startDate = new Date()
-      let expiresDate = new Date(startDate)
-      const billingCycle = result.billingCycle || 'monthly' // Default to monthly if undefined
+      if (result.status === 'approved') {
+        // Only activate subscription for approved payments
+        console.log('[MercadoPago Webhook] Payment approved, activating subscription')
+        
+        // Update user subscription
+        await prisma.user.update({
+          where: { id: result.userId },
+          data: { planType: result.planId.toUpperCase() as any }
+        })
+        
+        // Create subscription record
+        const startDate = new Date()
+        let expiresDate = new Date(startDate)
+        const billingCycle = result.billingCycle || 'monthly' // Default to monthly if undefined
 
-      if (billingCycle === 'yearly') {
-        expiresDate.setFullYear(startDate.getFullYear() + 1)
-      } else {
-        expiresDate.setMonth(startDate.getMonth() + 1)
+        if (billingCycle === 'yearly') {
+          expiresDate.setFullYear(startDate.getFullYear() + 1)
+        } else {
+          expiresDate.setMonth(startDate.getMonth() + 1)
+        }
+
+        await prisma.subscription.create({
+          data: {
+            userId: result.userId,
+            planType: result.planId.toUpperCase() as any,
+            status: 'ACTIVE',
+            mercadoPagoPaymentId: String(result.paymentId),
+            startedAt: startDate,
+            expiresAt: expiresDate
+          }
+        })
+        
+        // Create payment record with actual amount based on plan
+        const amount = result.planId.toUpperCase() === 'PRO' ? 99.90 : 
+                      result.planId.toUpperCase() === 'LITE' ? 49.90 : 1.00
+        
+        await prisma.payment.create({
+          data: {
+            userId: result.userId,
+            amount,
+            currency: 'BRL',
+            status: 'COMPLETED',
+            mercadoPagoPaymentId: String(result.paymentId)
+          }
+        })
+      } else if (result.status === 'pending') {
+        // For pending payments (like PIX), just log and create payment record with pending status
+        console.log('[MercadoPago Webhook] Payment pending, creating payment record')
+        
+        const amount = result.planId.toUpperCase() === 'PRO' ? 99.90 : 
+                      result.planId.toUpperCase() === 'LITE' ? 49.90 : 1.00
+        
+        // Check if payment record already exists
+        const existingPayment = await prisma.payment.findFirst({
+          where: { mercadoPagoPaymentId: String(result.paymentId) }
+        })
+        
+        if (!existingPayment) {
+          await prisma.payment.create({
+            data: {
+              userId: result.userId,
+              amount,
+              currency: 'BRL',
+              status: 'PENDING',
+              mercadoPagoPaymentId: String(result.paymentId)
+            }
+          })
+        }
       }
-
-      await prisma.subscription.create({
-        data: {
-          userId: result.userId,
-          planType: result.planId.toUpperCase() as any,
-          status: 'ACTIVE',
-          mercadoPagoPaymentId: String(result.paymentId),
-          startedAt: startDate,
-          expiresAt: expiresDate
-        }
-      })
-      
-      // Create payment record
-      // Using test values of R$ 1,00
-      const amount = 1
-      await prisma.payment.create({
-        data: {
-          userId: result.userId,
-          amount,
-          currency: 'BRL',
-          status: 'COMPLETED',
-          mercadoPagoPaymentId: String(result.paymentId)
-        }
-      })
     }
     
     return NextResponse.json({ received: true })
