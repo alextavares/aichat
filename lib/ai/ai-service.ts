@@ -136,9 +136,9 @@ class AIService {
     switch (planType) {
       case 'FREE':
         return allModels.filter(model => 
-          ['gpt-3.5-turbo', 'gpt-4o-mini', 'claude-3-haiku', 'claude-3.5-haiku', 
+          ['gpt-4o-mini', 'claude-3.5-haiku', 
            'gemini-2-flash-free', 'mistral-7b', 'llama-2-13b', 'llama-3.3-70b', 
-           'deepseek-r1', 'deepseek-r1-small', 'perplexity-sonar', 'qwen-qwq', 'sabia-3.1'].includes(model.id)
+           'deepseek-r1', 'deepseek-r1-small', 'grok-3-mini', 'perplexity-sonar', 'qwen-qwq', 'sabia-3.1'].includes(model.id)
         )
       case 'PRO':
         return allModels.filter(model => 
