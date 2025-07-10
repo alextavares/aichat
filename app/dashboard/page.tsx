@@ -15,9 +15,7 @@ import {
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 import { getUserUsageStats } from '@/lib/usage-limits'
-import { FeatureGrid } from '@/components/dashboard/feature-grid'
-import { ModelSelector } from '@/components/dashboard/model-selector'
-import { ProfessionalTemplates } from '@/components/dashboard/professional-templates'
+import { MarketplaceLayout } from '@/components/dashboard/marketplace-layout'
 
 async function getDashboardData(userId: string) {
   const [totalConversations, subscription, usageStats] = await Promise.all([
@@ -68,24 +66,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header Section - InnerAI Style */}
-      <div className="flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0">
-        <div>
-          <h1 className="text-3xl font-semibold">
-            Olá {user?.name || 'Alexandre'}, <span className="font-normal">Como posso ajudar hoje?</span>
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Escolha um template abaixo ou inicie uma nova conversa
-          </p>
-        </div>
-        
-        {/* Model Selector */}
-        <div className="flex items-center space-x-4">
-          <ModelSelector />
-        </div>
-      </div>
-
-      {/* Quick Stats */}
+      {/* Quick Stats - Simplified */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="relative overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -104,20 +85,6 @@ export default async function DashboardPage() {
               <Badge variant="destructive" className="text-xs">Quase no limite</Badge>
             </div>
           )}
-        </Card>
-
-        <Card className="relative overflow-hidden">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Tokens Mensais</CardTitle>
-            <Coins className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{tokensUsed.toLocaleString('pt-BR')}</div>
-            <Progress value={tokenProgress} className="mt-2 h-1" />
-            <p className="text-xs text-muted-foreground mt-1">
-              {tokenProgress.toFixed(1)}% usado
-            </p>
-          </CardContent>
         </Card>
 
         <Card>
@@ -150,65 +117,26 @@ export default async function DashboardPage() {
             )}
           </CardContent>
         </Card>
-      </div>
 
-      {/* Professional Templates Section */}
-      <ProfessionalTemplates />
-
-      {/* Main Feature Grid - InnerAI Style */}
-      <div>
-        <h2 className="text-xl font-semibold mb-6">Ferramentas Disponíveis</h2>
-        <FeatureGrid />
-      </div>
-
-      {/* Plan Upgrade Banner - Only for FREE users */}
-      {planType === 'FREE' && (
-        <Card className="bg-gradient-to-r from-primary/10 to-primary/5 border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <Sparkles className="h-5 w-5" />
-              <span>Desbloqueie Todo o Potencial do InnerAI</span>
-            </CardTitle>
-            <CardDescription>
-              Faça upgrade para o plano Pro e tenha acesso a recursos ilimitados
-            </CardDescription>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Chat Rápido</CardTitle>
+            <MessageSquare className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="flex items-start space-x-2">
-                <div className="rounded-full bg-primary/20 p-1 mt-0.5">
-                  <MessageSquare className="h-3 w-3" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Mensagens Ilimitadas</p>
-                  <p className="text-xs text-muted-foreground">Converse sem limites diários</p>
-                </div>
+            <Link href="/dashboard/chat">
+              <div className="text-center">
+                <div className="text-lg font-bold text-primary">💬</div>
+                <p className="text-xs text-muted-foreground mt-1">Iniciar chat</p>
               </div>
-              <div className="flex items-start space-x-2">
-                <div className="rounded-full bg-primary/20 p-1 mt-0.5">
-                  <Brain className="h-3 w-3" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Todos os Modelos</p>
-                  <p className="text-xs text-muted-foreground">GPT-4, Claude, e mais</p>
-                </div>
-              </div>
-              <div className="flex items-start space-x-2">
-                <div className="rounded-full bg-primary/20 p-1 mt-0.5">
-                  <Sparkles className="h-3 w-3" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium">Recursos Premium</p>
-                  <p className="text-xs text-muted-foreground">Imagens, vídeos, e mais</p>
-                </div>
-              </div>
-            </div>
-            <Link href="/pricing" className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-              Ver Planos e Preços
             </Link>
           </CardContent>
         </Card>
-      )}
+      </div>
+
+      {/* Main Marketplace Layout */}
+      <MarketplaceLayout userPlan={planType} />
+
     </div>
   )
 }
