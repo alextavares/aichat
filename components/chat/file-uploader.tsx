@@ -1,11 +1,11 @@
 "use client"
 
-import { useRef } from 'react'
+import { useRef, useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Paperclip, X, FileText, Image, Loader2 } from 'lucide-react'
+import { Paperclip, X, FileText, Image, Loader2, Upload, CloudUpload } from 'lucide-react'
 import { FileAttachment } from '@/types/chat'
 import { cn } from '@/lib/utils'
 
@@ -27,6 +27,7 @@ export function FileUploader({
   className
 }: FileUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [isDragActive, setIsDragActive] = useState(false)
 
   const handleFileSelect = () => {
     fileInputRef.current?.click()
@@ -40,6 +41,34 @@ export function FileUploader({
     // Reset the input to allow selecting the same file again
     e.target.value = ''
   }
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(false)
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(false)
+    
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) {
+      onFilesAdd(files)
+    }
+  }, [onFilesAdd])
 
   const getFileIcon = (type: string) => {
     if (type.startsWith('image/')) {
@@ -80,7 +109,47 @@ export function FileUploader({
         className="hidden"
       />
 
-      {/* Upload Button */}
+      {/* Drag & Drop Area */}
+      <div
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+        className={cn(
+          "border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer",
+          isDragActive 
+            ? "border-primary bg-primary/5 text-primary" 
+            : "border-muted-foreground/25 hover:border-muted-foreground/50",
+          isUploading && "opacity-50 cursor-not-allowed"
+        )}
+        onClick={!isUploading ? handleFileSelect : undefined}
+      >
+        <div className="flex flex-col items-center gap-2">
+          {isUploading ? (
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          ) : isDragActive ? (
+            <CloudUpload className="h-8 w-8 text-primary" />
+          ) : (
+            <Upload className="h-8 w-8 text-muted-foreground" />
+          )}
+          
+          <div className="space-y-1">
+            <p className="text-sm font-medium">
+              {isUploading 
+                ? 'Processando arquivos...' 
+                : isDragActive 
+                  ? 'Solte os arquivos aqui' 
+                  : 'Arraste arquivos aqui ou clique para selecionar'
+              }
+            </p>
+            <p className="text-xs text-muted-foreground">
+              PNG, JPEG, GIF, WebP, TXT, PDF, DOCX, CSV (máx. 10MB)
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Upload Button (Alternative) */}
       <div className="flex items-center gap-2">
         <Button
           type="button"
@@ -90,12 +159,8 @@ export function FileUploader({
           disabled={isUploading}
           className="gap-2"
         >
-          {isUploading ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Paperclip className="h-4 w-4" />
-          )}
-          {isUploading ? 'Processando...' : 'Anexar Arquivos'}
+          <Paperclip className="h-4 w-4" />
+          Ou escolher arquivos
         </Button>
         
         {attachments.length > 0 && (
