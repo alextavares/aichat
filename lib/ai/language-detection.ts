@@ -3,15 +3,16 @@ export function detectLanguage(text: string): 'pt' | 'en' | 'es' | 'other' {
   // Convert to lowercase for easier matching
   const lowerText = text.toLowerCase()
   
-  // Portuguese patterns
+  // Portuguese patterns - more comprehensive
   const portuguesePatterns = [
-    /\b(ola|olá|oi|bom dia|boa tarde|boa noite|tudo bem|como vai|obrigad[oa]|por favor|com licença|desculp[ae]|até|tchau|adeus)\b/,
-    /\b(eu|você|voce|nós|nos|eles|elas|meu|minha|seu|sua|nosso|nossa)\b/,
-    /\b(que|como|quando|onde|porque|por que|qual|quais|quanto[as]?)\b/,
-    /\b(sim|não|nao|talvez|claro|certo|errado)\b/,
-    /\b(fazer|ter|ser|estar|poder|querer|precisar|gostar|achar|saber|conseguir)\b/,
-    /\b(hoje|amanhã|amanha|ontem|agora|depois|antes|sempre|nunca|já|ja)\b/,
-    /[ção|ões|ção|ães|ãos|ém|êm]/,
+    /\b(ola|olá|oi|bom dia|boa tarde|boa noite|tudo bem|como vai|obrigad[oa]|por favor|com licença|desculp[ae]|até|tchau|adeus|beleza|e ai|e aí)\b/,
+    /\b(eu|você|voce|nós|nos|eles|elas|meu|minha|seu|sua|nosso|nossa|dele|dela|comigo|contigo)\b/,
+    /\b(que|como|quando|onde|porque|por que|qual|quais|quanto[as]?|quem|onde|aonde)\b/,
+    /\b(sim|não|nao|talvez|claro|certo|errado|legal|massa|show|bacana)\b/,
+    /\b(fazer|ter|ser|estar|poder|querer|precisar|gostar|achar|saber|conseguir|dever|ir|vir|dar|ver|falar|dizer)\b/,
+    /\b(hoje|amanhã|amanha|ontem|agora|depois|antes|sempre|nunca|já|ja|ainda|também|tambem|muito|pouco|mais|menos)\b/,
+    /\b(brasileiro|brasil|português|portugues|falar|conversar|responder|ajudar|explicar|entender|compreender)\b/,
+    /[ção|ções|são|ões|ães|ãos|ém|êm]/,
     /[àáâãéêíóôõúç]/
   ]
   
@@ -58,8 +59,11 @@ export function detectLanguage(text: string): 'pt' | 'en' | 'es' | 'other' {
     if (matches) englishScore += matches.length
   })
   
+  // Log scores for debugging
+  console.log(`[Language Detection] Scores - PT: ${portugueseScore}, EN: ${englishScore}, ES: ${spanishScore}`)
+  
   // Determine language based on highest score
-  if (portugueseScore > englishScore && portugueseScore > spanishScore) {
+  if (portugueseScore > 0 && portugueseScore >= englishScore && portugueseScore >= spanishScore) {
     return 'pt'
   } else if (spanishScore > englishScore && spanishScore > portugueseScore) {
     return 'es'
@@ -67,7 +71,9 @@ export function detectLanguage(text: string): 'pt' | 'en' | 'es' | 'other' {
     return 'en'
   }
   
-  return 'other'
+  // Default to Portuguese if no clear detection (since this is a Brazilian app)
+  console.log(`[Language Detection] No clear language detected, defaulting to PT`)
+  return 'pt'
 }
 
 // Get system prompt for language
