@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       }))
     ]
 
-    console.log(`[Chat API] Requesting AI response for user ${user.id} with model ${model} in ${detectedLanguage}`)
+    console.log(`[Chat API] Requesting AI response for user ${user.id} with model ${model} in ${language}`)
     const aiResponse = await aiService.generateResponse(aiMessages, model)
     console.log(`[Chat API] AI response received: ${aiResponse.content.length} chars, ${aiResponse.tokensUsed.total} tokens`)
 

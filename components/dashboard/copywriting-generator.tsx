@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from 'react'
+import { MarkdownRenderer } from '@/components/chat/markdown-renderer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
@@ -154,7 +155,7 @@ ${selectedType.id === 'ads-copy' ? 'Inclua: headline, descrição, call-to-actio
       const newResult: CopyResult = {
         id: Date.now().toString(),
         type: selectedType.name,
-        content: data.content,
+        content: data.message || data.content,
         timestamp: new Date()
       }
 
@@ -352,7 +353,7 @@ ${selectedType.id === 'ads-copy' ? 'Inclua: headline, descrição, call-to-actio
                       </Button>
                     </div>
                     <div className="bg-muted p-4 rounded-lg">
-                      <pre className="whitespace-pre-wrap text-sm">{result.content}</pre>
+                      <MarkdownRenderer content={result.content} className="text-sm" />
                     </div>
                   </TabsContent>
                 ))}

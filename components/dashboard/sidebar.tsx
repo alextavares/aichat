@@ -35,6 +35,7 @@ import {
   ChevronDown,
   Headphones,
   BookOpen,
+  Zap,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -71,6 +72,11 @@ const menuItems = [
     title: 'Ferramentas',
     href: '/dashboard/tools',
     icon: Briefcase,
+  },
+  {
+    title: 'Copywriting',
+    href: '/dashboard/copywriting',
+    icon: Zap,
   },
   {
     title: 'Biblioteca',
