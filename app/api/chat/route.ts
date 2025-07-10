@@ -97,13 +97,31 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Gerar resposta da IA
-    const aiMessages: AIMessage[] = messages.map((msg: any) => ({
-      role: msg.role,
-      content: msg.content
-    }))
+    // Detectar idioma baseado na preferência do usuário ou nas mensagens
+    const { detectLanguageFromConversation, getLanguageSystemPrompt } = await import('@/lib/ai/language-detection')
+    
+    let language = user.preferredLanguage || 'auto'
+    
+    // Se auto, detectar baseado nas mensagens
+    if (language === 'auto') {
+      language = detectLanguageFromConversation(messages)
+    }
+    
+    console.log(`[Chat API] Using language: ${language} (preference: ${user.preferredLanguage || 'auto'})`)
+    
+    // Adicionar system prompt baseado no idioma
+    const systemPrompt = getLanguageSystemPrompt(language)
+    
+    // Gerar resposta da IA com system prompt
+    const aiMessages: AIMessage[] = [
+      { role: 'system', content: systemPrompt },
+      ...messages.map((msg: any) => ({
+        role: msg.role,
+        content: msg.content
+      }))
+    ]
 
-    console.log(`[Chat API] Requesting AI response for user ${user.id} with model ${model}`)
+    console.log(`[Chat API] Requesting AI response for user ${user.id} with model ${model} in ${detectedLanguage}`)
     const aiResponse = await aiService.generateResponse(aiMessages, model)
     console.log(`[Chat API] AI response received: ${aiResponse.content.length} chars, ${aiResponse.tokensUsed.total} tokens`)
 

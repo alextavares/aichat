@@ -20,6 +20,7 @@ model User {
   usageType       UsageType?        @map("usage_type")
   professionCategory String?        @map("profession_category")
   phone           String?
+  preferredLanguage String?         @default("auto") @map("preferred_language") // auto, pt, en, es
   onboardingCompleted Boolean       @default(false) @map("onboarding_completed")
   isActive        Boolean           @default(true) @map("is_active")
   createdAt       DateTime          @default(now()) @map("created_at")
