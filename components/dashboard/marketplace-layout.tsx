@@ -26,12 +26,15 @@ import {
   Brain,
   Star,
   Zap,
-  Trending
+  Trending,
+  BarChart
 } from 'lucide-react'
 import { ImageGenerator } from './image-generator'
 import { CopywritingGenerator } from './copywriting-generator'
 import { ContentSummarizer } from './content-summarizer'
 import { AudioTranscriber } from './audio-transcriber'
+import { AnalyticsPanel } from './analytics-panel'
+import { templateTracker } from '@/lib/analytics/template-tracker'
 
 // Template categories organized by AI functionality (like InnerAI.com)
 const categories = [
@@ -221,6 +224,7 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('popular')
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null)
+  const [showAnalytics, setShowAnalytics] = useState(false)
 
   // Filter templates based on category and search
   const filteredTemplates = templates.filter(template => {
@@ -293,6 +297,16 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
               <SelectItem value="newest">Mais Recente</SelectItem>
             </SelectContent>
           </Select>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAnalytics(true)}
+            className="flex items-center gap-2"
+          >
+            <BarChart className="h-4 w-4" />
+            Analytics
+          </Button>
         </div>
       </div>
 
@@ -380,6 +394,19 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
               <Button 
                 className="w-full group-hover:bg-primary/90 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
                 onClick={() => {
+                  // Track template usage
+                  templateTracker.trackTemplateClick(
+                    template.id,
+                    template.category,
+                    userPlan,
+                    'marketplace',
+                    {
+                      position: index + 1,
+                      filters: selectedCategory !== 'all' ? [selectedCategory] : [],
+                      searchQuery: searchQuery || undefined
+                    }
+                  )
+
                   if (template.id === 'image-generation') {
                     setActiveTemplate('image-generator')
                   } else if (template.id === 'chat-advanced') {
@@ -494,6 +521,12 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
           </div>
         </div>
       )}
+
+      {/* Analytics Panel */}
+      <AnalyticsPanel 
+        isOpen={showAnalytics} 
+        onClose={() => setShowAnalytics(false)} 
+      />
     </div>
   )
 }
