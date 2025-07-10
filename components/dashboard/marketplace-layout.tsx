@@ -29,122 +29,182 @@ import {
 } from 'lucide-react'
 import { ImageGenerator } from './image-generator'
 
-// Template categories aligned with personas
+// Template categories organized by AI functionality (like InnerAI.com)
 const categories = [
-  { id: 'all', name: 'Todos', icon: Sparkles },
-  { id: 'marketing', name: 'Marketing', icon: Trending, color: 'bg-blue-500' },
-  { id: 'content', name: 'Criação de Conteúdo', icon: FileText, color: 'bg-purple-500' },
-  { id: 'design', name: 'Design & Arte', icon: Palette, color: 'bg-pink-500' },
-  { id: 'productivity', name: 'Produtividade', icon: Zap, color: 'bg-green-500' },
-  { id: 'ai-tools', name: 'Ferramentas IA', icon: Brain, color: 'bg-orange-500' },
-  { id: 'media', name: 'Áudio & Vídeo', icon: Video, color: 'bg-red-500' }
+  { id: 'all', name: 'Todas Ferramentas', icon: Sparkles },
+  { id: 'text', name: 'IA para Texto', icon: FileText, color: 'bg-blue-500' },
+  { id: 'images', name: 'IA para Imagens', icon: ImageIcon, color: 'bg-purple-500' },
+  { id: 'video', name: 'IA para Vídeo', icon: Video, color: 'bg-pink-500' },
+  { id: 'audio', name: 'IA para Áudio', icon: Mic, color: 'bg-green-500' },
+  { id: 'assistants', name: 'Assistentes Personalizados', icon: Brain, color: 'bg-orange-500' }
 ]
 
-// Template data focusing on Carlos Marketing and Ana Criadora personas
+// Template data organized by AI functionality type
 const templates = [
+  // IA para Texto
+  {
+    id: 'chat-advanced',
+    title: 'Chat com IA Avançada',
+    description: 'Converse com modelos como GPT-4, Claude e Gemini para qualquer tarefa',
+    category: 'text',
+    type: 'POPULAR',
+    usage: '12.5k',
+    rating: 4.9,
+    preview: '💬',
+    tags: ['GPT-4', 'Claude', 'Conversação'],
+    time: 'Instantâneo',
+    features: ['Múltiplos modelos', 'Contexto longo', 'Streaming']
+  },
+  {
+    id: 'copywriting',
+    title: 'Gerador de Copy',
+    description: 'Crie textos persuasivos para vendas, anúncios e marketing',
+    category: 'text',
+    type: 'PRO',
+    usage: '8.3k',
+    rating: 4.8,
+    preview: '✍️',
+    tags: ['Copywriting', 'Marketing', 'Vendas'],
+    time: '2 min',
+    features: ['Templates prontos', 'Múltiplas variações', 'A/B testing']
+  },
+  {
+    id: 'content-generator',
+    title: 'Criador de Conteúdo',
+    description: 'Gere artigos, posts e conteúdo para blogs e redes sociais',
+    category: 'text',
+    type: 'TRENDING',
+    usage: '6.7k',
+    rating: 4.7,
+    preview: '📝',
+    tags: ['Blog', 'Social Media', 'SEO'],
+    time: '3 min',
+    features: ['SEO otimizado', 'Múltiplos formatos', 'Pesquisa automática']
+  },
+  {
+    id: 'translation',
+    title: 'Tradutor Avançado',
+    description: 'Traduções precisas mantendo contexto e tom original',
+    category: 'text',
+    type: 'FREE',
+    usage: '9.1k',
+    rating: 4.6,
+    preview: '🌐',
+    tags: ['Tradução', 'Idiomas', 'Contexto'],
+    time: '30s',
+    features: ['50+ idiomas', 'Preserva tom', 'Contexto cultural']
+  },
+
+  // IA para Imagens
   {
     id: 'image-generation',
-    title: 'Geração de Imagens',
-    description: 'Crie imagens profissionais para posts, anúncios e apresentações',
-    category: 'design',
+    title: 'Geração de Imagens DALL-E',
+    description: 'Crie imagens profissionais usando DALL-E 3 com qualidade HD',
+    category: 'images',
     type: 'NEW',
-    usage: '2.1k',
-    rating: 4.8,
-    preview: '🎨',
-    tags: ['DALL-E', 'Marketing', 'Social Media'],
-    time: '2 min',
-    persona: ['Carlos Marketing', 'Ana Criadora']
-  },
-  {
-    id: 'social-media-posts',
-    title: 'Posts para Redes Sociais',
-    description: 'Templates otimizados para Instagram, Facebook, LinkedIn e Twitter',
-    category: 'marketing',
-    type: 'POPULAR',
-    usage: '5.8k',
+    usage: '4.2k',
     rating: 4.9,
-    preview: '📱',
-    tags: ['Instagram', 'Facebook', 'Copywriting'],
-    time: '1 min',
-    persona: ['Carlos Marketing', 'Ana Criadora']
+    preview: '🎨',
+    tags: ['DALL-E 3', 'HD', 'Profissional'],
+    time: '45s',
+    features: ['Qualidade HD', 'Múltiplos estilos', 'Prompt otimizado']
   },
   {
-    id: 'video-scripts',
-    title: 'Roteiros para Vídeos',
-    description: 'Scripts envolventes para YouTube, TikTok e Reels',
-    category: 'content',
-    type: 'TRENDING',
-    usage: '3.2k',
-    rating: 4.7,
+    id: 'image-editing',
+    title: 'Editor de Imagens IA',
+    description: 'Edite imagens com comandos de texto usando IA avançada',
+    category: 'images',
+    type: 'COMING_SOON',
+    usage: '---',
+    rating: 0,
+    preview: '🖼️',
+    tags: ['Edição', 'IA', 'Comandos'],
+    time: '1 min',
+    features: ['Edição por texto', 'Remoção de objetos', 'Estilo transfer']
+  },
+  {
+    id: 'background-remover',
+    title: 'Remoção de Fundo',
+    description: 'Remove fundos automaticamente com precisão profissional',
+    category: 'images',
+    type: 'COMING_SOON',
+    usage: '---',
+    rating: 0,
+    preview: '🔲',
+    tags: ['Fundo', 'Transparente', 'Automático'],
+    time: '15s',
+    features: ['Alta precisão', 'Bordas suaves', 'Batch processing']
+  },
+
+  // IA para Vídeo (futuro)
+  {
+    id: 'video-generation',
+    title: 'Geração de Vídeos',
+    description: 'Transforme texto em vídeos profissionais com IA',
+    category: 'video',
+    type: 'COMING_SOON',
+    usage: '---',
+    rating: 0,
     preview: '🎬',
-    tags: ['YouTube', 'TikTok', 'Scripts'],
-    time: '3 min',
-    persona: ['Ana Criadora']
-  },
-  {
-    id: 'email-campaigns',
-    title: 'Campanhas de Email',
-    description: 'Templates de email marketing com alta taxa de conversão',
-    category: 'marketing',
-    type: 'PRO',
-    usage: '1.9k',
-    rating: 4.6,
-    preview: '📧',
-    tags: ['Email Marketing', 'Conversão', 'CRM'],
-    time: '4 min',
-    persona: ['Carlos Marketing']
-  },
-  {
-    id: 'content-ideas',
-    title: 'Gerador de Ideias',
-    description: 'Ideias criativas baseadas em trends e seu nicho',
-    category: 'content',
-    type: 'AI',
-    usage: '4.1k',
-    rating: 4.8,
-    preview: '💡',
-    tags: ['Brainstorming', 'Trends', 'Criatividade'],
-    time: '1 min',
-    persona: ['Ana Criadora', 'Carlos Marketing']
-  },
-  {
-    id: 'presentation-maker',
-    title: 'Criador de Apresentações',
-    description: 'Slides profissionais para reuniões e pitches',
-    category: 'productivity',
-    type: 'BUSINESS',
-    usage: '2.7k',
-    rating: 4.5,
-    preview: '📊',
-    tags: ['PowerPoint', 'Business', 'Profissional'],
+    tags: ['Vídeo', 'IA', 'Automático'],
     time: '5 min',
-    persona: ['Carlos Marketing']
+    features: ['Texto para vídeo', 'Múltiplos estilos', 'Avatares IA']
   },
   {
-    id: 'hashtag-generator',
-    title: 'Gerador de Hashtags',
-    description: 'Hashtags estratégicas para maximizar alcance',
-    category: 'marketing',
-    type: 'FREE',
-    usage: '7.3k',
-    rating: 4.4,
-    preview: '#️⃣',
-    tags: ['Hashtags', 'Alcance', 'Engagement'],
-    time: '30s',
-    persona: ['Ana Criadora']
+    id: 'video-transcription',
+    title: 'Transcrição de Vídeo',
+    description: 'Transcreva vídeos automaticamente com alta precisão',
+    category: 'video',
+    type: 'COMING_SOON',
+    usage: '---',
+    rating: 0,
+    preview: '📹',
+    tags: ['Transcrição', 'Legendas', 'Automático'],
+    time: '2 min',
+    features: ['Alta precisão', 'Múltiplos idiomas', 'Timestamps']
   },
+
+  // IA para Áudio (futuro)
   {
     id: 'voice-generation',
     title: 'Geração de Voz',
-    description: 'Converta texto em áudio natural para podcasts e vídeos',
-    category: 'media',
-    type: 'NEW',
-    usage: '1.2k',
-    rating: 4.9,
+    description: 'Converta texto em áudio natural com vozes realistas',
+    category: 'audio',
+    type: 'COMING_SOON',
+    usage: '---',
+    rating: 0,
     preview: '🎙️',
-    tags: ['TTS', 'Podcast', 'Áudio'],
+    tags: ['TTS', 'Voz Natural', 'Multilíngue'],
+    time: '1 min',
+    features: ['Vozes realistas', 'Múltiplos idiomas', 'Controle de emoção']
+  },
+  {
+    id: 'audio-transcription',
+    title: 'Transcrição de Áudio',
+    description: 'Transcreva áudios e podcasts com precisão profissional',
+    category: 'audio',
+    type: 'COMING_SOON',
+    usage: '---',
+    rating: 0,
+    preview: '🎧',
+    tags: ['Transcrição', 'Podcast', 'Precisão'],
     time: '2 min',
-    persona: ['Ana Criadora']
+    features: ['Alta precisão', 'Identificação de falantes', 'Timestamps']
+  },
+
+  // Assistentes Personalizados
+  {
+    id: 'custom-assistant',
+    title: 'Assistente Personalizado',
+    description: 'Crie assistentes IA especializados para suas necessidades',
+    category: 'assistants',
+    type: 'PRO',
+    usage: '2.8k',
+    rating: 4.7,
+    preview: '🤖',
+    tags: ['Personalizado', 'Especializado', 'Workflow'],
+    time: '10 min',
+    features: ['Treinamento customizado', 'Memória persistente', 'Integração API']
   }
 ]
 
@@ -187,9 +247,8 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
       case 'POPULAR': return 'bg-blue-500'
       case 'TRENDING': return 'bg-purple-500'
       case 'PRO': return 'bg-yellow-500'
-      case 'AI': return 'bg-orange-500'
-      case 'BUSINESS': return 'bg-gray-500'
       case 'FREE': return 'bg-emerald-500'
+      case 'COMING_SOON': return 'bg-gray-400'
       default: return 'bg-gray-400'
     }
   }
@@ -199,10 +258,10 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
       {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          Central de Ferramentas IA
+          Ferramentas de IA
         </h1>
         <p className="text-muted-foreground max-w-2xl mx-auto">
-          Acelere sua produtividade com templates e ferramentas de IA otimizadas para marketing e criação de conteúdo
+          Acesse todas as funcionalidades de IA organizadas por tipo: texto, imagem, vídeo, áudio e assistentes personalizados
         </p>
       </div>
 
@@ -211,7 +270,7 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            placeholder="Buscar templates e ferramentas..."
+            placeholder="Buscar ferramentas de IA..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -309,14 +368,20 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
                 onClick={() => {
                   if (template.id === 'image-generation') {
                     setActiveTemplate('image-generator')
+                  } else if (template.id === 'chat-advanced') {
+                    window.location.href = '/dashboard/chat'
+                  } else if (template.type === 'COMING_SOON') {
+                    // Show coming soon message
+                    console.log('Coming soon:', template.id)
                   } else {
                     // Handle other templates
                     console.log('Template clicked:', template.id)
                   }
                 }}
+                disabled={template.type === 'COMING_SOON'}
               >
                 <Sparkles className="h-4 w-4 mr-2" />
-                Usar Template
+                {template.type === 'COMING_SOON' ? 'Em Breve' : 'Usar Ferramenta'}
               </Button>
             </CardContent>
           </Card>
@@ -325,7 +390,7 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
 
       {/* Results info */}
       <div className="text-center text-muted-foreground">
-        <p>Mostrando {sortedTemplates.length} de {templates.length} templates</p>
+        <p>Mostrando {sortedTemplates.length} de {templates.length} ferramentas</p>
       </div>
 
       {/* Template Modals/Views */}
