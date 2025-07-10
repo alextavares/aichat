@@ -29,7 +29,7 @@ import {
   TrendingUp,
   RefreshCw
 } from 'lucide-react'
-import { toast } from '@/hooks/use-toast'
+import { useToast } from '@/providers/toast-provider'
 
 interface CopywritingGeneratorProps {
   userPlan: string
@@ -101,14 +101,11 @@ export function CopywritingGenerator({ userPlan }: CopywritingGeneratorProps) {
   const [isGenerating, setIsGenerating] = useState(false)
   const [results, setResults] = useState<CopyResult[]>([])
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const toast = useToast()
 
   const handleGenerate = async () => {
     if (!product.trim()) {
-      toast({
-        title: "Erro",
-        description: "Descreva seu produto ou serviço",
-        variant: "destructive"
-      })
+      toast.error('Erro', 'Descreva seu produto ou serviço')
       return
     }
 
@@ -163,17 +160,10 @@ ${selectedType.id === 'ads-copy' ? 'Inclua: headline, descrição, call-to-actio
 
       setResults(prev => [newResult, ...prev.slice(0, 4)]) // Keep last 5 results
       
-      toast({
-        title: "Copy Gerado!",
-        description: `${selectedType.name} criado com sucesso`
-      })
+      toast.generateSuccess()
     } catch (error) {
       console.error('Error generating copy:', error)
-      toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao gerar copy",
-        variant: "destructive"
-      })
+      toast.genericError(error instanceof Error ? error.message : "Erro ao gerar copy")
     } finally {
       setIsGenerating(false)
     }
@@ -184,16 +174,9 @@ ${selectedType.id === 'ads-copy' ? 'Inclua: headline, descrição, call-to-actio
       await navigator.clipboard.writeText(text)
       setCopiedId(id)
       setTimeout(() => setCopiedId(null), 2000)
-      toast({
-        title: "Copiado!",
-        description: "Copy copiado para a área de transferência"
-      })
+      toast.copySuccess('Copy copiado com sucesso!')
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao copiar texto",
-        variant: "destructive"
-      })
+      toast.error('Erro ao copiar', 'Não foi possível copiar o texto')
     }
   }
 

@@ -28,7 +28,7 @@ import {
   Zap,
   Upload
 } from 'lucide-react'
-import { toast } from '@/hooks/use-toast'
+import { useToast } from '@/providers/toast-provider'
 
 interface ContentSummarizerProps {
   userPlan: string
@@ -96,6 +96,7 @@ export function ContentSummarizer({ userPlan }: ContentSummarizerProps) {
   const [isProcessing, setIsProcessing] = useState(false)
   const [results, setResults] = useState<SummaryResult[]>([])
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const toast = useToast()
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -105,38 +106,23 @@ export function ContentSummarizer({ userPlan }: ContentSummarizerProps) {
         reader.onload = (e) => {
           const text = e.target?.result as string
           setContent(text)
-          toast({
-            title: "Arquivo carregado!",
-            description: `${file.name} foi carregado com sucesso`
-          })
+          toast.uploadSuccess(file.name)
         }
         reader.readAsText(file)
       } else {
-        toast({
-          title: "Formato não suportado",
-          description: "Apenas arquivos .txt são suportados no momento",
-          variant: "destructive"
-        })
+        toast.error('Formato não suportado', 'Apenas arquivos .txt são suportados no momento')
       }
     }
   }
 
   const handleSummarize = async () => {
     if (!content.trim()) {
-      toast({
-        title: "Erro",
-        description: "Adicione o conteúdo que deseja resumir",
-        variant: "destructive"
-      })
+      toast.error('Erro', 'Adicione o conteúdo que deseja resumir')
       return
     }
 
     if (content.trim().length < 100) {
-      toast({
-        title: "Conteúdo muito curto",
-        description: "Adicione pelo menos 100 caracteres para um resumo eficaz",
-        variant: "destructive"
-      })
+      toast.warning('Conteúdo muito curto', 'Adicione pelo menos 100 caracteres para um resumo eficaz')
       return
     }
 
@@ -201,17 +187,10 @@ INSTRUÇÕES:
 
       setResults(prev => [newResult, ...prev.slice(0, 4)]) // Keep last 5 results
       
-      toast({
-        title: "Resumo Criado!",
-        description: `${selectedType.name} gerado com sucesso`
-      })
+      toast.generateSuccess()
     } catch (error) {
       console.error('Error generating summary:', error)
-      toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao gerar resumo",
-        variant: "destructive"
-      })
+      toast.genericError(error instanceof Error ? error.message : "Erro ao gerar resumo")
     } finally {
       setIsProcessing(false)
     }
@@ -222,16 +201,9 @@ INSTRUÇÕES:
       await navigator.clipboard.writeText(text)
       setCopiedId(id)
       setTimeout(() => setCopiedId(null), 2000)
-      toast({
-        title: "Copiado!",
-        description: "Resumo copiado para a área de transferência"
-      })
+      toast.copySuccess('Resumo copiado com sucesso!')
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao copiar texto",
-        variant: "destructive"
-      })
+      toast.error('Erro ao copiar', 'Não foi possível copiar o texto')
     }
   }
 

@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import SessionProviderWrapper from "@/components/providers/session-provider";
 import { Toaster } from "@/components/ui/toaster";
+import { ToastProvider } from "@/providers/toast-provider";
 
 // const inter = Inter({
 //   subsets: ["latin"],
@@ -23,8 +24,10 @@ export default function RootLayout({
     <html lang="pt-BR" className="dark">
       <body className="font-sans antialiased">
         <SessionProviderWrapper>
-          {children}
-          <Toaster />
+          <ToastProvider>
+            {children}
+            <Toaster />
+          </ToastProvider>
         </SessionProviderWrapper>
       </body>
     </html>

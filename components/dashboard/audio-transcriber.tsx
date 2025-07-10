@@ -26,7 +26,7 @@ import {
   Clock,
   Globe
 } from 'lucide-react'
-import { toast } from '@/hooks/use-toast'
+import { useToast } from '@/providers/toast-provider'
 
 interface AudioTranscriberProps {
   userPlan: string
@@ -88,44 +88,30 @@ export function AudioTranscriber({ userPlan }: AudioTranscriberProps) {
   const [isPlaying, setIsPlaying] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const audioRef = useRef<HTMLAudioElement>(null)
+  const toast = useToast()
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       // Check file size (25MB limit)
       if (file.size > 25 * 1024 * 1024) {
-        toast({
-          title: "Arquivo muito grande",
-          description: "O tamanho máximo é 25MB",
-          variant: "destructive"
-        })
+        toast.error('Arquivo muito grande', 'O tamanho máximo é 25MB')
         return
       }
 
       setSelectedFile(file)
-      toast({
-        title: "Arquivo selecionado",
-        description: `${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`
-      })
+      toast.uploadSuccess(`${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`)
     }
   }
 
   const handleTranscribe = async () => {
     if (!selectedFile) {
-      toast({
-        title: "Erro",
-        description: "Selecione um arquivo de áudio",
-        variant: "destructive"
-      })
+      toast.error('Erro', 'Selecione um arquivo de áudio')
       return
     }
 
     if (userPlan === 'FREE') {
-      toast({
-        title: "Upgrade Necessário",
-        description: "Transcrição de áudio disponível apenas para planos LITE e PRO",
-        variant: "destructive"
-      })
+      toast.quotaExceeded()
       return
     }
 
@@ -161,17 +147,10 @@ export function AudioTranscriber({ userPlan }: AudioTranscriberProps) {
 
       setResults(prev => [newResult, ...prev.slice(0, 4)]) // Keep last 5 results
       
-      toast({
-        title: "Transcrição Concluída!",
-        description: `${selectedFile.name} foi transcrito com sucesso`
-      })
+      toast.generateSuccess()
     } catch (error) {
       console.error('Error transcribing audio:', error)
-      toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao transcrever áudio",
-        variant: "destructive"
-      })
+      toast.genericError(error instanceof Error ? error.message : "Erro ao transcrever áudio")
     } finally {
       setIsTranscribing(false)
     }
@@ -182,16 +161,9 @@ export function AudioTranscriber({ userPlan }: AudioTranscriberProps) {
       await navigator.clipboard.writeText(text)
       setCopiedId(id)
       setTimeout(() => setCopiedId(null), 2000)
-      toast({
-        title: "Copiado!",
-        description: "Transcrição copiada para a área de transferência"
-      })
+      toast.copySuccess('Transcrição copiada com sucesso!')
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Erro ao copiar texto",
-        variant: "destructive"
-      })
+      toast.error('Erro ao copiar', 'Não foi possível copiar o texto')
     }
   }
 

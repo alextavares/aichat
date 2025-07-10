@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
+import { useToast } from '@/providers/toast-provider'
 import {
   Search,
   Filter,
@@ -225,6 +226,7 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
   const [sortBy, setSortBy] = useState('popular')
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null)
   const [showAnalytics, setShowAnalytics] = useState(false)
+  const toast = useToast()
 
   // Filter templates based on category and search
   const filteredTemplates = templates.filter(template => {
@@ -409,20 +411,23 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
 
                   if (template.id === 'image-generation') {
                     setActiveTemplate('image-generator')
+                    toast.newFeature('Gerador de Imagens com DALL-E 3 agora disponível!')
                   } else if (template.id === 'chat-advanced') {
+                    toast.loading('Abrindo chat...')
                     window.location.href = '/dashboard/chat'
                   } else if (template.id === 'copywriting') {
                     setActiveTemplate('copywriting-generator')
+                    toast.info('Gerador de Copywriting', 'Crie textos persuasivos com IA')
                   } else if (template.id === 'content-generator') {
                     setActiveTemplate('content-summarizer')
+                    toast.info('Resumidor de Conteúdo', 'Resuma textos longos em segundos')
                   } else if (template.id === 'audio-transcription') {
                     setActiveTemplate('audio-transcriber')
+                    toast.info('Transcritor de Áudio', 'Converta áudio em texto com Whisper AI')
                   } else if (template.type === 'COMING_SOON') {
-                    // Show coming soon message
-                    console.log('Coming soon:', template.id)
+                    toast.warning('Em Breve!', `${template.title} estará disponível em breve`)
                   } else {
-                    // Handle other templates
-                    console.log('Template clicked:', template.id)
+                    toast.info('Template selecionado', template.title)
                   }
                 }}
                 disabled={template.type === 'COMING_SOON'}
