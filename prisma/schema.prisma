@@ -359,3 +359,35 @@ enum KnowledgeBaseType {
   TEXT
   FAQ
 }
+
+model Template {
+  id          String   @id @default(cuid())
+  templateId  String   @unique @map("template_id")
+  name        String
+  category    String
+  usageCount  Int      @default(0) @map("usage_count")
+  lastUsedAt  DateTime? @map("last_used_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  @@index([category])
+  @@index([usageCount])
+  @@map("templates")
+}
+
+model TemplateAnalytics {
+  id          String   @id @default(cuid())
+  templateId  String   @map("template_id")
+  userId      String   @map("user_id")
+  category    String
+  userPlan    String   @map("user_plan")
+  source      String
+  metadata    String?  @db.Text
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  @@index([templateId])
+  @@index([userId])
+  @@index([category])
+  @@index([createdAt])
+  @@map("template_analytics")
+}
