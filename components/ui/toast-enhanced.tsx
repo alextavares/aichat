@@ -339,5 +339,22 @@ export const toastVariants = {
     icon: <Trophy className="h-5 w-5 text-yellow-500" />,
     duration: 6000,
     className: 'bg-gradient-to-r from-yellow-500/10 to-orange-500/10 border-yellow-500/20'
+  }),
+
+  // Feedback variants
+  feedbackSuccess: () => ({
+    type: 'success' as ToastType,
+    title: 'Feedback enviado!',
+    description: 'Obrigado por compartilhar sua experiência conosco',
+    icon: <CheckCircle2 className="h-5 w-5" />,
+    duration: 3000
+  }),
+
+  feedbackError: () => ({
+    type: 'error' as ToastType,
+    title: 'Erro no feedback',
+    description: 'Não foi possível enviar seu feedback. Tente novamente.',
+    icon: <XCircle className="h-5 w-5" />,
+    duration: 4000
   })
 }

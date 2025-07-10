@@ -35,6 +35,7 @@ import { CopywritingGenerator } from './copywriting-generator'
 import { ContentSummarizer } from './content-summarizer'
 import { AudioTranscriber } from './audio-transcriber'
 import { AnalyticsPanel } from './analytics-panel'
+import { FeedbackModal } from '@/components/feedback/feedback-modal'
 import { templateTracker } from '@/lib/analytics/template-tracker'
 
 // Template categories organized by AI functionality (like InnerAI.com)
@@ -226,6 +227,17 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
   const [sortBy, setSortBy] = useState('popular')
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null)
   const [showAnalytics, setShowAnalytics] = useState(false)
+  const [feedbackModal, setFeedbackModal] = useState<{
+    isOpen: boolean
+    templateId: string
+    templateName: string
+    category: string
+  }>({
+    isOpen: false,
+    templateId: '',
+    templateName: '',
+    category: ''
+  })
   const toast = useToast()
 
   // Filter templates based on category and search
@@ -392,49 +404,71 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
                 </div>
               </div>
 
-              {/* CTA Button */}
-              <Button 
-                className="w-full group-hover:bg-primary/90 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
-                onClick={() => {
-                  // Track template usage
-                  templateTracker.trackTemplateClick(
-                    template.id,
-                    template.category,
-                    userPlan,
-                    'marketplace',
-                    {
-                      position: index + 1,
-                      filters: selectedCategory !== 'all' ? [selectedCategory] : [],
-                      searchQuery: searchQuery || undefined
-                    }
-                  )
+              {/* CTA Buttons */}
+              <div className="space-y-2">
+                <Button 
+                  className="w-full group-hover:bg-primary/90 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+                  onClick={() => {
+                    // Track template usage
+                    templateTracker.trackTemplateClick(
+                      template.id,
+                      template.category,
+                      userPlan,
+                      'marketplace',
+                      {
+                        position: index + 1,
+                        filters: selectedCategory !== 'all' ? [selectedCategory] : [],
+                        searchQuery: searchQuery || undefined
+                      }
+                    )
 
-                  if (template.id === 'image-generation') {
-                    setActiveTemplate('image-generator')
-                    toast.newFeature('Gerador de Imagens com DALL-E 3 agora disponível!')
-                  } else if (template.id === 'chat-advanced') {
-                    toast.loading('Abrindo chat...')
-                    window.location.href = '/dashboard/chat'
-                  } else if (template.id === 'copywriting') {
-                    setActiveTemplate('copywriting-generator')
-                    toast.info('Gerador de Copywriting', 'Crie textos persuasivos com IA')
-                  } else if (template.id === 'content-generator') {
-                    setActiveTemplate('content-summarizer')
-                    toast.info('Resumidor de Conteúdo', 'Resuma textos longos em segundos')
-                  } else if (template.id === 'audio-transcription') {
-                    setActiveTemplate('audio-transcriber')
-                    toast.info('Transcritor de Áudio', 'Converta áudio em texto com Whisper AI')
-                  } else if (template.type === 'COMING_SOON') {
-                    toast.warning('Em Breve!', `${template.title} estará disponível em breve`)
-                  } else {
-                    toast.info('Template selecionado', template.title)
-                  }
-                }}
-                disabled={template.type === 'COMING_SOON'}
-              >
-                <Sparkles className="h-4 w-4 mr-2 transition-transform group-hover:rotate-12" />
-                {template.type === 'COMING_SOON' ? 'Em Breve' : 'Usar Ferramenta'}
-              </Button>
+                    if (template.id === 'image-generation') {
+                      setActiveTemplate('image-generator')
+                      toast.newFeature('Gerador de Imagens com DALL-E 3 agora disponível!')
+                    } else if (template.id === 'chat-advanced') {
+                      toast.loading('Abrindo chat...')
+                      window.location.href = '/dashboard/chat'
+                    } else if (template.id === 'copywriting') {
+                      setActiveTemplate('copywriting-generator')
+                      toast.info('Gerador de Copywriting', 'Crie textos persuasivos com IA')
+                    } else if (template.id === 'content-generator') {
+                      setActiveTemplate('content-summarizer')
+                      toast.info('Resumidor de Conteúdo', 'Resuma textos longos em segundos')
+                    } else if (template.id === 'audio-transcription') {
+                      setActiveTemplate('audio-transcriber')
+                      toast.info('Transcritor de Áudio', 'Converta áudio em texto com Whisper AI')
+                    } else if (template.type === 'COMING_SOON') {
+                      toast.warning('Em Breve!', `${template.title} estará disponível em breve`)
+                    } else {
+                      toast.info('Template selecionado', template.title)
+                    }
+                  }}
+                  disabled={template.type === 'COMING_SOON'}
+                >
+                  <Sparkles className="h-4 w-4 mr-2 transition-transform group-hover:rotate-12" />
+                  {template.type === 'COMING_SOON' ? 'Em Breve' : 'Usar Ferramenta'}
+                </Button>
+                
+                {template.type !== 'COMING_SOON' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs hover:bg-muted/50"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setFeedbackModal({
+                        isOpen: true,
+                        templateId: template.id,
+                        templateName: template.title,
+                        category: template.category
+                      })
+                    }}
+                  >
+                    <MessageSquare className="h-3 w-3 mr-1" />
+                    Avaliar
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
           </div>
@@ -531,6 +565,24 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
       <AnalyticsPanel 
         isOpen={showAnalytics} 
         onClose={() => setShowAnalytics(false)} 
+      />
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={feedbackModal.isOpen}
+        onClose={() => setFeedbackModal({
+          isOpen: false,
+          templateId: '',
+          templateName: '',
+          category: ''
+        })}
+        templateId={feedbackModal.templateId}
+        templateName={feedbackModal.templateName}
+        category={feedbackModal.category}
+        onSubmit={(feedback) => {
+          console.log('Feedback submitted:', feedback)
+          // Optionally refresh template data to show updated ratings
+        }}
       />
     </div>
   )
