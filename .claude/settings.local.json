@@ -217,7 +217,8 @@
       "Bash(BASE_URL=https://seahorse-app-k5pag.ondigitalocean.app npm run diagnose:production)",
       "Bash(sudo dpkg:*)",
       "mcp__sequential-thinking__sequentialthinking",
-      "WebFetch(domain:app.innerai.com)"
+      "WebFetch(domain:app.innerai.com)",
+      "Bash(yarn add framer-motion)"
     ],
     "deny": []
   }

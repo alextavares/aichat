@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { cn } from '@/lib/utils'
 import {
   Search,
   Filter,
@@ -297,7 +298,7 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
 
       {/* Categories */}
       <div className="flex flex-wrap gap-2">
-        {categories.map((category) => {
+        {categories.map((category, index) => {
           const Icon = category.icon
           return (
             <Button
@@ -305,9 +306,14 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
               variant={selectedCategory === category.id ? "default" : "outline"}
               size="sm"
               onClick={() => setSelectedCategory(category.id)}
-              className="flex items-center gap-2"
+              className={cn(
+                "flex items-center gap-2 transition-all duration-300 hover:scale-105 hover:shadow-md",
+                selectedCategory === category.id ? "glow" : "",
+                "opacity-0 animate-[fadeInUp_0.5s_ease-out_forwards]"
+              )}
+              style={{ animationDelay: `${index * 0.05}s` }}
             >
-              <Icon className="h-4 w-4" />
+              <Icon className="h-4 w-4 transition-transform group-hover:scale-110" />
               {category.name}
             </Button>
           )
@@ -316,14 +322,19 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
 
       {/* Templates Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {sortedTemplates.map((template) => (
-          <Card key={template.id} className="group hover:shadow-lg transition-all duration-300 hover:scale-105 cursor-pointer">
+        {sortedTemplates.map((template, index) => (
+          <div 
+            key={template.id}
+            className="opacity-0 animate-[fadeInUp_0.6s_ease-out_forwards]"
+            style={{ animationDelay: `${index * 0.1}s` }}
+          >
+            <Card className="group hover:shadow-xl transition-all duration-500 hover:scale-[1.02] cursor-pointer border-0 shadow-md hover:shadow-primary/20">
             <CardContent className="p-6">
               {/* Header with preview and type */}
               <div className="flex items-start justify-between mb-4">
-                <div className="text-4xl mb-2">{template.preview}</div>
+                <div className="text-4xl mb-2 transition-transform group-hover:scale-110 duration-300">{template.preview}</div>
                 <Badge 
-                  className={`${getTypeColor(template.type)} text-white text-xs`}
+                  className={`${getTypeColor(template.type)} text-white text-xs transition-all duration-300 group-hover:scale-110`}
                 >
                   {template.type}
                 </Badge>
@@ -331,10 +342,10 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
 
               {/* Title and Description */}
               <div className="space-y-2 mb-4">
-                <h3 className="font-semibold text-lg group-hover:text-primary transition-colors">
+                <h3 className="font-semibold text-lg group-hover:text-primary transition-all duration-300 group-hover:translate-x-1">
                   {template.title}
                 </h3>
-                <p className="text-sm text-muted-foreground line-clamp-2">
+                <p className="text-sm text-muted-foreground line-clamp-2 transition-colors duration-300 group-hover:text-foreground/80">
                   {template.description}
                 </p>
               </div>
@@ -367,7 +378,7 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
 
               {/* CTA Button */}
               <Button 
-                className="w-full group-hover:bg-primary/90 transition-colors"
+                className="w-full group-hover:bg-primary/90 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
                 onClick={() => {
                   if (template.id === 'image-generation') {
                     setActiveTemplate('image-generator')
@@ -389,11 +400,12 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
                 }}
                 disabled={template.type === 'COMING_SOON'}
               >
-                <Sparkles className="h-4 w-4 mr-2" />
+                <Sparkles className="h-4 w-4 mr-2 transition-transform group-hover:rotate-12" />
                 {template.type === 'COMING_SOON' ? 'Em Breve' : 'Usar Ferramenta'}
               </Button>
             </CardContent>
           </Card>
+          </div>
         ))}
       </div>
 
