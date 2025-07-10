@@ -28,6 +28,9 @@ import {
   Trending
 } from 'lucide-react'
 import { ImageGenerator } from './image-generator'
+import { CopywritingGenerator } from './copywriting-generator'
+import { ContentSummarizer } from './content-summarizer'
+import { AudioTranscriber } from './audio-transcriber'
 
 // Template categories organized by AI functionality (like InnerAI.com)
 const categories = [
@@ -164,7 +167,20 @@ const templates = [
     features: ['Alta precisão', 'Múltiplos idiomas', 'Timestamps']
   },
 
-  // IA para Áudio (futuro)
+  // IA para Áudio
+  {
+    id: 'audio-transcription',
+    title: 'Transcrição de Áudio',
+    description: 'Transcreva áudios e vídeos com precisão usando Whisper AI',
+    category: 'audio',
+    type: 'NEW',
+    usage: '1.8k',
+    rating: 4.9,
+    preview: '🎧',
+    tags: ['Whisper', 'Precisão', 'Timestamps'],
+    time: '2 min',
+    features: ['Alta precisão', 'Múltiplos idiomas', 'Timestamps', 'Legendas']
+  },
   {
     id: 'voice-generation',
     title: 'Geração de Voz',
@@ -177,19 +193,6 @@ const templates = [
     tags: ['TTS', 'Voz Natural', 'Multilíngue'],
     time: '1 min',
     features: ['Vozes realistas', 'Múltiplos idiomas', 'Controle de emoção']
-  },
-  {
-    id: 'audio-transcription',
-    title: 'Transcrição de Áudio',
-    description: 'Transcreva áudios e podcasts com precisão profissional',
-    category: 'audio',
-    type: 'COMING_SOON',
-    usage: '---',
-    rating: 0,
-    preview: '🎧',
-    tags: ['Transcrição', 'Podcast', 'Precisão'],
-    time: '2 min',
-    features: ['Alta precisão', 'Identificação de falantes', 'Timestamps']
   },
 
   // Assistentes Personalizados
@@ -370,6 +373,12 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
                     setActiveTemplate('image-generator')
                   } else if (template.id === 'chat-advanced') {
                     window.location.href = '/dashboard/chat'
+                  } else if (template.id === 'copywriting') {
+                    setActiveTemplate('copywriting-generator')
+                  } else if (template.id === 'content-generator') {
+                    setActiveTemplate('content-summarizer')
+                  } else if (template.id === 'audio-transcription') {
+                    setActiveTemplate('audio-transcriber')
                   } else if (template.type === 'COMING_SOON') {
                     // Show coming soon message
                     console.log('Coming soon:', template.id)
@@ -409,6 +418,66 @@ export function MarketplaceLayout({ userPlan }: MarketplaceLayoutProps) {
             </div>
             <div className="p-6">
               <ImageGenerator userPlan={userPlan} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTemplate === 'copywriting-generator' && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Gerador de Copywriting</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTemplate(null)}
+              >
+                ✕
+              </Button>
+            </div>
+            <div className="p-6">
+              <CopywritingGenerator userPlan={userPlan} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTemplate === 'content-summarizer' && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Resumidor de Conteúdo</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTemplate(null)}
+              >
+                ✕
+              </Button>
+            </div>
+            <div className="p-6">
+              <ContentSummarizer userPlan={userPlan} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {activeTemplate === 'audio-transcriber' && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-background rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4 border-b flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Transcritor de Áudio</h2>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveTemplate(null)}
+              >
+                ✕
+              </Button>
+            </div>
+            <div className="p-6">
+              <AudioTranscriber userPlan={userPlan} />
             </div>
           </div>
         </div>
