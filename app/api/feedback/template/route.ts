@@ -20,9 +20,14 @@ export async function POST(req: NextRequest) {
       tags
     } = body
 
-    // Validate required fields
-    if (!templateId || !rating || rating < 1 || rating > 5) {
-      return NextResponse.json({ error: 'Invalid data' }, { status: 400 })
+    // Validate required fields - only templateId is required
+    if (!templateId) {
+      return NextResponse.json({ error: 'Template ID required' }, { status: 400 })
+    }
+
+    // Validate rating if provided
+    if (rating && (rating < 1 || rating > 5)) {
+      return NextResponse.json({ error: 'Invalid rating value' }, { status: 400 })
     }
 
     // Create feedback record
@@ -30,7 +35,7 @@ export async function POST(req: NextRequest) {
       data: {
         templateId,
         userId: session.user.id,
-        rating,
+        rating: rating || 0, // Rating is optional - default to 0
         comment: comment || null,
         category,
         helpful: helpful || false,
@@ -43,9 +48,12 @@ export async function POST(req: NextRequest) {
       }
     })
 
-    // Update template average rating
+    // Update template average rating (only count ratings > 0)
     const avgRating = await prisma.templateFeedback.aggregate({
-      where: { templateId },
+      where: { 
+        templateId,
+        rating: { gt: 0 } // Only count actual ratings, not zero ratings
+      },
       _avg: { rating: true },
       _count: { rating: true }
     })

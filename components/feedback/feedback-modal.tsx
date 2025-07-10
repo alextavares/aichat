@@ -64,8 +64,9 @@ export function FeedbackModal({
   }
 
   const handleSubmit = async () => {
-    if (rating === 0) {
-      toast.error('Avaliação obrigatória', 'Por favor, selecione uma avaliação')
+    // Feedback é completamente espontâneo - não há campos obrigatórios
+    if (rating === 0 && !comment.trim() && selectedTags.length === 0 && !helpful) {
+      toast.error('Feedback vazio', 'Por favor, adicione pelo menos uma avaliação, comentário ou tag')
       return
     }
 
@@ -124,7 +125,7 @@ export function FeedbackModal({
         <div className="space-y-6">
           {/* Rating */}
           <div className="space-y-2">
-            <Label className="text-sm font-medium">Avaliação geral</Label>
+            <Label className="text-sm font-medium">Avaliação geral (opcional)</Label>
             <div className="flex items-center gap-3">
               <Rating 
                 value={rating} 
@@ -132,7 +133,7 @@ export function FeedbackModal({
                 size="lg"
               />
               <span className="text-sm text-muted-foreground">
-                {rating > 0 && `${rating} estrela${rating > 1 ? 's' : ''}`}
+                {rating > 0 ? `${rating} estrela${rating > 1 ? 's' : ''}` : 'Clique para avaliar'}
               </span>
             </div>
           </div>
@@ -197,7 +198,7 @@ export function FeedbackModal({
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={isSubmitting || rating === 0}
+            disabled={isSubmitting}
           >
             <Send className="h-4 w-4 mr-2" />
             {isSubmitting ? 'Enviando...' : 'Enviar Feedback'}
