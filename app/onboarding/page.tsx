@@ -29,6 +29,7 @@ export default function OnboardingPage() {
   const { data: session, update } = useSession()
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(false)
+  const [isSkipping, setIsSkipping] = useState(false)
   
   const [data, setData] = useState<OnboardingData>({
     usageType: null,
@@ -129,6 +130,40 @@ export default function OnboardingPage() {
     }
   }
 
+  const handleSkipOnboarding = async () => {
+    setIsSkipping(true)
+    
+    try {
+      const response = await fetch('/api/onboarding/skip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      })
+
+      if (!response.ok) {
+        throw new Error('Erro ao pular onboarding')
+      }
+
+      // Update session to reflect completed onboarding
+      await update()
+      
+      toast({
+        title: "Onboarding pulado",
+        description: "Você pode completar seu perfil a qualquer momento nas configurações.",
+      })
+
+      // Force a hard redirect to ensure the onboarding page is completely closed
+      window.location.href = '/dashboard'
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível pular o onboarding. Tente novamente.",
+        variant: "destructive"
+      })
+    } finally {
+      setIsSkipping(false)
+    }
+  }
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
@@ -181,7 +216,7 @@ export default function OnboardingPage() {
 
         <Button
           onClick={handleNext}
-          disabled={!canProceed() || isLoading}
+          disabled={!canProceed() || isLoading || isSkipping}
           className="flex items-center gap-2 gradient-primary text-white"
         >
           {isLoading ? (
@@ -203,10 +238,11 @@ export default function OnboardingPage() {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push('/dashboard')}
+            onClick={handleSkipOnboarding}
+            disabled={isSkipping || isLoading}
             className="text-muted-foreground hover:text-foreground"
           >
-            Pular por agora
+            {isSkipping ? "Pulando..." : "Pular por agora"}
           </Button>
         </div>
       )}
