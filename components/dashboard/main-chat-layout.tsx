@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
 import { Plus, Search, BookOpen, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -43,8 +45,43 @@ const toolCards = [
 ]
 
 export function MainChatLayout() {
+  const router = useRouter()
+  const { data: session } = useSession()
   const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash')
   const [message, setMessage] = useState('')
+  const [isCreatingChat, setIsCreatingChat] = useState(false)
+
+  const handleSendMessage = async () => {
+    if (!message.trim() || !session?.user) return
+
+    setIsCreatingChat(true)
+    try {
+      // Create new conversation
+      const response = await fetch('/api/conversations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: message.substring(0, 50) + (message.length > 50 ? '...' : ''),
+          model: selectedModel
+        })
+      })
+
+      if (response.ok) {
+        const { id } = await response.json()
+        // Navigate to the new chat with the initial message
+        router.push(`/dashboard/chat/${id}?message=${encodeURIComponent(message)}`)
+      }
+    } catch (error) {
+      console.error('Failed to create chat:', error)
+    } finally {
+      setIsCreatingChat(false)
+    }
+  }
+
+  const handleToolClick = (toolId: string) => {
+    // Navigate to specific tool or start a chat with tool context
+    router.push(`/dashboard/tools/${toolId}`)
+  }
 
   return (
     <div className="flex-1 bg-gray-50 flex flex-col">
@@ -88,7 +125,11 @@ export function MainChatLayout() {
           {/* Tool Cards Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
             {toolCards.map((tool) => (
-              <Card key={tool.id} className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 shadow-md">
+              <Card 
+                key={tool.id} 
+                className="overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer group border-0 shadow-md"
+                onClick={() => handleToolClick(tool.id)}
+              >
                 <CardContent className="p-0">
                   <div className="relative bg-white">
                     {/* Content */}
@@ -119,6 +160,10 @@ export function MainChatLayout() {
                           size="sm" 
                           variant="ghost" 
                           className="text-blue-600 hover:bg-blue-50 hover:text-blue-700 font-medium"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleToolClick(tool.id)
+                          }}
                         >
                           Use This Tool →
                         </Button>
@@ -164,7 +209,8 @@ export function MainChatLayout() {
             <Button 
               size="icon" 
               className="w-12 h-12 rounded-full bg-gray-800 hover:bg-gray-900"
-              disabled={!message.trim()}
+              disabled={!message.trim() || isCreatingChat}
+              onClick={handleSendMessage}
             >
               <Send className="w-5 h-5" />
             </Button>

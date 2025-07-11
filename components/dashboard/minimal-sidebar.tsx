@@ -7,11 +7,6 @@ import { useState } from 'react'
 import {
   Home,
   Wrench,
-  Library,
-  MessageSquare,
-  ChevronDown,
-  User,
-  Settings,
   LogOut,
   Bot
 } from 'lucide-react'
@@ -19,6 +14,8 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
+import { ChatHistory } from './chat-history'
+import { LibrarySection } from './library-section'
 
 const menuItems = [
   {
@@ -30,12 +27,6 @@ const menuItems = [
     title: 'Tools',
     href: '/dashboard/tools',
     icon: Wrench,
-  },
-  {
-    title: 'Library',
-    href: '/dashboard/library',
-    icon: Library,
-    hasDropdown: true,
   },
 ]
 
@@ -60,71 +51,31 @@ export function MinimalSidebar() {
       <nav className="flex-1 p-4">
         <div className="space-y-2">
           {menuItems.map((item) => (
-            <div key={item.href}>
-              <Link
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
-                  pathname === item.href
-                    ? "bg-blue-50 text-blue-700"
-                    : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                )}
-              >
-                <item.icon className="w-5 h-5" />
-                <span className="flex-1">{item.title}</span>
-                {item.hasDropdown && (
-                  <ChevronDown
-                    className={cn(
-                      "w-4 h-4 transition-transform",
-                      isLibraryOpen ? "rotate-180" : ""
-                    )}
-                    onClick={(e) => {
-                      e.preventDefault()
-                      setIsLibraryOpen(!isLibraryOpen)
-                    }}
-                  />
-                )}
-              </Link>
-              
-              {item.hasDropdown && isLibraryOpen && (
-                <div className="ml-12 mt-2 space-y-1">
-                  <Link
-                    href="/dashboard/templates"
-                    className="block px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg"
-                  >
-                    Templates
-                  </Link>
-                  <Link
-                    href="/dashboard/prompts"
-                    className="block px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg"
-                  >
-                    Prompts
-                  </Link>
-                </div>
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
+                pathname === item.href
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
               )}
-            </div>
+            >
+              <item.icon className="w-5 h-5" />
+              <span className="flex-1">{item.title}</span>
+            </Link>
           ))}
+          
+          {/* Library Section */}
+          <LibrarySection 
+            isExpanded={isLibraryOpen}
+            onToggle={() => setIsLibraryOpen(!isLibraryOpen)}
+          />
         </div>
 
-        {/* Chats Section */}
+        {/* Chat History Section */}
         <div className="mt-8">
-          <div className="flex items-center justify-between px-4 py-2">
-            <span className="text-sm font-medium text-gray-900">Chats</span>
-            <button className="text-xs text-gray-500 hover:text-gray-700">
-              All
-            </button>
-          </div>
-          
-          <div className="mt-2 space-y-1">
-            {/* Chat history placeholder */}
-            <div className="px-4 py-3 rounded-xl border border-gray-200 bg-gray-50">
-              <div className="text-center text-sm text-gray-500">
-                Log in or Sign up
-                <br />
-                to view chat history
-              </div>
-            </div>
-          </div>
+          <ChatHistory />
         </div>
       </nav>
 

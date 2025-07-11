@@ -1,98 +1,44 @@
-import { NextRequest, NextResponse } from "next/server"
-import { getServerSession } from "next-auth/next"
-import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params;
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { message: "Não autorizado" },
-        { status: 401 }
-      )
+    if (\!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Verificar se a conversa pertence ao usuário
-    const conversation = await prisma.conversation.findFirst({
-      where: {
-        id: id,
-        userId: session.user.id
+    const conversationId = params.id
+
+    // Check if conversation belongs to user
+    const conversation = await prisma.conversation.findUnique({
+      where: { 
+        id: conversationId,
+        userId: session.user.id 
       }
     })
 
-    if (!conversation) {
-      return NextResponse.json(
-        { message: "Conversa não encontrada" },
-        { status: 404 }
-      )
+    if (\!conversation) {
+      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 })
     }
 
-    // Deletar a conversa (mensagens serão deletadas em cascata)
+    // Delete conversation and all its messages (cascade)
     await prisma.conversation.delete({
-      where: {
-        id: id
-      }
+      where: { id: conversationId }
     })
 
-    return NextResponse.json({ message: "Conversa deletada com sucesso" })
+    return NextResponse.json({ success: true })
 
   } catch (error) {
-    console.error("Delete conversation error:", error)
+    console.error('Error deleting conversation:', error)
     return NextResponse.json(
-      { message: "Erro interno do servidor" },
-      { status: 500 }
-    )
-  }
-}
-
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const { id } = await params;
-  try {
-    const session = await getServerSession(authOptions)
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { message: "Não autorizado" },
-        { status: 401 }
-      )
-    }
-
-    const conversation = await prisma.conversation.findFirst({
-      where: {
-        id: id,
-        userId: session.user.id
-      },
-      include: {
-        messages: {
-          orderBy: {
-            createdAt: 'asc'
-          }
-        }
-      }
-    })
-
-    if (!conversation) {
-      return NextResponse.json(
-        { message: "Conversa não encontrada" },
-        { status: 404 }
-      )
-    }
-
-    return NextResponse.json(conversation)
-
-  } catch (error) {
-    console.error("Get conversation error:", error)
-    return NextResponse.json(
-      { message: "Erro interno do servidor" },
+      { error: 'Failed to delete conversation' }, 
       { status: 500 }
     )
   }
@@ -100,55 +46,48 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: { id: string } }
 ) {
-  const { id } = await params;
   try {
     const session = await getServerSession(authOptions)
     
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { message: "Não autorizado" },
-        { status: 401 }
-      )
+    if (\!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await request.json()
-    const { title, isArchived } = body
+    const conversationId = params.id
+    const { title } = await request.json()
 
-    // Verificar se a conversa pertence ao usuário
-    const conversation = await prisma.conversation.findFirst({
-      where: {
-        id: id,
-        userId: session.user.id
+    // Check if conversation belongs to user
+    const conversation = await prisma.conversation.findUnique({
+      where: { 
+        id: conversationId,
+        userId: session.user.id 
       }
     })
 
-    if (!conversation) {
-      return NextResponse.json(
-        { message: "Conversa não encontrada" },
-        { status: 404 }
-      )
+    if (\!conversation) {
+      return NextResponse.json({ error: 'Conversation not found' }, { status: 404 })
     }
 
-    // Atualizar a conversa
+    // Update conversation title
     const updatedConversation = await prisma.conversation.update({
-      where: {
-        id: id
-      },
-      data: {
-        ...(title !== undefined && { title }),
-        ...(isArchived !== undefined && { isArchived })
-      }
+      where: { id: conversationId },
+      data: { title: title || 'Untitled Chat' }
     })
 
-    return NextResponse.json({ conversation: updatedConversation })
+    return NextResponse.json({
+      id: updatedConversation.id,
+      title: updatedConversation.title,
+      updatedAt: updatedConversation.updatedAt.toISOString()
+    })
 
   } catch (error) {
-    console.error("Update conversation error:", error)
+    console.error('Error updating conversation:', error)
     return NextResponse.json(
-      { message: "Erro interno do servidor" },
+      { error: 'Failed to update conversation' }, 
       { status: 500 }
     )
   }
 }
+EOF < /dev/null
