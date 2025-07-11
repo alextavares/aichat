@@ -2,6 +2,9 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
+  // Debug log for troubleshooting
+  console.log('[MIDDLEWARE] Request:', request.nextUrl.pathname)
+  
   // For database sessions, we need to check the session cookie differently
   const sessionToken = request.cookies.get('next-auth.session-token')?.value || 
                       request.cookies.get('__Secure-next-auth.session-token')?.value
