@@ -16,6 +16,7 @@ import { signOut } from 'next-auth/react'
 import { cn } from '@/lib/utils'
 import { ChatHistory } from './chat-history'
 import { LibrarySection } from './library-section'
+import { UsageIndicator } from './usage-indicator'
 
 const menuItems = [
   {
@@ -79,8 +80,13 @@ export function MinimalSidebar() {
         </div>
       </nav>
 
-      {/* Language Selector */}
+      {/* Usage Indicator */}
       <div className="p-4 border-t border-gray-100">
+        <UsageIndicator />
+      </div>
+
+      {/* Language Selector */}
+      <div className="px-4 pb-4">
         <Button
           variant="outline"
           size="sm"

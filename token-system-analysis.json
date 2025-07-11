@@ -1,0 +1,24 @@
+{
+  "credits": [],
+  "tokens": [],
+  "usage": [],
+  "pricing": [],
+  "limits": [],
+  "indicators": [
+    {
+      "text": "HomeToolsLibraryChatsAll Log in or Sign up to view chat historyLanguage",
+      "className": "_bentoItem_fz1ff_70  _sidebarBentoItem_xcdmh_102  _transparent_fz1ff_104",
+      "role": null,
+      "value": null,
+      "max": null
+    },
+    {
+      "text": "Progress element",
+      "className": "_collapseSidebarButton_nqvx4_19 collapse-sidebar-button collapse-sidebar-button",
+      "role": null,
+      "value": null,
+      "max": null
+    }
+  ],
+  "balanceDisplays": []
+}

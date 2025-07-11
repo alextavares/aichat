@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { ModelSelector } from './model-selector'
+import { UsageIndicator } from './usage-indicator'
 
 const toolCards = [
   {
@@ -99,6 +100,11 @@ export function MainChatLayout() {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Usage Indicator Compact */}
+          {session?.user && (
+            <UsageIndicator compact className="hidden md:flex" />
+          )}
+
           {/* Model Selector */}
           <ModelSelector
             selectedModel={selectedModel}
@@ -106,10 +112,18 @@ export function MainChatLayout() {
           />
 
           {/* Auth Buttons */}
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm">Log in</Button>
-            <Button size="sm" className="bg-gray-800 hover:bg-gray-900">Sign up</Button>
-          </div>
+          {!session?.user ? (
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="sm">Log in</Button>
+              <Button size="sm" className="bg-gray-800 hover:bg-gray-900">Sign up</Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">
+                {session.user.name || 'User'}
+              </span>
+            </div>
+          )}
         </div>
       </header>
 
