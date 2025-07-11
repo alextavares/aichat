@@ -1,0 +1,133 @@
+{
+  "title": "Inner AI",
+  "url": "https://app.innerai.com/",
+  "layout": {
+    "sidebar": {
+      "exists": true,
+      "classes": "_bentoItem_fz1ff_70  _sidebarBentoItem_xcdmh_102  _transparent_fz1ff_104",
+      "width": "24.2031px",
+      "backgroundColor": "rgba(0, 0, 0, 0)"
+    }
+  },
+  "navigation": {
+    "items": [
+      {
+        "text": "",
+        "href": "https://app.innerai.com/",
+        "classes": "active"
+      },
+      {
+        "text": "Home",
+        "href": "https://app.innerai.com/",
+        "classes": " _active_dlc35_74 menu-item-active  _menuItem_dlc35_42 menu-item"
+      },
+      {
+        "text": "Tools",
+        "href": "https://app.innerai.com/explore",
+        "classes": "   _menuItem_dlc35_42 menu-item"
+      },
+      {
+        "text": "Log in",
+        "href": "https://platform.innerai.com/login.html",
+        "classes": ""
+      },
+      {
+        "text": "Sign up",
+        "href": "https://platform.innerai.com/join.html",
+        "classes": ""
+      }
+    ]
+  },
+  "cards": [],
+  "tools": [
+    {
+      "text": "Text TranslationAs an expert translator, your task",
+      "classes": "prompt-tooltip hide"
+    },
+    {
+      "text": "Text Translation",
+      "classes": "prompt-tooltip-title"
+    },
+    {
+      "text": "As an expert translator, your task is to provide a",
+      "classes": "prompt-tooltip-description custom-scroll"
+    },
+    {
+      "text": "Use Prompt",
+      "classes": "prompt-tooltip-button"
+    },
+    {
+      "text": "Audience-First Content BlueprintHelp me understand",
+      "classes": "prompt-tooltip hide"
+    },
+    {
+      "text": "Audience-First Content Blueprint",
+      "classes": "prompt-tooltip-title"
+    },
+    {
+      "text": "Help me understand my audience's core anxieties an",
+      "classes": "prompt-tooltip-description custom-scroll"
+    },
+    {
+      "text": "Use Prompt",
+      "classes": "prompt-tooltip-button"
+    },
+    {
+      "text": "Smart Message ShortenerRevise this email, text, et",
+      "classes": "prompt-tooltip hide"
+    },
+    {
+      "text": "Smart Message Shortener",
+      "classes": "prompt-tooltip-title"
+    }
+  ],
+  "chatSystem": {
+    "exists": true,
+    "classes": "inner-chat-container",
+    "text": "@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');\n\n.opacity-05-ai-models-pro {\n  img, span {\n    opacity: 0.4;\n  }\n\n  .re"
+  },
+  "usageSystem": {
+    "elements": []
+  },
+  "visualElements": {
+    "colorScheme": {
+      "backgroundColor": "rgba(0, 0, 0, 0)",
+      "color": "rgb(0, 0, 0)",
+      "fontFamily": "\"Times New Roman\"",
+      "fontSize": "16px"
+    },
+    "buttons": [
+      {
+        "text": "",
+        "classes": "_showSearchFileInputButton_1gb7i_19",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "50%"
+      },
+      {
+        "text": "",
+        "classes": "_collapseSidebarButton_nqvx4_19 collapse-sidebar-button collapse-sidebar-button",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "50%"
+      },
+      {
+        "text": "Library",
+        "classes": "menu-item-collapsible-button",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "0px"
+      },
+      {
+        "text": "ChatsAll",
+        "classes": "_recentsChatDropdownButton_1fppa_94 menu-item-active no-hover _cursorDefault_1s2vj_26 _menuItem_dlc35_42 _navMenuButton_dlc35_37",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "12px"
+      },
+      {
+        "text": "Language",
+        "classes": "_trigger_18sno_49",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "borderRadius": "16px"
+      }
+    ]
+  },
+  "features": []
+}

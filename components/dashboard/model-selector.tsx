@@ -1,212 +1,122 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
+import { useState } from 'react'
+import { ChevronDown, Check } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Badge } from "@/components/ui/badge"
-import { ChevronDown, Sparkles, Zap, Brain, Gauge } from "lucide-react"
-import { cn } from "@/lib/utils"
+} from '@/components/ui/dropdown-menu'
+import { cn } from '@/lib/utils'
 
-export interface AIModel {
-  id: string
-  name: string
-  provider: string
-  description: string
-  icon: React.ReactNode
-  badge?: string
-  badgeVariant?: "default" | "secondary" | "destructive" | "outline"
-  speed: "slow" | "medium" | "fast" | "very-fast"
-  intelligence: "basic" | "good" | "advanced" | "state-of-the-art"
-  cost: "$" | "$$" | "$$$" | "$$$$"
-  maxTokens: number
-  supportsImages?: boolean
-  supportsTools?: boolean
-}
-
-const models: AIModel[] = [
-  {
-    id: "gpt-4-turbo",
-    name: "GPT-4 Turbo",
-    provider: "OpenAI",
-    description: "Modelo mais inteligente e versátil",
-    icon: <Brain className="h-4 w-4" />,
-    badge: "Recomendado",
-    badgeVariant: "default",
-    speed: "medium",
-    intelligence: "state-of-the-art",
-    cost: "$$$",
-    maxTokens: 128000,
-    supportsImages: true,
-    supportsTools: true
+const aiModels = [
+  { 
+    id: 'gemini-2.5-flash', 
+    name: 'Gemini 2.5 Flash', 
+    icon: '💎',
+    description: 'Fast and efficient for most tasks',
+    provider: 'Google'
   },
-  {
-    id: "gpt-3.5-turbo",
-    name: "GPT-3.5 Turbo",
-    provider: "OpenAI",
-    description: "Rápido e eficiente para tarefas gerais",
-    icon: <Zap className="h-4 w-4" />,
-    badge: "Popular",
-    badgeVariant: "secondary",
-    speed: "fast",
-    intelligence: "good",
-    cost: "$",
-    maxTokens: 16384,
-    supportsTools: true
+  { 
+    id: 'gpt-4', 
+    name: 'GPT-4', 
+    icon: '🚀',
+    description: 'Advanced reasoning and analysis',
+    provider: 'OpenAI'
   },
-  {
-    id: "claude-3-opus",
-    name: "Claude 3 Opus",
-    provider: "Anthropic",
-    description: "Excelente para análise e escrita",
-    icon: <Sparkles className="h-4 w-4" />,
-    badge: "Poderoso",
-    badgeVariant: "default",
-    speed: "medium",
-    intelligence: "state-of-the-art",
-    cost: "$$$$",
-    maxTokens: 200000,
-    supportsImages: true
+  { 
+    id: 'claude-3.5-sonnet', 
+    name: 'Claude 3.5 Sonnet', 
+    icon: '🤖',
+    description: 'Excellent for writing and coding',
+    provider: 'Anthropic'
   },
-  {
-    id: "claude-3-sonnet",
-    name: "Claude 3 Sonnet",
-    provider: "Anthropic",
-    description: "Equilíbrio entre velocidade e inteligência",
-    icon: <Brain className="h-4 w-4" />,
-    speed: "fast",
-    intelligence: "advanced",
-    cost: "$$",
-    maxTokens: 200000,
-    supportsImages: true
+  { 
+    id: 'gpt-3.5-turbo', 
+    name: 'GPT-3.5 Turbo', 
+    icon: '⚡',
+    description: 'Quick responses for simple tasks',
+    provider: 'OpenAI'
   },
-  {
-    id: "claude-3-haiku",
-    name: "Claude 3 Haiku",
-    provider: "Anthropic",
-    description: "Ultra rápido para tarefas simples",
-    icon: <Gauge className="h-4 w-4" />,
-    badge: "Mais rápido",
-    badgeVariant: "outline",
-    speed: "very-fast",
-    intelligence: "basic",
-    cost: "$",
-    maxTokens: 200000
-  },
-  {
-    id: "gemini-1.5-pro",
-    name: "Gemini 1.5 Pro",
-    provider: "Google",
-    description: "Contexto massivo de 2M tokens",
-    icon: <Sparkles className="h-4 w-4" />,
-    badge: "2M tokens",
-    badgeVariant: "destructive",
-    speed: "medium",
-    intelligence: "advanced",
-    cost: "$$",
-    maxTokens: 2097152,
-    supportsImages: true
-  }
 ]
 
-export function ModelSelector() {
-  const [selectedModel, setSelectedModel] = useState<AIModel>(models[0])
+interface ModelSelectorProps {
+  selectedModel?: string
+  onModelChange?: (modelId: string) => void
+  className?: string
+}
 
-  // Load saved model from localStorage
-  useEffect(() => {
-    const savedModelId = localStorage.getItem("selectedModel")
-    if (savedModelId) {
-      const model = models.find(m => m.id === savedModelId)
-      if (model) setSelectedModel(model)
-    }
-  }, [])
+export function ModelSelector({ 
+  selectedModel = 'gemini-2.5-flash', 
+  onModelChange,
+  className 
+}: ModelSelectorProps) {
+  const [isOpen, setIsOpen] = useState(false)
+  
+  const currentModel = aiModels.find(model => model.id === selectedModel) || aiModels[0]
 
-  const handleModelSelect = (model: AIModel) => {
-    setSelectedModel(model)
-    localStorage.setItem("selectedModel", model.id)
-  }
-
-  const getSpeedIcon = (speed: string) => {
-    switch (speed) {
-      case "very-fast": return "⚡⚡⚡"
-      case "fast": return "⚡⚡"
-      case "medium": return "⚡"
-      default: return "🐌"
-    }
-  }
-
-  const getIntelligenceIcon = (intelligence: string) => {
-    switch (intelligence) {
-      case "state-of-the-art": return "🧠🧠🧠"
-      case "advanced": return "🧠🧠"
-      case "good": return "🧠"
-      default: return "💡"
-    }
+  const handleModelSelect = (modelId: string) => {
+    onModelChange?.(modelId)
+    setIsOpen(false)
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="outline" 
-          className="min-w-[200px] justify-between"
+        <Button
+          variant="outline"
+          className={cn(
+            "flex items-center gap-2 bg-white border-gray-200 hover:bg-gray-50",
+            className
+          )}
         >
-          <div className="flex items-center space-x-2">
-            {selectedModel.icon}
-            <span className="font-medium">{selectedModel.name}</span>
+          <span className="text-lg">{currentModel.icon}</span>
+          <div className="flex flex-col items-start">
+            <span className="font-medium text-sm">{currentModel.name}</span>
+            <span className="text-xs text-gray-500">{currentModel.provider}</span>
           </div>
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronDown className="w-4 h-4 ml-2" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[380px]">
-        <DropdownMenuLabel>Selecione um Modelo de IA</DropdownMenuLabel>
-        <DropdownMenuSeparator />
+      
+      <DropdownMenuContent align="end" className="w-80 p-2">
+        <div className="text-xs font-medium text-gray-500 px-2 py-1 mb-1">
+          Choose AI Model
+        </div>
         
-        {models.map((model) => (
+        {aiModels.map((model) => (
           <DropdownMenuItem
             key={model.id}
-            onSelect={() => handleModelSelect(model)}
+            onClick={() => handleModelSelect(model.id)}
             className={cn(
-              "flex flex-col items-start space-y-1 p-3 cursor-pointer",
-              selectedModel.id === model.id && "bg-accent"
+              "flex items-center gap-3 p-3 cursor-pointer rounded-lg",
+              "hover:bg-blue-50 focus:bg-blue-50",
+              selectedModel === model.id && "bg-blue-50"
             )}
           >
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center space-x-2">
-                {model.icon}
-                <span className="font-medium">{model.name}</span>
-                <span className="text-xs text-muted-foreground">• {model.provider}</span>
+            <span className="text-lg">{model.icon}</span>
+            
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-sm">{model.name}</span>
+                <span className="text-xs text-gray-500">by {model.provider}</span>
               </div>
-              {model.badge && (
-                <Badge variant={model.badgeVariant} className="ml-2 text-xs">
-                  {model.badge}
-                </Badge>
-              )}
+              <p className="text-xs text-gray-600 mt-1">{model.description}</p>
             </div>
             
-            <p className="text-xs text-muted-foreground">{model.description}</p>
-            
-            <div className="flex items-center space-x-4 text-xs">
-              <span title="Velocidade">{getSpeedIcon(model.speed)}</span>
-              <span title="Inteligência">{getIntelligenceIcon(model.intelligence)}</span>
-              <span title="Custo" className="font-mono">{model.cost}</span>
-              <span className="text-muted-foreground">
-                {model.maxTokens >= 1000000 
-                  ? `${(model.maxTokens / 1000000).toFixed(1)}M tokens`
-                  : `${(model.maxTokens / 1000).toFixed(0)}K tokens`
-                }
-              </span>
-              {model.supportsImages && <span title="Suporta imagens">🖼️</span>}
-              {model.supportsTools && <span title="Suporta ferramentas">🔧</span>}
-            </div>
+            {selectedModel === model.id && (
+              <Check className="w-4 h-4 text-blue-600" />
+            )}
           </DropdownMenuItem>
         ))}
+        
+        <div className="border-t mt-2 pt-2">
+          <div className="text-xs text-gray-500 px-2">
+            💡 Different models excel at different tasks. Experiment to find your favorite!
+          </div>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   )

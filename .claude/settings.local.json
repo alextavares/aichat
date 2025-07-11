@@ -222,7 +222,8 @@
       "Bash(./test-api.sh:*)",
       "Bash(./test-api-detailed.sh:*)",
       "Bash(./test-direct-access.sh:*)",
-      "Bash(./test-manual-simulation.sh:*)"
+      "Bash(./test-manual-simulation.sh:*)",
+      "Bash(PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=false npx puppeteer browsers install chrome)"
     ],
     "deny": []
   }
