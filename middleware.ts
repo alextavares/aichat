@@ -2,131 +2,92 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  const pathname = request.nextUrl.pathname
+  const { pathname } = request.nextUrl
   
-  // Debug log
-  console.log('[MIDDLEWARE] Processing:', pathname)
+  console.log('[MIDDLEWARE-SIMPLE] Processing:', pathname)
   
-  // Static and public file paths that should never be processed
-  const staticPaths = [
-    '/_next/',
-    '/favicon.ico',
-    '/public/',
-    '/api/auth/'
-  ]
-  
-  // Skip middleware for static files and auth routes
-  if (staticPaths.some(path => pathname.startsWith(path))) {
+  // Skip middleware for specific paths
+  if (
+    pathname.startsWith('/_next/') ||
+    pathname.startsWith('/api/auth/') ||
+    pathname === '/favicon.ico' ||
+    pathname.startsWith('/public/')
+  ) {
     return NextResponse.next()
   }
   
-  // Public pages that don't require authentication
-  const publicPages = [
+  // Public routes that should NEVER require authentication
+  const publicRoutes = [
     '/',
-    '/demo-chat',
-    '/teste-gratis', 
+    '/new-landing',
     '/pricing',
-    '/new-landing'
-  ]
-  
-  // Public API routes that don't require authentication
-  const publicApiRoutes = [
+    '/demo-chat',
+    '/teste-gratis',
     '/api/health',
-    '/api/test/image-status',
-    '/api/test/ai-status', 
     '/api/test/system-status',
-    '/api/test-ai-public',
-    '/api/test-stream-public',
-    '/api/public/',
-    '/api/public-test-chat',
-    '/api/mercadopago/webhook',
-    '/api/stripe/webhook',
-    '/api/test-webhook',
-    '/api/test/simulate-payment'
+    '/api/test/image-status',
+    '/api/test/ai-status'
   ]
   
-  // Check if current path is public
-  const isPublicPage = publicPages.includes(pathname) || 
-                       pathname.startsWith('/pricing/') ||
-                       pathname.startsWith('/payment/')
+  // Check if current path is in public routes
+  const isPublicRoute = publicRoutes.some(route => {
+    if (route === pathname) return true
+    if (pathname.startsWith('/pricing/') || pathname.startsWith('/payment/')) return true
+    return false
+  })
   
-  const isPublicApiRoute = publicApiRoutes.some(route => pathname.startsWith(route))
-  
-  // Allow all public routes without any authentication check
-  if (isPublicPage || isPublicApiRoute) {
-    console.log('[MIDDLEWARE] ✅ Public route allowed:', pathname)
+  if (isPublicRoute) {
+    console.log('[MIDDLEWARE-SIMPLE] ✅ PUBLIC ROUTE ALLOWED:', pathname)
     return NextResponse.next()
   }
   
-  // Now handle authentication for protected routes
+  // Check authentication for protected routes
   const sessionToken = request.cookies.get('next-auth.session-token')?.value || 
                       request.cookies.get('__Secure-next-auth.session-token')?.value
   
-  const isAuth = !!sessionToken
-  const isAuthPage = pathname.startsWith('/auth')
-  const isOnboardingPage = pathname === '/onboarding'
-
-  console.log('[MIDDLEWARE] 🔐 Auth check:', { 
-    pathname, 
-    isAuth, 
-    isAuthPage, 
-    isOnboardingPage,
-    hasToken: !!sessionToken 
-  })
-
-  // Special handling for auth pages
-  if (isAuthPage) {
-    if (isAuth) {
-      console.log('[MIDDLEWARE] 🔄 Authenticated user on auth page - redirect to dashboard')
+  const isAuthenticated = !!sessionToken
+  
+  console.log('[MIDDLEWARE-SIMPLE] Auth status:', { pathname, isAuthenticated })
+  
+  // Auth pages handling
+  if (pathname.startsWith('/auth/')) {
+    if (isAuthenticated) {
+      console.log('[MIDDLEWARE-SIMPLE] 🔄 Redirect authenticated user to dashboard')
       return NextResponse.redirect(new URL('/dashboard', request.url))
-    } else {
-      console.log('[MIDDLEWARE] ✅ Unauthenticated user accessing auth page - allowed')
-      return NextResponse.next()
     }
+    return NextResponse.next()
   }
-
-  // Special handling for onboarding page
-  if (isOnboardingPage) {
-    if (!isAuth) {
-      console.log('[MIDDLEWARE] 🔄 Onboarding requires auth - redirect to signin')
+  
+  // Onboarding page
+  if (pathname === '/onboarding') {
+    if (!isAuthenticated) {
+      console.log('[MIDDLEWARE-SIMPLE] 🔄 Redirect to signin for onboarding')
       return NextResponse.redirect(new URL('/auth/signin', request.url))
-    } else {
-      console.log('[MIDDLEWARE] ✅ Authenticated user accessing onboarding - allowed')
-      return NextResponse.next()
     }
+    return NextResponse.next()
   }
-
-  // Handle API routes
+  
+  // Protected API routes
   if (pathname.startsWith('/api/')) {
-    if (!isAuth) {
-      console.log('[MIDDLEWARE] ❌ Private API route blocked - no auth:', pathname)
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      )
-    } else {
-      console.log('[MIDDLEWARE] ✅ Private API route allowed - has auth:', pathname)
-      return NextResponse.next()
+    if (!isAuthenticated) {
+      console.log('[MIDDLEWARE-SIMPLE] ❌ API route requires auth')
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+    return NextResponse.next()
   }
-
-  // Handle all other protected pages
-  if (!isAuth) {
-    console.log('[MIDDLEWARE] 🔄 Protected page requires auth - redirect to signin:', pathname)
+  
+  // All other protected pages
+  if (!isAuthenticated) {
+    console.log('[MIDDLEWARE-SIMPLE] 🔄 Redirect to signin')
     return NextResponse.redirect(new URL('/auth/signin', request.url))
   }
-
-  console.log('[MIDDLEWARE] ✅ Protected page allowed - has auth:', pathname)
+  
+  console.log('[MIDDLEWARE-SIMPLE] ✅ Protected route allowed')
   return NextResponse.next()
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except static files
-     * More specific matcher to avoid unnecessary processing
-     */
-    '/((?!_next/static|_next/image|favicon.ico|public|.*\\..*).*)' ,
-    '/api/(.*)'
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 }
