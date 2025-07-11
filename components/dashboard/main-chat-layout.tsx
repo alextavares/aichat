@@ -9,6 +9,9 @@ import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { ModelSelector } from './model-selector'
 import { UsageIndicator } from './usage-indicator'
+import { FileUpload } from './file-upload'
+import { WebSearch } from './web-search'
+import { KnowledgeBase } from './knowledge-base'
 
 const toolCards = [
   {
@@ -51,6 +54,7 @@ export function MainChatLayout() {
   const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash')
   const [message, setMessage] = useState('')
   const [isCreatingChat, setIsCreatingChat] = useState(false)
+  const [activeModal, setActiveModal] = useState<'file-upload' | 'web-search' | 'knowledge' | null>(null)
 
   const handleSendMessage = async () => {
     if (!message.trim() || !session?.user) return
@@ -82,6 +86,32 @@ export function MainChatLayout() {
   const handleToolClick = (toolId: string) => {
     // Navigate to specific tool or start a chat with tool context
     router.push(`/dashboard/tools/${toolId}`)
+  }
+
+  const handleModalOpen = (modal: 'file-upload' | 'web-search' | 'knowledge') => {
+    setActiveModal(modal)
+  }
+
+  const handleModalClose = () => {
+    setActiveModal(null)
+  }
+
+  const handleFilesUploaded = (files: any[]) => {
+    console.log('Files uploaded:', files)
+    // TODO: Add files to chat context
+    setActiveModal(null)
+  }
+
+  const handleSearchResults = (results: any[]) => {
+    console.log('Search results:', results)
+    // TODO: Add search results to chat context
+    setActiveModal(null)
+  }
+
+  const handleKnowledgeItems = (items: any[]) => {
+    console.log('Knowledge items:', items)
+    // TODO: Add knowledge items to chat context
+    setActiveModal(null)
   }
 
   return (
@@ -205,15 +235,30 @@ export function MainChatLayout() {
               
               {/* Action Buttons */}
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-                <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => handleModalOpen('file-upload')}
+                >
                   <Plus className="w-4 h-4" />
                   Add
                 </Button>
-                <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => handleModalOpen('web-search')}
+                >
                   <Search className="w-4 h-4" />
                   Web Search
                 </Button>
-                <Button variant="ghost" size="sm" className="text-gray-500 hover:text-gray-700">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="text-gray-500 hover:text-gray-700"
+                  onClick={() => handleModalOpen('knowledge')}
+                >
                   <BookOpen className="w-4 h-4" />
                   Knowledge
                 </Button>
@@ -231,6 +276,37 @@ export function MainChatLayout() {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      {activeModal === 'file-upload' && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <FileUpload
+            onFilesUploaded={handleFilesUploaded}
+            onClose={handleModalClose}
+            className="w-full max-w-2xl"
+          />
+        </div>
+      )}
+
+      {activeModal === 'web-search' && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <WebSearch
+            onResultsSelected={handleSearchResults}
+            onClose={handleModalClose}
+            className="w-full max-w-3xl"
+          />
+        </div>
+      )}
+
+      {activeModal === 'knowledge' && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <KnowledgeBase
+            onItemsSelected={handleKnowledgeItems}
+            onClose={handleModalClose}
+            className="w-full max-w-4xl"
+          />
+        </div>
+      )}
     </div>
   )
 }
