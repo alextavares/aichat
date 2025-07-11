@@ -219,7 +219,8 @@
       "mcp__sequential-thinking__sequentialthinking",
       "WebFetch(domain:app.innerai.com)",
       "Bash(yarn add framer-motion)",
-      "Bash(./test-api.sh:*)"
+      "Bash(./test-api.sh:*)",
+      "Bash(./test-api-detailed.sh:*)"
     ],
     "deny": []
   }
