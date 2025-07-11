@@ -218,7 +218,8 @@
       "Bash(sudo dpkg:*)",
       "mcp__sequential-thinking__sequentialthinking",
       "WebFetch(domain:app.innerai.com)",
-      "Bash(yarn add framer-motion)"
+      "Bash(yarn add framer-motion)",
+      "Bash(./test-api.sh:*)"
     ],
     "deny": []
   }
