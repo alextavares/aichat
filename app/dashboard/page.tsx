@@ -10,7 +10,9 @@ import {
   Brain,
   CreditCard,
   Sparkles,
-  TrendingUp
+  TrendingUp,
+  ShoppingCart,
+  History
 } from 'lucide-react'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
@@ -18,9 +20,10 @@ import { getUserUsageStats } from '@/lib/usage-limits'
 import { FeatureGrid } from '@/components/dashboard/feature-grid'
 import { ModelSelector } from '@/components/dashboard/model-selector'
 import { ProfessionalTemplates } from '@/components/dashboard/professional-templates'
+import { CreditService } from '@/lib/credit-service'
 
 async function getDashboardData(userId: string) {
-  const [totalConversations, subscription, usageStats] = await Promise.all([
+  const [totalConversations, subscription, usageStats, creditBalance, creditStats] = await Promise.all([
     prisma.conversation.count({
       where: { userId }
     }),
@@ -30,13 +33,17 @@ async function getDashboardData(userId: string) {
         status: 'ACTIVE'
       }
     }),
-    getUserUsageStats(userId)
+    getUserUsageStats(userId),
+    CreditService.getBalance(userId),
+    CreditService.getMonthlyStats(userId)
   ])
 
   return {
     totalConversations,
     subscription,
-    usageStats
+    usageStats,
+    creditBalance,
+    creditStats
   }
 }
 
@@ -54,7 +61,7 @@ export default async function DashboardPage() {
     redirect('/onboarding')
   }
 
-  const { totalConversations, subscription, usageStats } = await getDashboardData(session.user.id)
+  const { totalConversations, subscription, usageStats, creditBalance, creditStats } = await getDashboardData(session.user.id)
 
   const planType = usageStats.planType
   const messagesUsed = usageStats.daily.messages.used
@@ -89,38 +96,44 @@ export default async function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <Card className="relative overflow-hidden bg-gray-800/50 border-gray-700 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Mensagens Hoje</CardTitle>
-            <MessageSquare className="h-4 w-4 text-purple-400" />
+            <CardTitle className="text-sm font-medium text-gray-300">Saldo de Créditos</CardTitle>
+            <Coins className="h-4 w-4 text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{messagesUsed}</div>
-            <Progress value={messageProgress} className="mt-2 h-1 bg-gray-700">
-              <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${messageProgress}%` }} />
-            </Progress>
-            <p className="text-xs text-gray-400 mt-1">
-              {messagesLimit === 999999 ? 'Ilimitado' : `de ${messagesLimit}`}
-            </p>
+            <div className="text-2xl font-bold text-white">{creditBalance.toLocaleString('pt-BR')}</div>
+            <div className="mt-2 flex items-center justify-between">
+              <p className="text-xs text-gray-400">
+                Créditos disponíveis
+              </p>
+              <Link href="/dashboard/credits/purchase" className="text-xs text-purple-400 hover:text-purple-300 inline-flex items-center">
+                <ShoppingCart className="h-3 w-3 mr-1" />
+                Comprar
+              </Link>
+            </div>
           </CardContent>
-          {messageProgress > 80 && (
+          {creditBalance < 100 && (
             <div className="absolute top-2 right-2">
-              <Badge variant="destructive" className="text-xs">Quase no limite</Badge>
+              <Badge variant="destructive" className="text-xs">Saldo baixo</Badge>
             </div>
           )}
         </Card>
 
         <Card className="relative overflow-hidden bg-gray-800/50 border-gray-700 backdrop-blur-sm">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-300">Tokens Mensais</CardTitle>
-            <Coins className="h-4 w-4 text-purple-400" />
+            <CardTitle className="text-sm font-medium text-gray-300">Gastos do Mês</CardTitle>
+            <TrendingUp className="h-4 w-4 text-purple-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">{tokensUsed.toLocaleString('pt-BR')}</div>
-            <Progress value={tokenProgress} className="mt-2 h-1 bg-gray-700">
-              <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${tokenProgress}%` }} />
-            </Progress>
-            <p className="text-xs text-gray-400 mt-1">
-              {tokenProgress.toFixed(1)}% usado
-            </p>
+            <div className="text-2xl font-bold text-white">{creditStats.consumed.toLocaleString('pt-BR')}</div>
+            <div className="mt-2 flex items-center justify-between">
+              <p className="text-xs text-gray-400">
+                Créditos consumidos
+              </p>
+              <Link href="/dashboard/credits/history" className="text-xs text-purple-400 hover:text-purple-300 inline-flex items-center">
+                <History className="h-3 w-3 mr-1" />
+                Histórico
+              </Link>
+            </div>
           </CardContent>
         </Card>
 
@@ -165,54 +178,94 @@ export default async function DashboardPage() {
         <FeatureGrid />
       </div>
 
-      {/* Plan Upgrade Banner - Only for FREE users */}
-      {planType === 'FREE' && (
-        <Card className="bg-gradient-to-r from-purple-900/20 to-purple-800/10 border-purple-500/30 backdrop-blur-sm">
+      {/* Credit System & Upgrade Banner */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card className="bg-gradient-to-r from-blue-900/20 to-blue-800/10 border-blue-500/30 backdrop-blur-sm">
           <CardHeader>
             <CardTitle className="flex items-center space-x-2 text-white">
-              <Sparkles className="h-5 w-5 text-purple-400" />
-              <span>Desbloqueie Todo o Potencial do InnerAI</span>
+              <Coins className="h-5 w-5 text-blue-400" />
+              <span>Sistema de Créditos</span>
             </CardTitle>
             <CardDescription className="text-gray-300">
-              Faça upgrade para o plano Pro e tenha acesso a recursos ilimitados
+              Controle seus gastos com nosso sistema de créditos flexível
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-              <div className="flex items-start space-x-2">
-                <div className="rounded-full bg-purple-500/20 p-1 mt-0.5">
-                  <MessageSquare className="h-3 w-3 text-purple-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-white">Mensagens Ilimitadas</p>
-                  <p className="text-xs text-gray-400">Converse sem limites diários</p>
-                </div>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-400">Saldo atual:</span>
+                <span className="font-semibold text-white">{creditBalance.toLocaleString('pt-BR')} créditos</span>
               </div>
-              <div className="flex items-start space-x-2">
-                <div className="rounded-full bg-purple-500/20 p-1 mt-0.5">
-                  <Brain className="h-3 w-3 text-purple-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-white">Todos os Modelos</p>
-                  <p className="text-xs text-gray-400">GPT-4, Claude, e mais</p>
-                </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-400">Consumo mensal:</span>
+                <span className="font-semibold text-white">{creditStats.consumed.toLocaleString('pt-BR')} créditos</span>
               </div>
-              <div className="flex items-start space-x-2">
-                <div className="rounded-full bg-purple-500/20 p-1 mt-0.5">
-                  <Sparkles className="h-3 w-3 text-purple-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-white">Recursos Premium</p>
-                  <p className="text-xs text-gray-400">Imagens, vídeos, e mais</p>
-                </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-400">Compras:</span>
+                <span className="font-semibold text-white">{creditStats.purchased.toLocaleString('pt-BR')} créditos</span>
               </div>
             </div>
-            <Link href="/pricing" className="inline-flex items-center justify-center rounded-md bg-purple-600 hover:bg-purple-700 px-4 py-2 text-sm font-medium text-white transition-colors">
-              Ver Planos e Preços
-            </Link>
+            <div className="mt-4 flex gap-2">
+              <Link href="/dashboard/credits/purchase" className="flex-1 inline-flex items-center justify-center rounded-md bg-blue-600 hover:bg-blue-700 px-3 py-2 text-sm font-medium text-white transition-colors">
+                <ShoppingCart className="h-4 w-4 mr-2" />
+                Comprar Créditos
+              </Link>
+              <Link href="/dashboard/credits/history" className="flex-1 inline-flex items-center justify-center rounded-md border border-blue-600 hover:bg-blue-600/10 px-3 py-2 text-sm font-medium text-blue-400 transition-colors">
+                <History className="h-4 w-4 mr-2" />
+                Histórico
+              </Link>
+            </div>
           </CardContent>
         </Card>
-      )}
+
+        {planType === 'FREE' && (
+          <Card className="bg-gradient-to-r from-purple-900/20 to-purple-800/10 border-purple-500/30 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2 text-white">
+                <Sparkles className="h-5 w-5 text-purple-400" />
+                <span>Upgrade para Pro</span>
+              </CardTitle>
+              <CardDescription className="text-gray-300">
+                Mais créditos e recursos avançados
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <div className="flex items-start space-x-2">
+                  <div className="rounded-full bg-purple-500/20 p-1 mt-0.5">
+                    <Coins className="h-3 w-3 text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-white">7.000 créditos mensais</p>
+                    <p className="text-xs text-gray-400">Para imagem, áudio e vídeo</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <div className="rounded-full bg-purple-500/20 p-1 mt-0.5">
+                    <Brain className="h-3 w-3 text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-white">Todos os Modelos</p>
+                    <p className="text-xs text-gray-400">GPT-4o, Claude 4, Gemini 2.5</p>
+                  </div>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <div className="rounded-full bg-purple-500/20 p-1 mt-0.5">
+                    <Sparkles className="h-3 w-3 text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-white">Recursos Premium</p>
+                    <p className="text-xs text-gray-400">Assistentes e anexos ilimitados</p>
+                  </div>
+                </div>
+              </div>
+              <Link href="/pricing" className="mt-4 inline-flex items-center justify-center rounded-md bg-purple-600 hover:bg-purple-700 px-4 py-2 text-sm font-medium text-white transition-colors w-full">
+                Ver Planos e Preços
+              </Link>
+            </CardContent>
+          </Card>
+        )}
+      </div>
     </div>
   )
 }

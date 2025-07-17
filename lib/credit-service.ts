@@ -12,6 +12,53 @@ export class CreditService {
     return user?.creditBalance || 0
   }
 
+  // Alias for getUserBalance (for dashboard compatibility)
+  static async getBalance(userId: string): Promise<number> {
+    return this.getUserBalance(userId)
+  }
+
+  // Get monthly statistics for credit usage
+  static async getMonthlyStats(userId: string): Promise<{
+    consumed: number
+    purchased: number
+  }> {
+    const startOfMonth = new Date()
+    startOfMonth.setDate(1)
+    startOfMonth.setHours(0, 0, 0, 0)
+    
+    const endOfMonth = new Date()
+    endOfMonth.setMonth(endOfMonth.getMonth() + 1)
+    endOfMonth.setDate(0)
+    endOfMonth.setHours(23, 59, 59, 999)
+
+    const transactions = await prisma.creditTransaction.findMany({
+      where: {
+        userId,
+        createdAt: {
+          gte: startOfMonth,
+          lte: endOfMonth
+        }
+      },
+      select: {
+        amount: true,
+        type: true
+      }
+    })
+
+    const consumed = transactions
+      .filter(t => t.type === 'CONSUMPTION')
+      .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+
+    const purchased = transactions
+      .filter(t => t.type === 'PURCHASE')
+      .reduce((sum, t) => sum + t.amount, 0)
+
+    return {
+      consumed,
+      purchased
+    }
+  }
+
   // Consume credits for AI model usage
   static async consumeCreditsForModel(
     userId: string,
