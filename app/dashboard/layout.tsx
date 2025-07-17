@@ -23,7 +23,7 @@ export default async function DashboardLayout({
         <div className="flex-1 flex flex-col overflow-hidden">
           <DashboardHeader user={session.user} />
           <main className="flex-1 overflow-y-auto bg-black hide-scrollbar">
-            <div className="container mx-auto">
+            <div className="w-full max-w-none px-4 lg:px-6">
               {children}
             </div>
           </main>

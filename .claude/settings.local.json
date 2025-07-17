@@ -216,7 +216,9 @@
       "Bash(NODE_ENV=production npm run build)",
       "Bash(BASE_URL=https://seahorse-app-k5pag.ondigitalocean.app npm run diagnose:production)",
       "Bash(sudo dpkg:*)",
-      "mcp__sequential-thinking__sequentialthinking"
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(git rev-list:*)",
+      "mcp__desktop-commander__read_file"
     ],
     "deny": []
   }

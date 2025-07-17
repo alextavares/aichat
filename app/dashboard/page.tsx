@@ -67,7 +67,7 @@ export default async function DashboardPage() {
   const tokenProgress = tokensLimit ? (tokensUsed / tokensLimit) * 100 : 0
 
   return (
-    <div className="space-y-8 p-6">
+    <div className="space-y-8 py-6">
       {/* Header Section - InnerAI Style */}
       <div className="flex flex-col space-y-4">
         <div className="text-center lg:text-left">

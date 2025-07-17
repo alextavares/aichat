@@ -101,6 +101,11 @@
     @apply transition-colors duration-200;
   }
   
+  /* Responsive container for collapsed sidebar */
+  .sidebar-collapsed .main-content {
+    @apply max-w-full;
+  }
+  
   /* Typography */
   h1 {
     @apply text-2xl lg:text-3xl font-semibold;
