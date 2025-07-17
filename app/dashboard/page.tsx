@@ -51,15 +51,16 @@ export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return null
 
-  // Check if user completed onboarding
+  // Check if user completed onboarding - TEMPORARILY DISABLED FOR TESTING
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
     select: { onboardingCompleted: true, name: true }
   })
 
-  if (!user?.onboardingCompleted) {
-    redirect('/onboarding')
-  }
+  // TODO: Re-enable onboarding check in production
+  // if (!user?.onboardingCompleted) {
+  //   redirect('/onboarding')
+  // }
 
   const { totalConversations, subscription, usageStats, creditBalance, creditStats } = await getDashboardData(session.user.id)
 
