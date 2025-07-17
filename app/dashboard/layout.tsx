@@ -18,12 +18,12 @@ export default async function DashboardLayout({
 
   return (
     <SidebarProvider defaultOpen={true}>
-      <div className="flex h-screen overflow-hidden">
+      <div className="flex h-screen overflow-hidden bg-black">
         <DashboardSidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
           <DashboardHeader user={session.user} />
-          <main className="flex-1 overflow-y-auto bg-background">
-            <div className="container mx-auto p-6">
+          <main className="flex-1 overflow-y-auto bg-black">
+            <div className="container mx-auto">
               {children}
             </div>
           </main>

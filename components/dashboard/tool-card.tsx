@@ -34,7 +34,7 @@ export function ToolCard({
     <Card 
       className={cn(
         "group relative overflow-hidden transition-all duration-300 hover:shadow-lg",
-        "cursor-pointer hover:-translate-y-1",
+        "cursor-pointer hover:-translate-y-1 bg-gray-800/50 border-gray-700 hover:bg-gray-700/50",
         disabled && "opacity-50 cursor-not-allowed",
         className
       )}
@@ -42,7 +42,7 @@ export function ToolCard({
     >
       {/* Preview Image */}
       {preview && (
-        <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+        <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800">
           {preview.startsWith('http') ? (
             <Image
               src={preview}
@@ -51,7 +51,7 @@ export function ToolCard({
               className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center text-6xl opacity-20">
+            <div className="flex h-full w-full items-center justify-center text-6xl opacity-20 text-purple-400">
               {icon}
             </div>
           )}
@@ -61,13 +61,13 @@ export function ToolCard({
       <CardHeader className="space-y-2">
         <div className="flex items-start justify-between">
           <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/20 text-purple-400">
               {icon}
             </div>
-            <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+            <CardTitle className="text-lg font-semibold text-white">{title}</CardTitle>
           </div>
           {badge && (
-            <Badge variant={badgeVariant} className="ml-2">
+            <Badge variant={badgeVariant} className="ml-2 bg-purple-600 text-white border-purple-500">
               {badge}
             </Badge>
           )}
@@ -75,7 +75,7 @@ export function ToolCard({
       </CardHeader>
 
       <CardContent>
-        <CardDescription className="line-clamp-2 text-sm">
+        <CardDescription className="line-clamp-2 text-sm text-gray-400">
           {description}
         </CardDescription>
         
@@ -83,7 +83,7 @@ export function ToolCard({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="mt-4 group/button"
+            className="mt-4 group/button text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
             onClick={(e) => {
               e.stopPropagation()
               onClick?.()
@@ -96,7 +96,7 @@ export function ToolCard({
       </CardContent>
 
       {/* Hover Effect Border */}
-      <div className="absolute inset-0 rounded-lg border-2 border-transparent transition-colors group-hover:border-primary/20" />
+      <div className="absolute inset-0 rounded-lg border-2 border-transparent transition-colors group-hover:border-purple-500/30" />
     </Card>
   )
 }

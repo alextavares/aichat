@@ -105,13 +105,13 @@ export function DashboardSidebar() {
   }, [fetchUserPlan])
 
   return (
-    <Sidebar className="w-[280px] border-r-0">
+    <Sidebar className="w-[280px] border-r-0 bg-gray-900 text-white">
       <SidebarHeader className="p-4">
         <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-            <span className="text-xl font-bold text-primary">AI</span>
+          <div className="h-10 w-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
+            <span className="text-xl font-bold text-purple-400">AI</span>
           </div>
-          <span className="text-xl font-semibold">Inner AI</span>
+          <span className="text-xl font-semibold text-white">Inner AI</span>
         </Link>
       </SidebarHeader>
       
@@ -124,7 +124,7 @@ export function DashboardSidebar() {
                   <SidebarMenuButton 
                     asChild 
                     isActive={pathname === item.href}
-                    className="h-12 rounded-xl hover:bg-accent/50 data-[active=true]:bg-accent"
+                    className="h-12 rounded-xl hover:bg-gray-800/50 data-[active=true]:bg-gray-800 text-gray-300 hover:text-white data-[active=true]:text-white"
                   >
                     <Link href={item.href} className="flex items-center gap-3 px-3">
                       <item.icon className="h-5 w-5" />
@@ -142,7 +142,7 @@ export function DashboardSidebar() {
 
         {/* Upgrade Section */}
         <div className="mt-auto mb-4 mx-3">
-          <div className="gradient-primary p-4 rounded-2xl text-white">
+          <div className="bg-gradient-to-r from-purple-600 to-purple-700 p-4 rounded-2xl text-white">
             <h3 className="font-semibold mb-1">Você está no plano {userPlan === 'FREE' ? 'Free' : userPlan}</h3>
             <p className="text-sm opacity-90 mb-3">
               Faça upgrade para desbloquear funcionalidades disponíveis
@@ -161,11 +161,11 @@ export function DashboardSidebar() {
         </div>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 border-t border-border/50">
+      <SidebarFooter className="p-3 border-t border-gray-800">
         <div className="space-y-2">
           <SidebarMenuButton 
             asChild
-            className="h-12 rounded-xl hover:bg-accent/50 justify-start"
+            className="h-12 rounded-xl hover:bg-gray-800/50 justify-start text-gray-300 hover:text-white"
           >
             <Link href="/support" className="flex items-center gap-3 px-3">
               <Headphones className="h-5 w-5" />
@@ -175,15 +175,15 @@ export function DashboardSidebar() {
           
           <div className="flex items-center gap-3 px-3 py-2">
             <Avatar className="h-10 w-10">
-              <AvatarFallback className="bg-primary/10 text-primary">
+              <AvatarFallback className="bg-purple-500/20 text-purple-400">
                 {session?.user?.name?.[0] || 'U'}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <p className="text-sm font-medium truncate">
+              <p className="text-sm font-medium truncate text-white">
                 {session?.user?.name || 'Usuário'}
               </p>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs border-gray-600 text-gray-400">
                 {userPlan}
               </Badge>
             </div>
@@ -191,7 +191,7 @@ export function DashboardSidebar() {
               variant="ghost"
               size="icon"
               onClick={() => signOut()}
-              className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive"
+              className="h-8 w-8 rounded-lg hover:bg-red-500/10 hover:text-red-400 text-gray-400"
             >
               <LogOut className="h-4 w-4" />
             </Button>

@@ -94,14 +94,14 @@ export function ProfessionalTemplates({ className }: ProfessionalTemplatesProps)
       {/* Categorias Profissionais */}
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">Conte para gente de qual time você faz parte...</h3>
+          <h3 className="text-lg font-semibold text-white">Conte para gente de qual time você faz parte...</h3>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
           {professionalCategories.map((category) => (
             <Button
               key={category.id}
               variant="outline"
-              className="h-auto p-4 flex flex-col items-center space-y-2 hover:bg-muted/50 transition-colors"
+              className="h-auto p-4 flex flex-col items-center space-y-2 bg-gray-800/50 border-gray-700 hover:bg-gray-700/50 transition-colors text-white"
               onClick={() => handleCategoryClick(category)}
             >
               <span className="text-2xl">{category.icon}</span>
@@ -115,12 +115,12 @@ export function ProfessionalTemplates({ className }: ProfessionalTemplatesProps)
       <div>
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h3 className="text-lg font-semibold">Templates Profissionais</h3>
-            <p className="text-sm text-muted-foreground">
+            <h3 className="text-lg font-semibold text-white">Templates Profissionais</h3>
+            <p className="text-sm text-gray-400">
               Modelos prontos para acelerar seu trabalho
             </p>
           </div>
-          <Badge variant="secondary" className="hidden sm:flex">
+          <Badge variant="secondary" className="hidden sm:flex bg-purple-600 text-white">
             Trabalho
           </Badge>
         </div>
@@ -129,19 +129,19 @@ export function ProfessionalTemplates({ className }: ProfessionalTemplatesProps)
           {professionalTemplates.map((template) => (
             <Card 
               key={template.id}
-              className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-[1.02] group"
+              className="cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-[1.02] group bg-gray-800/50 border-gray-700 hover:bg-gray-700/50"
               onClick={() => handleTemplateClick(template)}
             >
               <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center space-y-4">
-                  <div className="p-3 rounded-lg bg-muted/20 group-hover:bg-muted/30 transition-colors">
+                  <div className="p-3 rounded-lg bg-gray-700/50 group-hover:bg-gray-600/50 transition-colors">
                     {template.icon}
                   </div>
                   <div className="space-y-2">
-                    <h4 className="font-semibold text-sm leading-tight">
+                    <h4 className="font-semibold text-sm leading-tight text-white">
                       {template.title}
                     </h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed">
+                    <p className="text-xs text-gray-400 leading-relaxed">
                       {template.description}
                     </p>
                   </div>
@@ -156,7 +156,7 @@ export function ProfessionalTemplates({ className }: ProfessionalTemplatesProps)
       <div className="flex justify-center">
         <Button
           onClick={() => router.push('/dashboard/chat')}
-          className="flex items-center space-x-2 bg-primary hover:bg-primary/90"
+          className="flex items-center space-x-2 bg-purple-600 hover:bg-purple-700 text-white"
         >
           <Plus className="h-4 w-4" />
           <span>Iniciar Chat Personalizado</span>
