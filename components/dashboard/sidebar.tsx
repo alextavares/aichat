@@ -40,6 +40,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { signOut } from 'next-auth/react'
+import { CreditBalance } from '@/components/dashboard/credit-balance'
 
 const menuItems = [
   {
@@ -139,6 +140,11 @@ export function DashboardSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+
+        {/* Credit Balance Section */}
+        <div className="mx-3 mb-4">
+          <CreditBalance />
+        </div>
 
         {/* Upgrade Section */}
         <div className="mt-auto mb-4 mx-3">

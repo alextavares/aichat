@@ -14,6 +14,7 @@ model User {
   name            String?
   passwordHash    String?           @map("password_hash")
   planType        PlanType          @default(FREE) @map("plan_type")
+  creditBalance   Int               @default(0) @map("credit_balance")
   profileImage    String?           @map("profile_image")
   profession      String?
   organization    String?
@@ -33,6 +34,7 @@ model User {
   userUsage       UserUsage[]
   templateFavorites TemplateFavorite[]
   knowledgeBase   KnowledgeBase[]
+  creditTransactions CreditTransaction[]
 
   @@map("users")
 }
@@ -53,6 +55,8 @@ model AIModel {
   provider           AIProvider
   costPerInputToken  Decimal           @map("cost_per_input_token") @db.Decimal(10, 6)
   costPerOutputToken Decimal           @map("cost_per_output_token") @db.Decimal(10, 6)
+  creditsPerInputToken Int             @default(1) @map("credits_per_input_token")
+  creditsPerOutputToken Int            @default(1) @map("credits_per_output_token")
   maxContextLength   Int               @map("max_context_length")
   isActive           Boolean           @default(true) @map("is_active")
   planRequired       PlanType          @map("plan_required")
@@ -160,6 +164,7 @@ model Tool {
   type         ToolType
   apiEndpoint  String?     @map("api_endpoint")
   costPerUse   Decimal     @map("cost_per_use") @db.Decimal(8, 4)
+  creditsPerUse Int        @default(1) @map("credits_per_use")
   planRequired PlanType    @map("plan_required")
   isActive     Boolean     @default(true) @map("is_active")
   createdAt    DateTime    @default(now()) @map("created_at")
@@ -357,4 +362,45 @@ enum KnowledgeBaseType {
   WEBPAGE
   TEXT
   FAQ
+}
+
+model CreditPackage {
+  id                String             @id @default(cuid())
+  name              String
+  credits           Int
+  price             Decimal            @db.Decimal(10, 2)
+  currency          String             @default("BRL") @db.VarChar(3)
+  discountPercent   Int?               @map("discount_percent")
+  isActive          Boolean            @default(true) @map("is_active")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  creditTransactions CreditTransaction[]
+
+  @@map("credit_packages")
+}
+
+model CreditTransaction {
+  id                String              @id @default(cuid())
+  userId            String              @map("user_id")
+  type              CreditTransactionType
+  amount            Int                 // positive for additions, negative for consumptions
+  description       String
+  referenceId       String?             @map("reference_id") // conversation_id, tool_usage_id, etc.
+  referenceType     String?             @map("reference_type") // conversation, tool_usage, purchase, etc.
+  packageId         String?             @map("package_id")
+  balanceBefore     Int                 @map("balance_before")
+  balanceAfter      Int                 @map("balance_after")
+  createdAt         DateTime            @default(now()) @map("created_at")
+  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  package           CreditPackage?      @relation(fields: [packageId], references: [id])
+
+  @@index([userId, createdAt])
+  @@map("credit_transactions")
+}
+
+enum CreditTransactionType {
+  PURCHASE
+  CONSUMPTION
+  BONUS
+  REFUND
 }

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { aiService } from "@/lib/ai/ai-service"
 import { AIMessage } from "@/lib/ai/types"
 import { PLAN_LIMITS, getModelType } from "@/lib/usage-limits"
+import { CreditService } from "@/lib/credit-service"
 
 export async function POST(request: NextRequest) {
   try {
@@ -107,6 +108,25 @@ export async function POST(request: NextRequest) {
     const aiResponse = await aiService.generateResponse(aiMessages, model)
     console.log(`[Chat API] AI response received: ${aiResponse.content.length} chars, ${aiResponse.tokensUsed.total} tokens`)
 
+    // Check if we have a model in the database to calculate credits
+    const modelConfig = await prisma.aIModel.findUnique({
+      where: { name: model },
+      select: { 
+        id: true,
+        creditsPerInputToken: true, 
+        creditsPerOutputToken: true 
+      }
+    })
+
+    // Calculate credits needed for this request
+    let creditsNeeded = 0
+    if (modelConfig) {
+      creditsNeeded = (aiResponse.tokensUsed.input * modelConfig.creditsPerInputToken) + 
+                      (aiResponse.tokensUsed.output * modelConfig.creditsPerOutputToken)
+    }
+
+    console.log(`[Chat API] Credits needed: ${creditsNeeded} for model ${model}`)
+
     // Criar ou atualizar conversa
     let conversation
     if (conversationId) {
@@ -151,6 +171,24 @@ export async function POST(request: NextRequest) {
       }
     })
 
+    // Consume credits if model configuration exists
+    let creditResult = null
+    if (modelConfig && creditsNeeded > 0) {
+      creditResult = await CreditService.consumeCreditsForModel(
+        user.id,
+        modelConfig.id,
+        aiResponse.tokensUsed.input,
+        aiResponse.tokensUsed.output,
+        conversation.id
+      )
+
+      if (!creditResult.success) {
+        console.warn(`[Chat API] Credit consumption failed: ${creditResult.message}`)
+        // For now, we'll log but not block the request
+        // In production, you might want to block or charge differently
+      }
+    }
+
     // Atualizar estatísticas de uso
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -185,7 +223,9 @@ export async function POST(request: NextRequest) {
       message: aiResponse.content,
       conversationId: conversation.id,
       tokensUsed: aiResponse.tokensUsed,
-      cost: aiResponse.cost
+      cost: aiResponse.cost,
+      creditsConsumed: creditResult?.creditsConsumed || 0,
+      creditBalance: creditResult?.success ? await CreditService.getUserBalance(user.id) : undefined
     })
 
   } catch (error: any) {
