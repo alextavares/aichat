@@ -105,7 +105,7 @@ export function DashboardSidebar() {
   }, [fetchUserPlan])
 
   return (
-    <Sidebar className="w-[280px] border-r-0 bg-gray-900 text-white">
+    <Sidebar className="w-[280px] border-r-0 bg-gray-900 text-white hide-scrollbar">
       <SidebarHeader className="p-4">
         <Link href="/dashboard" className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
@@ -115,7 +115,7 @@ export function DashboardSidebar() {
         </Link>
       </SidebarHeader>
       
-      <SidebarContent className="px-3">
+      <SidebarContent className="px-3 hide-scrollbar">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
