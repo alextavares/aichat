@@ -361,100 +361,168 @@ export async function getUserUsageStats(userId: string) {
   startOfMonth.setDate(1)
   startOfMonth.setHours(0, 0, 0, 0)
 
-  const [dailyUsage, monthlyUsage, user] = await Promise.all([
-    prisma.userUsage.aggregate({
-      where: {
-        userId,
-        date: {
-          gte: today,
-          lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+  try {
+    const [dailyUsage, monthlyUsage, user] = await Promise.all([
+      prisma.userUsage.aggregate({
+        where: {
+          userId,
+          date: {
+            gte: today,
+            lt: new Date(today.getTime() + 24 * 60 * 60 * 1000),
+          },
         },
-      },
-      _sum: {
-        messagesCount: true,
-        inputTokensUsed: true,
-        outputTokensUsed: true,
-        costIncurred: true,
-      },
-    }),
-    prisma.userUsage.aggregate({
+        _sum: {
+          messagesCount: true,
+          inputTokensUsed: true,
+          outputTokensUsed: true,
+          costIncurred: true,
+        },
+      }),
+      prisma.userUsage.aggregate({
+        where: {
+          userId,
+          date: {
+            gte: startOfMonth,
+          },
+        },
+        _sum: {
+          messagesCount: true,
+          inputTokensUsed: true,
+          outputTokensUsed: true,
+          costIncurred: true,
+        },
+      }),
+      prisma.user.findUnique({
+        where: { id: userId },
+        select: { planType: true },
+      }),
+    ])
+
+    if (!user) {
+      console.error('User not found in getUserUsageStats, returning defaults for userId:', userId)
+      // Return default stats for non-existent user instead of throwing
+      return {
+        planType: 'FREE' as const,
+        daily: {
+          messages: {
+            used: 0,
+            limit: 20,
+            remaining: 20,
+          },
+          cost: 0,
+        },
+        monthly: {
+          messages: 0,
+          advancedMessages: {
+            used: 0,
+            limit: 0,
+            remaining: 0,
+          },
+          tokens: {
+            used: 0,
+            limit: 50000,
+            remaining: 50000,
+          },
+          credits: {
+            used: 0,
+            limit: null,
+            remaining: null,
+          },
+          cost: 0,
+        },
+        modelsAllowed: PLAN_LIMITS.FREE.modelsAllowed,
+      }
+    }
+
+    const limits = PLAN_LIMITS[user.planType]
+    const dailyMessages = dailyUsage._sum.messagesCount || 0
+    const monthlyTokens = (monthlyUsage._sum.inputTokensUsed || 0) + 
+                          (monthlyUsage._sum.outputTokensUsed || 0)
+    const monthlyCost = monthlyUsage._sum.costIncurred || 0
+
+    // Calculate advanced messages used for FREE plan
+    const monthlyAdvancedMessages = user.planType === 'FREE' ? await prisma.userUsage.aggregate({
       where: {
         userId,
         date: {
           gte: startOfMonth,
         },
+        // Temporarily check modelId directly since foreign key is removed
+        modelId: {
+          in: limits.modelsAllowed.advanced
+        }
       },
       _sum: {
         messagesCount: true,
-        inputTokensUsed: true,
-        outputTokensUsed: true,
-        costIncurred: true,
       },
-    }),
-    prisma.user.findUnique({
-      where: { id: userId },
-      select: { planType: true },
-    }),
-  ])
+    }) : null
 
-  if (!user) {
-    throw new Error('User not found')
-  }
+    const advancedMessagesUsed = monthlyAdvancedMessages?._sum.messagesCount || 0
 
-  const limits = PLAN_LIMITS[user.planType]
-  const dailyMessages = dailyUsage._sum.messagesCount || 0
-  const monthlyTokens = (monthlyUsage._sum.inputTokensUsed || 0) + 
-                        (monthlyUsage._sum.outputTokensUsed || 0)
-  const monthlyCost = monthlyUsage._sum.costIncurred || 0
-
-  // Calculate advanced messages used for FREE plan
-  const monthlyAdvancedMessages = user.planType === 'FREE' ? await prisma.userUsage.aggregate({
-    where: {
-      userId,
-      date: {
-        gte: startOfMonth,
+    return {
+      planType: user.planType,
+      daily: {
+        messages: {
+          used: dailyMessages,
+          limit: limits.dailyMessages,
+          remaining: limits.dailyMessages ? Math.max(0, limits.dailyMessages - dailyMessages) : null,
+        },
+        cost: dailyUsage._sum.costIncurred || 0,
       },
-      // Temporarily check modelId directly since foreign key is removed
-      modelId: {
-        in: limits.modelsAllowed.advanced
-      }
-    },
-    _sum: {
-      messagesCount: true,
-    },
-  }) : null
-
-  const advancedMessagesUsed = monthlyAdvancedMessages?._sum.messagesCount || 0
-
-  return {
-    planType: user.planType,
-    daily: {
-      messages: {
-        used: dailyMessages,
-        limit: limits.dailyMessages,
-        remaining: limits.dailyMessages ? Math.max(0, limits.dailyMessages - dailyMessages) : null,
+      monthly: {
+        messages: monthlyUsage._sum.messagesCount || 0,
+        advancedMessages: {
+          used: advancedMessagesUsed,
+          limit: limits.monthlyAdvancedMessages,
+          remaining: limits.monthlyAdvancedMessages ? Math.max(0, limits.monthlyAdvancedMessages - advancedMessagesUsed) : null,
+        },
+        tokens: {
+          used: monthlyTokens,
+          limit: limits.monthlyTokens,
+          remaining: limits.monthlyTokens ? Math.max(0, limits.monthlyTokens - monthlyTokens) : null,
+        },
+        credits: {
+          used: 0, // TODO: implement credit tracking
+          limit: limits.monthlyCredits,
+          remaining: limits.monthlyCredits ? limits.monthlyCredits : null,
+        },
+        cost: monthlyCost,
       },
-      cost: dailyUsage._sum.costIncurred || 0,
-    },
-    monthly: {
-      messages: monthlyUsage._sum.messagesCount || 0,
-      advancedMessages: {
-        used: advancedMessagesUsed,
-        limit: limits.monthlyAdvancedMessages,
-        remaining: limits.monthlyAdvancedMessages ? Math.max(0, limits.monthlyAdvancedMessages - advancedMessagesUsed) : null,
+      modelsAllowed: limits.modelsAllowed,
+    }
+  } catch (error) {
+    console.error('Error in getUserUsageStats:', error)
+    // Return default stats in case of any error
+    return {
+      planType: 'FREE' as const,
+      daily: {
+        messages: {
+          used: 0,
+          limit: 20,
+          remaining: 20,
+        },
+        cost: 0,
       },
-      tokens: {
-        used: monthlyTokens,
-        limit: limits.monthlyTokens,
-        remaining: limits.monthlyTokens ? Math.max(0, limits.monthlyTokens - monthlyTokens) : null,
+      monthly: {
+        messages: 0,
+        advancedMessages: {
+          used: 0,
+          limit: 0,
+          remaining: 0,
+        },
+        tokens: {
+          used: 0,
+          limit: 50000,
+          remaining: 50000,
+        },
+        credits: {
+          used: 0,
+          limit: null,
+          remaining: null,
+        },
+        cost: 0,
       },
-      credits: {
-        used: 0, // TODO: implement credit tracking
-        limit: limits.monthlyCredits,
-        remaining: limits.monthlyCredits ? limits.monthlyCredits : null,
-      },
-      cost: monthlyCost,
-    },
-    modelsAllowed: limits.modelsAllowed,
+      modelsAllowed: PLAN_LIMITS.FREE.modelsAllowed,
+    }
   }
 }
