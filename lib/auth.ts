@@ -4,7 +4,7 @@ import GoogleProvider from "next-auth/providers/google"
 import GitHubProvider from "next-auth/providers/github"
 import AzureADProvider from "next-auth/providers/azure-ad"
 import AppleProvider from "next-auth/providers/apple"
-import { PrismaAdapter } from "@next-auth/prisma-adapter"
+// import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 
@@ -92,12 +92,11 @@ providers.push(CredentialsProvider({
 )
 
 export const authOptions: NextAuthOptions = {
-  // Remove PrismaAdapter temporarily to isolate the issue
-  // adapter: PrismaAdapter(prisma),
+  // Remove adapter temporarily to isolate the issue
   providers,
   session: {
-    strategy: "jwt", // Fix: Use JWT strategy to support CredentialsProvider
-    maxAge: 7 * 24 * 60 * 60, // 7 days (more secure than 30 days)
+    strategy: "jwt",
+    maxAge: 7 * 24 * 60 * 60, // 7 days
     updateAge: 24 * 60 * 60, // 24 hours
   },
   pages: {
@@ -105,44 +104,25 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      try {
-        // When user signs in, add user info to JWT token
-        if (user) {
-          token.id = user.id
-          token.email = user.email
-          token.name = user.name
-        }
-        return token
-      } catch (error) {
-        console.error('JWT callback error:', error)
-        return token
+      if (user) {
+        token.id = user.id
+        token.email = user.email
+        token.name = user.name
       }
+      return token
     },
     async session({ session, token }) {
-      try {
-        // JWT sessions receive token object
-        if (token) {
-          session.user.id = token.id as string
-          session.user.email = token.email as string
-          session.user.name = token.name as string
-        }
-        return session
-      } catch (error) {
-        console.error('Session callback error:', error)
-        return session
+      if (token) {
+        session.user.id = token.id as string
+        session.user.email = token.email as string
+        session.user.name = token.name as string
       }
+      return session
     },
     async signIn() {
-      try {
-        // Allow sign in
-        return true
-      } catch (error) {
-        console.error('SignIn callback error:', error)
-        return false
-      }
+      return true
     }
   },
-  // Add explicit configuration
   secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development'
+  debug: false
 }
