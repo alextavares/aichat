@@ -24,18 +24,32 @@ import { CreditService } from '@/lib/credit-service'
 
 async function getDashboardData(userId: string) {
   // Get core data
-  const [totalConversations, subscription, usageStats] = await Promise.all([
-    prisma.conversation.count({
-      where: { userId }
-    }),
-    prisma.subscription.findFirst({
-      where: {
-        userId,
-        status: 'ACTIVE'
-      }
-    }),
-    getUserUsageStats(userId)
-  ])
+  let totalConversations = 0
+  let subscription = null
+  let usageStats = null
+  
+  try {
+    [totalConversations, subscription, usageStats] = await Promise.all([
+      prisma.conversation.count({
+        where: { userId }
+      }),
+      prisma.subscription.findFirst({
+        where: {
+          userId,
+          status: 'ACTIVE'
+        }
+      }),
+      getUserUsageStats(userId)
+    ])
+  } catch (error) {
+    console.error('Error fetching dashboard data:', error)
+    // Return defaults if database queries fail
+    usageStats = {
+      planType: 'FREE',
+      daily: { messages: { used: 0, limit: 20 } },
+      monthly: { tokens: { used: 0, limit: 50000 }, cost: 0 }
+    }
+  }
 
   // Try to get credit data, but fall back to defaults if tables don't exist yet
   let creditBalance = 0
@@ -68,10 +82,20 @@ export default async function DashboardPage() {
   if (!session?.user?.id) return null
 
   // Check if user completed onboarding - TEMPORARILY DISABLED FOR TESTING
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { onboardingCompleted: true, name: true }
-  })
+  let user = null
+  try {
+    user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { onboardingCompleted: true, name: true }
+    })
+  } catch (error) {
+    console.error('Error fetching user:', error)
+  }
+
+  // If user doesn't exist in database, redirect to signup
+  if (!user) {
+    redirect('/auth/signup')
+  }
 
   // TODO: Re-enable onboarding check in production
   // if (!user?.onboardingCompleted) {
