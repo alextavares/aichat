@@ -58,29 +58,34 @@ providers.push(CredentialsProvider({
           return null
         }
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
+        try {
+          const user = await prisma.user.findUnique({
+            where: {
+              email: credentials.email
+            }
+          })
+
+          if (!user || !user.passwordHash) {
+            return null
           }
-        })
 
-        if (!user || !user.passwordHash) {
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.passwordHash
+          )
+
+          if (!isPasswordValid) {
+            return null
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          }
+        } catch (error) {
+          console.error('Auth error:', error)
           return null
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.passwordHash
-        )
-
-        if (!isPasswordValid) {
-          return null
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
         }
       }
     })
@@ -99,26 +104,41 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async jwt({ token, user }) {
-      // When user signs in, add user info to JWT token
-      if (user) {
-        token.id = user.id
-        token.email = user.email
-        token.name = user.name
+      try {
+        // When user signs in, add user info to JWT token
+        if (user) {
+          token.id = user.id
+          token.email = user.email
+          token.name = user.name
+        }
+        return token
+      } catch (error) {
+        console.error('JWT callback error:', error)
+        return token
       }
-      return token
     },
     async session({ session, token }) {
-      // JWT sessions receive token object
-      if (token) {
-        session.user.id = token.id as string
-        session.user.email = token.email as string
-        session.user.name = token.name as string
+      try {
+        // JWT sessions receive token object
+        if (token) {
+          session.user.id = token.id as string
+          session.user.email = token.email as string
+          session.user.name = token.name as string
+        }
+        return session
+      } catch (error) {
+        console.error('Session callback error:', error)
+        return session
       }
-      return session
     },
     async signIn() {
-      // Allow sign in
-      return true
+      try {
+        // Allow sign in
+        return true
+      } catch (error) {
+        console.error('SignIn callback error:', error)
+        return false
+      }
     }
   },
   // Add explicit configuration
