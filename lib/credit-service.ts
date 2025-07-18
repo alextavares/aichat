@@ -4,12 +4,18 @@ import { CreditTransactionType } from '@prisma/client'
 export class CreditService {
   // Get user's current credit balance
   static async getUserBalance(userId: string): Promise<number> {
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { creditBalance: true }
-    })
-    
-    return user?.creditBalance || 0
+    try {
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { creditBalance: true }
+      })
+      
+      return user?.creditBalance || 0
+    } catch (error) {
+      console.error('Error getting user balance:', error)
+      // Return 0 if creditBalance column doesn't exist yet
+      return 0
+    }
   }
 
   // Alias for getUserBalance (for dashboard compatibility)
@@ -22,40 +28,49 @@ export class CreditService {
     consumed: number
     purchased: number
   }> {
-    const startOfMonth = new Date()
-    startOfMonth.setDate(1)
-    startOfMonth.setHours(0, 0, 0, 0)
-    
-    const endOfMonth = new Date()
-    endOfMonth.setMonth(endOfMonth.getMonth() + 1)
-    endOfMonth.setDate(0)
-    endOfMonth.setHours(23, 59, 59, 999)
+    try {
+      const startOfMonth = new Date()
+      startOfMonth.setDate(1)
+      startOfMonth.setHours(0, 0, 0, 0)
+      
+      const endOfMonth = new Date()
+      endOfMonth.setMonth(endOfMonth.getMonth() + 1)
+      endOfMonth.setDate(0)
+      endOfMonth.setHours(23, 59, 59, 999)
 
-    const transactions = await prisma.creditTransaction.findMany({
-      where: {
-        userId,
-        createdAt: {
-          gte: startOfMonth,
-          lte: endOfMonth
+      const transactions = await prisma.creditTransaction.findMany({
+        where: {
+          userId,
+          createdAt: {
+            gte: startOfMonth,
+            lte: endOfMonth
+          }
+        },
+        select: {
+          amount: true,
+          type: true
         }
-      },
-      select: {
-        amount: true,
-        type: true
+      })
+
+      const consumed = transactions
+        .filter(t => t.type === 'CONSUMPTION')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0)
+
+      const purchased = transactions
+        .filter(t => t.type === 'PURCHASE')
+        .reduce((sum, t) => sum + t.amount, 0)
+
+      return {
+        consumed,
+        purchased
       }
-    })
-
-    const consumed = transactions
-      .filter(t => t.type === 'CONSUMPTION')
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0)
-
-    const purchased = transactions
-      .filter(t => t.type === 'PURCHASE')
-      .reduce((sum, t) => sum + t.amount, 0)
-
-    return {
-      consumed,
-      purchased
+    } catch (error) {
+      console.error('Error getting monthly stats:', error)
+      // Return default values if tables don't exist yet
+      return {
+        consumed: 0,
+        purchased: 0
+      }
     }
   }
 

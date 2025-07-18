@@ -23,7 +23,8 @@ import { ProfessionalTemplates } from '@/components/dashboard/professional-templ
 import { CreditService } from '@/lib/credit-service'
 
 async function getDashboardData(userId: string) {
-  const [totalConversations, subscription, usageStats, creditBalance, creditStats] = await Promise.all([
+  // Get core data
+  const [totalConversations, subscription, usageStats] = await Promise.all([
     prisma.conversation.count({
       where: { userId }
     }),
@@ -33,10 +34,25 @@ async function getDashboardData(userId: string) {
         status: 'ACTIVE'
       }
     }),
-    getUserUsageStats(userId),
-    CreditService.getBalance(userId),
-    CreditService.getMonthlyStats(userId)
+    getUserUsageStats(userId)
   ])
+
+  // Try to get credit data, but fall back to defaults if tables don't exist yet
+  let creditBalance = 0
+  let creditStats = { consumed: 0, purchased: 0 }
+  
+  try {
+    const [balance, stats] = await Promise.all([
+      CreditService.getBalance(userId),
+      CreditService.getMonthlyStats(userId)
+    ])
+    creditBalance = balance
+    creditStats = stats
+  } catch (error) {
+    console.error('Error fetching credit data:', error)
+    // Continue with default values - this allows the dashboard to load
+    // even if credit tables haven't been migrated yet
+  }
 
   return {
     totalConversations,
