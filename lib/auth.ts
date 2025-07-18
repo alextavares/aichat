@@ -4,7 +4,7 @@ import GoogleProvider from "next-auth/providers/google"
 import GitHubProvider from "next-auth/providers/github"
 import AzureADProvider from "next-auth/providers/azure-ad"
 import AppleProvider from "next-auth/providers/apple"
-// import { PrismaAdapter } from "@next-auth/prisma-adapter"
+import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 
@@ -92,10 +92,10 @@ providers.push(CredentialsProvider({
 )
 
 export const authOptions: NextAuthOptions = {
-  // Remove adapter temporarily to isolate the issue
+  adapter: PrismaAdapter(prisma),
   providers,
   session: {
-    strategy: "jwt",
+    strategy: "database", // Use database strategy with adapter
     maxAge: 7 * 24 * 60 * 60, // 7 days
     updateAge: 24 * 60 * 60, // 24 hours
   },
@@ -103,19 +103,11 @@ export const authOptions: NextAuthOptions = {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async session({ session, user }) {
       if (user) {
-        token.id = user.id
-        token.email = user.email
-        token.name = user.name
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string
-        session.user.email = token.email as string
-        session.user.name = token.name as string
+        session.user.id = user.id
+        session.user.email = user.email
+        session.user.name = user.name
       }
       return session
     },
