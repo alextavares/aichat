@@ -126,7 +126,7 @@ export default function SignUp() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* OAuth Providers */}
-          <SocialLoginButtons />
+          // <SocialLoginButtons />
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
