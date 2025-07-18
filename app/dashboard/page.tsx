@@ -81,20 +81,38 @@ export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
   if (!session?.user?.id) return null
 
-  // Check if user completed onboarding - TEMPORARILY DISABLED FOR TESTING
+  // Check if user exists in database - create if doesn't exist (OAuth users)
   let user = null
   try {
     user = await prisma.user.findUnique({
       where: { id: session.user.id },
       select: { onboardingCompleted: true, name: true }
     })
+    
+    // If user doesn't exist, create them (OAuth login)
+    if (!user) {
+      try {
+        user = await prisma.user.create({
+          data: {
+            id: session.user.id,
+            email: session.user.email!,
+            name: session.user.name || 'Usuário',
+            onboardingCompleted: false,
+            creditBalance: 1000 // Start with 1000 credits
+          },
+          select: { onboardingCompleted: true, name: true }
+        })
+        console.log('Created new user from OAuth login:', session.user.email)
+      } catch (createError) {
+        console.error('Error creating user from OAuth:', createError)
+        // If we can't create user, continue with default data
+        user = { onboardingCompleted: false, name: session.user.name || 'Usuário' }
+      }
+    }
   } catch (error) {
     console.error('Error fetching user:', error)
-  }
-
-  // If user doesn't exist in database, redirect to signup
-  if (!user) {
-    redirect('/auth/signup')
+    // Fallback to session data if database fails
+    user = { onboardingCompleted: false, name: session.user.name || 'Usuário' }
   }
 
   // TODO: Re-enable onboarding check in production
