@@ -31,6 +31,7 @@ export default function SignIn() {
         email,
         password,
         redirect: false,
+        callbackUrl: "/dashboard"
       })
 
       if (result?.error) {

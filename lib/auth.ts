@@ -111,8 +111,23 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     },
-    async signIn() {
-      return true
+    async signIn({ user, account, profile, email, credentials }) {
+      try {
+        // Allow all sign-ins
+        return true
+      } catch (error) {
+        console.error('SignIn callback error:', error)
+        return false
+      }
+    },
+    async redirect({ url, baseUrl }) {
+      // Redirect to dashboard after successful login
+      if (url.startsWith(baseUrl)) {
+        // If the URL is internal, allow it
+        return url
+      }
+      // Default redirect to dashboard
+      return `${baseUrl}/dashboard`
     }
   },
   secret: process.env.NEXTAUTH_SECRET,
