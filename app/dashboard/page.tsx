@@ -79,7 +79,10 @@ async function getDashboardData(userId: string) {
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
-  if (!session?.user?.id) return null
+  if (!session?.user?.id) {
+    console.log('No session found, should redirect to login')
+    redirect('/auth/signin')
+  }
 
   // Check if user exists in database - create if doesn't exist (OAuth users)
   let user = null
@@ -91,13 +94,14 @@ export default async function DashboardPage() {
     
     // If user doesn't exist, create them (OAuth login)
     if (!user) {
+      console.log('User not found in database, creating new user:', session.user.email)
       try {
         user = await prisma.user.create({
           data: {
             id: session.user.id,
             email: session.user.email!,
             name: session.user.name || 'Usuário',
-            onboardingCompleted: false,
+            onboardingCompleted: true, // Set to true for OAuth users
             creditBalance: 1000 // Start with 1000 credits
           },
           select: { onboardingCompleted: true, name: true }
@@ -106,19 +110,19 @@ export default async function DashboardPage() {
       } catch (createError) {
         console.error('Error creating user from OAuth:', createError)
         // If we can't create user, continue with default data
-        user = { onboardingCompleted: false, name: session.user.name || 'Usuário' }
+        user = { onboardingCompleted: true, name: session.user.name || 'Usuário' }
       }
     }
   } catch (error) {
     console.error('Error fetching user:', error)
     // Fallback to session data if database fails
-    user = { onboardingCompleted: false, name: session.user.name || 'Usuário' }
+    user = { onboardingCompleted: true, name: session.user.name || 'Usuário' }
   }
 
-  // TODO: Re-enable onboarding check in production
-  // if (!user?.onboardingCompleted) {
-  //   redirect('/onboarding')
-  // }
+  // If user needs onboarding, redirect
+  if (!user?.onboardingCompleted) {
+    redirect('/onboarding')
+  }
 
   const { totalConversations, subscription, usageStats, creditBalance, creditStats } = await getDashboardData(session.user.id)
 
