@@ -92,7 +92,8 @@ providers.push(CredentialsProvider({
 )
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  // Remove PrismaAdapter temporarily to isolate the issue
+  // adapter: PrismaAdapter(prisma),
   providers,
   session: {
     strategy: "jwt", // Fix: Use JWT strategy to support CredentialsProvider
