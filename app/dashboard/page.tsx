@@ -12,10 +12,7 @@ import {
   Sparkles,
   TrendingUp,
   ShoppingCart,
-  History,
-  Paperclip,
-  Globe,
-  MapPin
+  History
 } from 'lucide-react'
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
@@ -24,6 +21,7 @@ import { FeatureGrid } from '@/components/dashboard/feature-grid'
 import { ModelSelector } from '@/components/dashboard/model-selector'
 import { ProfessionalTemplates } from '@/components/dashboard/professional-templates'
 import { CreditService } from '@/lib/credit-service'
+import { ChatInput } from '@/components/dashboard/chat-input'
 
 async function getDashboardData(userId: string) {
   // Get core data
@@ -162,38 +160,7 @@ export default async function DashboardPage() {
       <FeatureGrid />
 
       {/* Chat Input Area - InnerAI Style */}
-      <div className="relative">
-        <Card className="bg-gray-900 border-gray-700 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center space-x-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <input
-                    type="text"
-                    placeholder="Pergunte para Inner AI"
-                    className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    disabled
-                  />
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <button className="p-2 text-gray-400 hover:text-white transition-colors">
-                  <Paperclip className="h-5 w-5" />
-                </button>
-                <button className="p-2 text-gray-400 hover:text-white transition-colors">
-                  <Globe className="h-5 w-5" />
-                </button>
-                <button className="p-2 text-gray-400 hover:text-white transition-colors">
-                  <MapPin className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-            <div className="flex items-center justify-center mt-3 text-xs text-gray-500">
-              Adicionar • Pesquisa na web • Conhecimento
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <ChatInput />
     </div>
   )
 }
