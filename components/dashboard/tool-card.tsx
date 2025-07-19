@@ -41,7 +41,7 @@ export function ToolCard({
       onClick={disabled ? undefined : onClick}
     >
       {/* Preview Image */}
-      <div className="relative h-60 w-full overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800">
+      <div className="relative h-40 w-full overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800">
         {preview && preview.startsWith('http') ? (
           <Image
             src={preview}
@@ -72,14 +72,14 @@ export function ToolCard({
         )}
       </div>
 
-      <CardContent className="p-6">
-        <div className="space-y-3">
+      <CardContent className="p-4">
+        <div className="space-y-2">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-800 text-gray-400 flex-shrink-0">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-800 text-gray-400 flex-shrink-0">
               {icon}
             </div>
             <div className="min-w-0 flex-1">
-              <CardTitle className="text-lg font-semibold text-white mb-2 line-clamp-1">
+              <CardTitle className="text-base font-semibold text-white mb-1 line-clamp-1">
                 {title}
               </CardTitle>
               <CardDescription className="text-sm text-gray-400 line-clamp-2">
