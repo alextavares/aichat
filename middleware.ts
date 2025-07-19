@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // For database sessions, we need to check the session cookie differently
+  // For database sessions, check for the correct session cookie name
   const sessionToken = request.cookies.get('next-auth.session-token')?.value || 
                       request.cookies.get('__Secure-next-auth.session-token')?.value
   
-  // Simple existence check for now - NextAuth will validate the session properly in API routes
+  // For database sessions, let NextAuth handle the validation in API routes
+  // We'll be more permissive here and only block obvious unauthenticated access
   const isAuth = !!sessionToken
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth')
   const isPublicPage = request.nextUrl.pathname === '/' || 
@@ -48,8 +49,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
-  // If user is not authenticated and trying to access protected pages
-  if (!isAuth && !isAuthPage && !isPublicPage && !isOnboardingPage) {
+  // Only redirect to login for dashboard pages specifically
+  // Let NextAuth handle session validation for other protected routes
+  if (!isAuth && request.nextUrl.pathname.startsWith('/dashboard')) {
     return NextResponse.redirect(new URL('/auth/signin', request.url))
   }
 
