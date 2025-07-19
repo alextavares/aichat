@@ -78,9 +78,9 @@ export function FeatureGrid() {
   }
 
   return (
-    <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide">
+    <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar">
       {tools.map((tool, index) => (
-        <div key={tool.id} className="flex-shrink-0 w-80">
+        <div key={tool.id} className="flex-shrink-0 w-72">
           <ToolCard
             title={tool.title}
             description={tool.description}
