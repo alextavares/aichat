@@ -33,70 +33,65 @@ export function ToolCard({
   return (
     <Card 
       className={cn(
-        "group relative overflow-hidden transition-all duration-300 hover:shadow-lg",
-        "cursor-pointer hover:-translate-y-1 bg-gray-800/50 border-gray-700 hover:bg-gray-700/50",
-        disabled && "opacity-50 cursor-not-allowed",
+        "group relative overflow-hidden transition-all duration-300 hover:shadow-lg h-full",
+        "cursor-pointer hover:-translate-y-1 bg-gray-900 border-gray-700 hover:bg-gray-800",
+        disabled && "opacity-70 cursor-not-allowed",
         className
       )}
       onClick={disabled ? undefined : onClick}
     >
       {/* Preview Image */}
-      {preview && (
-        <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800">
-          {preview.startsWith('http') ? (
-            <Image
-              src={preview}
-              alt={title}
-              fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-6xl opacity-20 text-purple-400">
-              {icon}
-            </div>
-          )}
-        </div>
-      )}
-
-      <CardHeader className="space-y-2">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-500/20 text-purple-400">
-              {icon}
-            </div>
-            <CardTitle className="text-lg font-semibold text-white">{title}</CardTitle>
+      <div className="relative h-60 w-full overflow-hidden bg-gradient-to-br from-gray-700 to-gray-800">
+        {preview && preview.startsWith('http') ? (
+          <Image
+            src={preview}
+            alt={title}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-8xl opacity-30 text-gray-500">
+            {icon}
           </div>
-          {badge && (
-            <Badge variant={badgeVariant} className="ml-2 bg-purple-600 text-white border-purple-500">
+        )}
+        
+        {/* Badge overlay */}
+        {badge && (
+          <div className="absolute top-4 right-4">
+            <Badge 
+              variant={badgeVariant} 
+              className={cn(
+                "text-xs font-medium",
+                badgeVariant === "secondary" && "bg-purple-600 text-white border-purple-500",
+                badgeVariant === "default" && "bg-blue-600 text-white border-blue-500"
+              )}
+            >
               {badge}
             </Badge>
-          )}
-        </div>
-      </CardHeader>
-
-      <CardContent>
-        <CardDescription className="line-clamp-2 text-sm text-gray-400">
-          {description}
-        </CardDescription>
-        
-        {!disabled && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="mt-4 group/button text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
-            onClick={(e) => {
-              e.stopPropagation()
-              onClick?.()
-            }}
-          >
-            Começar
-            <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/button:translate-x-1" />
-          </Button>
+          </div>
         )}
+      </div>
+
+      <CardContent className="p-6">
+        <div className="space-y-3">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-800 text-gray-400 flex-shrink-0">
+              {icon}
+            </div>
+            <div className="min-w-0 flex-1">
+              <CardTitle className="text-lg font-semibold text-white mb-2 line-clamp-1">
+                {title}
+              </CardTitle>
+              <CardDescription className="text-sm text-gray-400 line-clamp-2">
+                {description}
+              </CardDescription>
+            </div>
+          </div>
+        </div>
       </CardContent>
 
       {/* Hover Effect Border */}
-      <div className="absolute inset-0 rounded-lg border-2 border-transparent transition-colors group-hover:border-purple-500/30" />
+      <div className="absolute inset-0 rounded-lg border-2 border-transparent transition-colors group-hover:border-gray-600" />
     </Card>
   )
 }
