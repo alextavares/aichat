@@ -221,7 +221,8 @@
       "mcp__desktop-commander__read_file",
       "Bash(./node_modules/.bin/prisma migrate dev:*)",
       "WebFetch(domain:seahorse-app-w52h5.ondigitalocean.app)",
-      "WebFetch(domain:proxy-nyc1-08c13dfea8d2.ondigitalocean.app)"
+      "WebFetch(domain:proxy-nyc1-08c13dfea8d2.ondigitalocean.app)",
+      "WebFetch(domain:app.innerai.com)"
     ],
     "deny": []
   }
