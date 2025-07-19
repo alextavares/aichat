@@ -106,7 +106,7 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       // For JWT strategy, user info comes from token
       if (token) {
-        session.user.id = token.sub!
+        session.user.id = token.id || token.sub!
         session.user.email = token.email!
         session.user.name = token.name!
       }

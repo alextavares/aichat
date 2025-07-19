@@ -1,6 +1,0 @@
-fix(auth): Corrige falha de autenticação da OpenRouter
-
-- Remove chave de API exposta do arquivo README_PRODUCTION.md para corrigir uma falha de segurança.
-- Adiciona o arquivo .env.local ao .gitignore para garantir que as chaves locais não sejam enviadas ao repositório.
-- Diagnóstico confirmou que a chave de API era inválida, causando erros 401.
-- A solução requer que o usuário configure a OPENROUTER_API_KEY como uma variável de ambiente segura na Digital Ocean.
