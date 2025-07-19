@@ -2,11 +2,11 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  // For database sessions, check for the correct session cookie name
+  // For JWT sessions, check for the JWT token cookie
   const sessionToken = request.cookies.get('next-auth.session-token')?.value || 
                       request.cookies.get('__Secure-next-auth.session-token')?.value
   
-  // For database sessions, let NextAuth handle the validation in API routes
+  // For JWT sessions, let NextAuth handle the validation in API routes
   // We'll be more permissive here and only block obvious unauthenticated access
   const isAuth = !!sessionToken
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth')
