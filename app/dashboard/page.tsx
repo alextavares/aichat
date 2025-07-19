@@ -79,9 +79,7 @@ async function getDashboardData(userId: string) {
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions)
-  console.log('Dashboard session data:', JSON.stringify(session, null, 2))
   if (!session?.user?.id) {
-    console.log('No session found, should redirect to login. Session:', session)
     redirect('/auth/signin')
   }
 
