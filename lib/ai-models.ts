@@ -83,6 +83,26 @@ export const AI_MODELS: AIModel[] = [
       reasoning: false
     }
   },
+  {
+    id: 'moonshotai/kimi-k2:free',
+    name: 'Kimi K2 Free',
+    provider: 'Moonshot AI',
+    category: 'fast',
+    description: 'Modelo gratuito da Moonshot AI com boa performance',
+    inputCostPerToken: 0.0000002,
+    outputCostPerToken: 0.0000008,
+    contextWindow: 128000,
+    features: ['Chat', 'Análise', 'Escrita'],
+    isAvailable: true,
+    requiresAuth: false,
+    supportedFeatures: {
+      text: true,
+      vision: false,
+      audio: false,
+      codeGeneration: true,
+      reasoning: false
+    }
+  },
 
   // Advanced Models (Pro Plan)
   {
