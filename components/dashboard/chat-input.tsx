@@ -52,6 +52,7 @@ export function ChatInput() {
     setChatStarted(true)
 
     try {
+      console.log('Enviando requisição para /api/chat...')
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: {
@@ -66,11 +67,20 @@ export function ChatInput() {
         }),
       })
 
+      console.log('Resposta recebida:', response.status)
+
       if (!response.ok) {
-        throw new Error('Falha na requisição')
+        const errorData = await response.json()
+        console.error('Erro na API:', errorData)
+        throw new Error(errorData.message || 'Falha na requisição')
       }
 
       const data = await response.json()
+      console.log('Dados recebidos:', data)
+
+      if (!data.message) {
+        throw new Error('Resposta da API não contém mensagem')
+      }
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -81,9 +91,10 @@ export function ChatInput() {
 
       setMessages(prev => [...prev, assistantMessage])
     } catch (error) {
+      console.error('Erro no chat:', error)
       toast({
         title: 'Erro',
-        description: 'Não foi possível enviar a mensagem. Tente novamente.',
+        description: error instanceof Error ? error.message : 'Não foi possível enviar a mensagem. Tente novamente.',
         variant: 'destructive',
       })
     } finally {
