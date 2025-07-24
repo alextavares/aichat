@@ -1,51 +1,68 @@
-import { aiService } from '../lib/ai/ai-service'
+#!/usr/bin/env tsx
+
+// Teste da API de chat
+import { prisma } from '../lib/prisma'
 
 async function testChatAPI() {
-  console.log('🚀 Testando API de chat com novos modelos...\n')
+  console.log('🧪 TESTANDO API DE CHAT\n')
 
-  const testModels = [
-    { id: 'gpt-4.1', name: 'GPT-4.1' },
-    { id: 'claude-4-sonnet', name: 'Claude 4 Sonnet' },
-    { id: 'gemini-2.5-pro', name: 'Gemini 2.5 Pro' },
-    { id: 'perplexity-sonar', name: 'Perplexity Sonar' },
-    { id: 'sabia-3.1', name: 'Sabiá 3.1' },
-    { id: 'o3', name: 'o3' }
-  ]
-
-  // Verificar quais modelos estão disponíveis
-  console.log('📋 Modelos disponíveis no sistema:')
-  const allModels = aiService.getAllAvailableModels()
-  const modelIds = allModels.map(m => m.id)
-  console.log(modelIds.join(', '))
-  console.log()
-
-  // Verificar modelos para plano PRO
-  console.log('💎 Modelos disponíveis para plano PRO:')
-  const proModels = aiService.getModelsForPlan('PRO')
-  const proModelIds = proModels.map(m => m.id)
-  console.log(proModelIds.join(', '))
-  console.log()
-
-  // Testar se os novos modelos estão incluídos
-  console.log('✅ Verificando novos modelos:')
-  for (const model of testModels) {
-    const isAvailable = modelIds.includes(model.id)
-    const isInPro = proModelIds.includes(model.id)
-    console.log(`${model.name} (${model.id}): ${isAvailable ? '✓' : '✗'} Disponível | ${isInPro ? '✓' : '✗'} PRO`)
-  }
-
-  // Testar um modelo específico
-  console.log('\n🧪 Testando modelo Sabiá 3.1...')
   try {
-    const response = await aiService.generateResponse(
-      [{ role: 'user', content: 'Olá! Me diga "Oi, sou o Sabiá 3.1 e estou funcionando!" em português brasileiro.' }],
-      'sabia-3.1'
-    )
-    console.log('Resposta:', response.content)
-    console.log('Tokens usados:', response.tokensUsed.total)
+    // 1. Buscar usuário de teste
+    const user = await prisma.user.findFirst({
+      where: { email: 'test@example.com' }
+    })
+
+    if (!user) {
+      console.error('❌ Usuário de teste não encontrado')
+      return
+    }
+
+    console.log(`✅ Usuário encontrado: ${user.id}`)
+    console.log(`   • Email: ${user.email}`)
+    console.log(`   • Plano: ${user.planType}`)
+    console.log(`   • Créditos: ${user.creditBalance}`)
+
+    // 2. Testar chamada da API de chat
+    const testMessage = {
+      messages: [
+        { role: 'user', content: 'Olá, como você está?' }
+      ],
+      model: 'gpt-4o-mini'
+    }
+
+    console.log('\n🔄 Testando API de chat...')
+    console.log(`   • Modelo: ${testMessage.model}`)
+    console.log(`   • Mensagem: ${testMessage.messages[0].content}`)
+
+    // Simular requisição para API de chat
+    const response = await fetch('http://localhost:3050/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        // Note: Em produção seria necessário incluir cookie de sessão
+      },
+      body: JSON.stringify(testMessage)
+    })
+
+    console.log(`   • Status: ${response.status}`)
+    
+    if (response.ok) {
+      const data = await response.json()
+      console.log('✅ Resposta da API:')
+      console.log(`   • Mensagem: ${data.message?.substring(0, 100)}...`)
+      console.log(`   • Tokens: ${JSON.stringify(data.tokensUsed)}`)
+      console.log(`   • Créditos: ${JSON.stringify(data.credits)}`)
+    } else {
+      const error = await response.text()
+      console.log('❌ Erro na API:')
+      console.log(`   • ${error}`)
+    }
+
   } catch (error) {
-    console.error('Erro:', error.message)
+    console.error('❌ Erro no teste:', error)
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
-testChatAPI().catch(console.error)
+testChatAPI()

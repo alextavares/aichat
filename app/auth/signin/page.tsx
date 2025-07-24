@@ -30,7 +30,7 @@ export default function SignIn() {
       const result = await signIn("credentials", {
         email,
         password,
-        redirect: false,
+        redirect: false, // Vamos controlar o redirecionamento manualmente
         callbackUrl: "/dashboard"
       })
 
@@ -41,20 +41,36 @@ export default function SignIn() {
         } else {
           setError("Erro ao fazer login. Tente novamente.")
         }
-      } else {
-        // Sucesso
+        setLoading(false)
+      } else if (result?.ok) {
+        // Sucesso - mostrar mensagem e redirecionar
         setSuccess(true)
-        setTimeout(() => {
-          router.push("/dashboard")
-        }, 1000) // Aguarda 1 segundo para mostrar sucesso
+        
+        // Aguardar um pouco para mostrar a mensagem de sucesso
+        setTimeout(async () => {
+          try {
+            // Verificar se a sessão foi criada
+            const session = await getSession()
+            if (session) {
+              // Usar window.location para forçar redirecionamento completo
+              window.location.replace("/dashboard")
+            } else {
+              // Se não há sessão, tentar novamente
+              setError("Erro na criação da sessão. Tente fazer login novamente.")
+              setLoading(false)
+              setSuccess(false)
+            }
+          } catch (sessionError) {
+            console.error("Erro ao verificar sessão:", sessionError)
+            // Tentar redirecionamento mesmo assim
+            window.location.replace("/dashboard")
+          }
+        }, 2000) // Aguardar 2 segundos para mostrar sucesso
       }
     } catch (error) {
       console.error("Login error:", error)
       setError("Erro de conexão. Verifique sua internet e tente novamente.")
-    } finally {
-      if (!success) {
-        setLoading(false)
-      }
+      setLoading(false)
     }
   }
 

@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
+import ConversationHistory from '@/components/chat/conversation-history'
 import {
   Select,
   SelectContent,
@@ -617,10 +618,29 @@ class HttpError extends Error {
     textareaRef.current?.focus()
   }
 
+  const handleLoadConversation = async (conversationId: string) => {
+    await loadConversation(conversationId)
+  }
+
+  const handleNewConversation = () => {
+    handleNewChat()
+  }
+
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)]">
-      {/* Header - InnerAI Style */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-border/50">
+    <div className="flex h-[calc(100vh-8rem)]">
+      {/* Sidebar com histórico de conversas */}
+      <div className="w-[320px] border-r border-border/50">
+        <ConversationHistory 
+          currentConversationId={conversationId || undefined}
+          onSelectConversation={handleLoadConversation}
+          onNewConversation={handleNewConversation}
+        />
+      </div>
+      
+      {/* Área principal do chat */}
+      <div className="flex-1 flex flex-col">
+        {/* Header - InnerAI Style */}
+        <div className="flex items-center justify-between px-6 py-3 border-b border-border/50">
         <div className="flex items-center gap-4">
           <Select value={selectedModel} onValueChange={setSelectedModel}>
             <SelectTrigger className="w-[200px] h-10 bg-card border-border/50 rounded-xl">
@@ -1103,6 +1123,7 @@ class HttpError extends Error {
           </div>
         </DialogContent>
       </Dialog>
+    </div>
     </div>
   )
 }

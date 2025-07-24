@@ -1,5 +1,4 @@
 import { prisma } from './prisma'
-import { CreditTransactionType } from '@prisma/client'
 
 export class CreditService {
   // Get user's current credit balance
@@ -74,57 +73,9 @@ export class CreditService {
     }
   }
 
-  // Consume credits for AI model usage
-  static async consumeCreditsForModel(
-    userId: string,
-    modelId: string,
-    inputTokens: number,
-    outputTokens: number,
-    conversationId: string
-  ): Promise<{ success: boolean; message?: string; creditsConsumed?: number }> {
-    const model = await prisma.aIModel.findUnique({
-      where: { id: modelId },
-      select: { creditsPerInputToken: true, creditsPerOutputToken: true, name: true }
-    })
-
-    if (!model) {
-      return { success: false, message: 'Model not found' }
-    }
-
-    const creditsNeeded = (inputTokens * model.creditsPerInputToken) + (outputTokens * model.creditsPerOutputToken)
-    
-    return this.consumeCredits(
-      userId,
-      creditsNeeded,
-      `Chat with ${model.name} (${inputTokens} input + ${outputTokens} output tokens)`,
-      conversationId,
-      'conversation'
-    )
-  }
-
-  // Consume credits for tool usage
-  static async consumeCreditsForTool(
-    userId: string,
-    toolId: string,
-    usageId: string
-  ): Promise<{ success: boolean; message?: string; creditsConsumed?: number }> {
-    const tool = await prisma.tool.findUnique({
-      where: { id: toolId },
-      select: { creditsPerUse: true, name: true }
-    })
-
-    if (!tool) {
-      return { success: false, message: 'Tool not found' }
-    }
-
-    return this.consumeCredits(
-      userId,
-      tool.creditsPerUse,
-      `Tool usage: ${tool.name}`,
-      usageId,
-      'tool_usage'
-    )
-  }
+  // Removidos métodos que dependem de tabelas não existentes
+  // consumeCreditsForModel e consumeCreditsForTool
+  // Agora usamos apenas o método genérico consumeCredits
 
   // Generic credit consumption with transaction
   static async consumeCredits(
@@ -169,13 +120,10 @@ export class CreditService {
       await tx.creditTransaction.create({
         data: {
           userId,
-          type: CreditTransactionType.CONSUMPTION,
+          type: 'CONSUMPTION',
           amount: -amount, // negative for consumption
           description,
-          referenceId,
-          referenceType,
-          balanceBefore: user.creditBalance,
-          balanceAfter: newBalance
+          relatedId: referenceId
         }
       })
 
@@ -189,7 +137,7 @@ export class CreditService {
     amount: number,
     description: string,
     packageId?: string,
-    type: CreditTransactionType = CreditTransactionType.PURCHASE
+    type: string = 'PURCHASE'
   ): Promise<{ success: boolean; message?: string; newBalance?: number }> {
     if (amount <= 0) {
       return { success: false, message: 'Invalid credit amount' }
@@ -221,9 +169,7 @@ export class CreditService {
           type,
           amount, // positive for additions
           description,
-          packageId,
-          balanceBefore: user.creditBalance,
-          balanceAfter: newBalance
+          relatedId: packageId
         }
       })
 
@@ -241,21 +187,37 @@ export class CreditService {
       where: { userId },
       orderBy: { createdAt: 'desc' },
       take: limit,
-      skip: offset,
-      include: {
-        package: {
-          select: { name: true, credits: true }
-        }
-      }
+      skip: offset
     })
   }
 
-  // Get available credit packages
+  // Get available credit packages (hardcoded for now)
   static async getAvailablePackages() {
-    return prisma.creditPackage.findMany({
-      where: { isActive: true },
-      orderBy: { credits: 'asc' }
-    })
+    // Retornar pacotes hardcoded por enquanto
+    // Em produção, isso viria de uma tabela no banco
+    return [
+      {
+        id: 'basic',
+        name: 'Pacote Básico',
+        credits: 5000,
+        price: 59.00,
+        isActive: true
+      },
+      {
+        id: 'popular',
+        name: 'Pacote Popular',
+        credits: 10000,
+        price: 99.00,
+        isActive: true
+      },
+      {
+        id: 'premium',
+        name: 'Pacote Premium',
+        credits: 20000,
+        price: 159.00,
+        isActive: true
+      }
+    ]
   }
 
   // Check if user has enough credits for operation
@@ -279,14 +241,14 @@ export class CreditService {
       prisma.creditTransaction.aggregate({
         where: { 
           userId,
-          type: CreditTransactionType.CONSUMPTION
+          type: 'CONSUMPTION'
         },
         _sum: { amount: true }
       }),
       prisma.creditTransaction.aggregate({
         where: { 
           userId,
-          type: CreditTransactionType.PURCHASE
+          type: 'PURCHASE'
         },
         _sum: { amount: true }
       })

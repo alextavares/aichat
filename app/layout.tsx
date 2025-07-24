@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import SessionProviderWrapper from "@/components/providers/session-provider";
 import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/contexts/theme-context";
 
 // const inter = Inter({
 //   subsets: ["latin"],
@@ -20,12 +21,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="dark">
+    <html lang="pt-BR" suppressHydrationWarning>
       <body className="font-sans antialiased">
-        <SessionProviderWrapper>
-          {children}
-          <Toaster />
-        </SessionProviderWrapper>
+        <ThemeProvider>
+          <SessionProviderWrapper>
+            {children}
+            <Toaster />
+          </SessionProviderWrapper>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -52,188 +52,12 @@ interface ModelUsage {
   cost: number
 }
 
-const AI_MODELS: AIModel[] = [
-  // OpenAI Models
-  {
-    id: 'gpt-3.5-turbo',
-    name: 'GPT-3.5 Turbo',
-    provider: 'OpenAI',
-    category: 'OpenAI',
-    description: 'Modelo rápido e eficiente para tarefas gerais',
-    contextWindow: 16385,
-    costPer1kTokens: { input: 0.0005, output: 0.0015 },
-    features: ['Chat', 'Completions', 'Function Calling'],
-    planRequired: 'FREE',
-    isAvailable: true,
-    performance: { speed: 'fast', quality: 'good' },
-  },
-  {
-    id: 'gpt-4',
-    name: 'GPT-4',
-    provider: 'OpenAI',
-    category: 'OpenAI',
-    description: 'Modelo mais capaz para tarefas complexas',
-    contextWindow: 8192,
-    costPer1kTokens: { input: 0.03, output: 0.06 },
-    features: ['Chat', 'Completions', 'Function Calling', 'Vision'],
-    planRequired: 'PRO',
-    isAvailable: true,
-    performance: { speed: 'medium', quality: 'excellent' },
-  },
-  {
-    id: 'gpt-4-turbo',
-    name: 'GPT-4 Turbo',
-    provider: 'OpenAI',
-    category: 'OpenAI',
-    description: 'GPT-4 otimizado com contexto expandido',
-    contextWindow: 128000,
-    costPer1kTokens: { input: 0.01, output: 0.03 },
-    features: ['Chat', 'Completions', 'Function Calling', 'Vision', 'JSON Mode'],
-    planRequired: 'PRO',
-    isAvailable: true,
-    performance: { speed: 'medium', quality: 'excellent' },
-  },
-  // Claude Models
-  {
-    id: 'claude-3-opus',
-    name: 'Claude 3 Opus',
-    provider: 'OpenRouter',
-    category: 'Claude',
-    description: 'Modelo mais poderoso da Anthropic para tarefas complexas',
-    contextWindow: 200000,
-    costPer1kTokens: { input: 0.015, output: 0.075 },
-    features: ['Chat', 'Analysis', 'Code Generation', 'Long Context', 'Vision'],
-    planRequired: 'ENTERPRISE',
-    isAvailable: true,
-    performance: { speed: 'slow', quality: 'superior' },
-  },
-  {
-    id: 'claude-3-sonnet',
-    name: 'Claude 3 Sonnet',
-    provider: 'OpenRouter',
-    category: 'Claude',
-    description: 'Equilíbrio ideal entre performance e custo',
-    contextWindow: 200000,
-    costPer1kTokens: { input: 0.003, output: 0.015 },
-    features: ['Chat', 'Analysis', 'Code', 'Long Context'],
-    planRequired: 'PRO',
-    isAvailable: true,
-    performance: { speed: 'medium', quality: 'excellent' },
-  },
-  {
-    id: 'claude-3-haiku',
-    name: 'Claude 3 Haiku',
-    provider: 'OpenRouter',
-    category: 'Claude',
-    description: 'Modelo rápido e eficiente da Anthropic',
-    contextWindow: 200000,
-    costPer1kTokens: { input: 0.00025, output: 0.00125 },
-    features: ['Chat', 'Fast Response', 'Code'],
-    planRequired: 'FREE',
-    isAvailable: true,
-    performance: { speed: 'fast', quality: 'good' },
-  },
-  // Google Models
-  {
-    id: 'gemini-pro',
-    name: 'Gemini Pro',
-    provider: 'OpenRouter',
-    category: 'Google',
-    description: 'Modelo multimodal avançado do Google',
-    contextWindow: 32000,
-    costPer1kTokens: { input: 0.00025, output: 0.0005 },
-    features: ['Chat', 'Multimodal', 'Code', 'Analysis'],
-    planRequired: 'PRO',
-    isAvailable: true,
-    performance: { speed: 'fast', quality: 'excellent' },
-  },
-  // Meta Models
-  {
-    id: 'llama-2-70b',
-    name: 'Llama 2 70B',
-    provider: 'OpenRouter',
-    category: 'Llama',
-    description: 'Modelo open source poderoso da Meta',
-    contextWindow: 4096,
-    costPer1kTokens: { input: 0.0007, output: 0.0009 },
-    features: ['Chat', 'Open Source', 'Customizable'],
-    planRequired: 'PRO',
-    isAvailable: true,
-    performance: { speed: 'medium', quality: 'excellent' },
-  },
-  {
-    id: 'llama-2-13b',
-    name: 'Llama 2 13B',
-    provider: 'OpenRouter',
-    category: 'Llama',
-    description: 'Modelo open source eficiente da Meta',
-    contextWindow: 4096,
-    costPer1kTokens: { input: 0.0001, output: 0.0001 },
-    features: ['Chat', 'Open Source', 'Fast'],
-    planRequired: 'FREE',
-    isAvailable: true,
-    performance: { speed: 'fast', quality: 'good' },
-  },
-  // Mistral Models
-  {
-    id: 'mixtral-8x7b',
-    name: 'Mixtral 8x7B',
-    provider: 'OpenRouter',
-    category: 'Mistral',
-    description: 'Modelo MoE poderoso e eficiente',
-    contextWindow: 32000,
-    costPer1kTokens: { input: 0.00027, output: 0.00027 },
-    features: ['Chat', 'MoE Architecture', 'Multilingual'],
-    planRequired: 'PRO',
-    isAvailable: true,
-    performance: { speed: 'fast', quality: 'excellent' },
-  },
-  {
-    id: 'mistral-7b',
-    name: 'Mistral 7B',
-    provider: 'OpenRouter',
-    category: 'Mistral',
-    description: 'Modelo compacto e eficiente',
-    contextWindow: 8192,
-    costPer1kTokens: { input: 0.00006, output: 0.00006 },
-    features: ['Chat', 'Fast', 'Efficient'],
-    planRequired: 'FREE',
-    isAvailable: true,
-    performance: { speed: 'fast', quality: 'good' },
-  },
-  // Code Models
-  {
-    id: 'phind-codellama-34b',
-    name: 'Phind CodeLlama 34B',
-    provider: 'OpenRouter',
-    category: 'Código',
-    description: 'Especializado em programação e debug',
-    contextWindow: 16000,
-    costPer1kTokens: { input: 0.0004, output: 0.0004 },
-    features: ['Code Generation', 'Debug', 'Technical'],
-    planRequired: 'PRO',
-    isAvailable: true,
-    performance: { speed: 'medium', quality: 'excellent' },
-  },
-  {
-    id: 'deepseek-coder',
-    name: 'DeepSeek Coder 33B',
-    provider: 'OpenRouter',
-    category: 'Código',
-    description: 'Otimizado para tarefas de programação',
-    contextWindow: 16000,
-    costPer1kTokens: { input: 0.0004, output: 0.0004 },
-    features: ['Code', 'Algorithms', 'Refactoring'],
-    planRequired: 'PRO',
-    isAvailable: true,
-    performance: { speed: 'medium', quality: 'excellent' },
-  },
-]
+import { INNERAI_MODELS } from '@/lib/ai/innerai-models-config'
 
 export default function ModelsPage() {
   const { data: session } = useSession()
   const [modelUsage, setModelUsage] = useState<ModelUsage[]>([])
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
+  const [selectedCategory, setSelectedCategory] = useState<'all' | 'fast' | 'advanced' | 'credit'>('all')
   const [userPlan, setUserPlan] = useState<'FREE' | 'PRO' | 'ENTERPRISE'>('FREE')
 
   const fetchModelUsage = useCallback(async () => {
@@ -274,28 +98,56 @@ export default function ModelsPage() {
     }
   }
 
-  const filteredModels = AI_MODELS.filter(model => 
-    selectedCategory === 'all' || model.category === selectedCategory
-  )
+  const filteredModels = INNERAI_MODELS.filter(model => {
+    if (selectedCategory === 'all') return true
+    return model.category === selectedCategory
+  })
+  
+  const availableModels = filteredModels.filter(model => model.isAvailable)
+  const unavailableModels = filteredModels.filter(model => !model.isAvailable)
   
   // Get unique categories
-  const categories = ['all', ...Array.from(new Set(AI_MODELS.map(m => m.category)))]
+  const categories = ['all', 'fast', 'advanced', 'credit']
 
-  const canUseModel = (model: AIModel) => {
-    const planHierarchy = { FREE: 0, PRO: 1, ENTERPRISE: 2 }
-    return planHierarchy[userPlan] >= planHierarchy[model.planRequired]
+  const canUseModel = (model: any) => {
+    if (model.planRequired === 'FREE') return true
+    if (model.planRequired === 'PRO' && (userPlan === 'PRO' || userPlan === 'ENTERPRISE')) return true
+    if (model.planRequired === 'ENTERPRISE' && userPlan === 'ENTERPRISE') return true
+    return false
   }
 
-  const getPerformanceColor = (level: string) => {
-    switch (level) {
-      case 'fast': return 'text-green-500'
-      case 'medium': return 'text-yellow-500'
-      case 'slow': return 'text-red-500'
-      case 'good': return 'text-blue-500'
-      case 'excellent': return 'text-purple-500'
-      case 'superior': return 'text-pink-500'
-      default: return 'text-gray-500'
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case 'fast': return 'Modelos Rápidos'
+      case 'advanced': return 'Modelos Avançados'
+      case 'credit': return 'Modelos de Crédito'
+      default: return 'Todos os Modelos'
     }
+  }
+
+  const getCategoryDescription = (category: string) => {
+    switch (category) {
+      case 'fast': return 'Modelos otimizados para velocidade e eficiência'
+      case 'advanced': return 'Modelos premium com máxima qualidade'
+      case 'credit': return 'Modelos para geração de mídia (imagens, vídeos, áudio)'
+      default: return 'Todos os modelos de IA disponíveis'
+    }
+  }
+
+  const getPerformanceColor = (value: string) => {
+    const numValue = value === 'superior' ? 10 : value === 'excellent' ? 8 : value === 'good' ? 6 : 4
+    if (numValue >= 8) return 'text-green-500'
+    if (numValue >= 6) return 'text-yellow-500'
+    return 'text-red-500'
+  }
+
+  const getPerformanceValue = (value: string) => {
+    return value === 'superior' ? 'superior/10' : 
+           value === 'excellent' ? 'excellent/10' : 
+           value === 'good' ? 'good/10' : 
+           value === 'fast' ? 'fast/10' : 
+           value === 'medium' ? 'medium/10' : 
+           value === 'slow' ? 'slow/10' : value
   }
 
   const totalUsage = modelUsage.reduce((acc, usage) => ({
@@ -308,9 +160,11 @@ export default function ModelsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Modelos de IA</h1>
+        <h1 className="text-3xl font-bold tracking-tight">
+          {getCategoryLabel(selectedCategory)}
+        </h1>
         <p className="text-muted-foreground">
-          Explore e compare diferentes modelos de inteligência artificial
+          {getCategoryDescription(selectedCategory)}
         </p>
       </div>
 
@@ -361,7 +215,7 @@ export default function ModelsPage() {
         <TabsList className="grid w-full" style={{ gridTemplateColumns: `repeat(${Math.min(categories.length, 8)}, minmax(0, 1fr))` }}>
           {categories.map((category) => (
             <TabsTrigger key={category} value={category}>
-              {category === 'all' ? 'Todos' : category}
+              {getCategoryLabel(category)}
             </TabsTrigger>
           ))}
         </TabsList>
@@ -424,11 +278,11 @@ export default function ModelsPage() {
                     <div className="flex gap-4 text-sm">
                       <div className="flex items-center gap-1">
                         <Zap className={`h-4 w-4 ${getPerformanceColor(model.performance.speed)}`} />
-                        <span className="capitalize">{model.performance.speed}</span>
+                        <span>Velocidade: {getPerformanceValue(model.performance.speed)}</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <Sparkles className={`h-4 w-4 ${getPerformanceColor(model.performance.quality)}`} />
-                        <span className="capitalize">{model.performance.quality}</span>
+                        <span>Qualidade: {getPerformanceValue(model.performance.quality)}</span>
                       </div>
                     </div>
 

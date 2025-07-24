@@ -4,23 +4,45 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    /* Novas variáveis CSS customizadas do Inner AI - Padrão light theme */
+    --primary: #8B5CF6;
+    --primaryHover: #7C3AED;
+    --secondary: #3B82F6;
+    --secondaryHover: #2563EB;
+    --accent: #10B981;
+    --accentHover: #059669;
+    
+    --background: #FFFFFF;
+    --backgroundSecondary: #F9FAFB;
+    --backgroundTertiary: #F3F4F6;
+    
+    --surface: linear-gradient(to bottom right, #FFFFFF, #F9FAFB);
+    --surfaceHover: linear-gradient(to bottom right, #F9FAFB, #F3F4F6);
+    
+    --textPrimary: #111827;
+    --textSecondary: #6B7280;
+    --textTertiary: #9CA3AF;
+    
+    --border: #E5E7EB;
+    --borderHover: #D1D5DB;
+    
+    --cardBackground: linear-gradient(135deg, #FFFFFF 0%, #F3F4F6 100%);
+    --cardHover: linear-gradient(135deg, #F9FAFB 0%, #E5E7EB 100%);
+    
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadowMd: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadowLg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    
+    /* Manter variáveis originais para compatibilidade */
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96%;
-    --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
     --chart-1: 12 76% 61%;
@@ -40,24 +62,45 @@
   }
 
   .dark {
-    /* InnerAI Original Colors */
-    --background: 0 0% 6%;          /* #0f0f0f */
+    /* Variáveis customizadas do Inner AI - Dark theme */
+    --primary: #8B5CF6;
+    --primaryHover: #9333EA;
+    --secondary: #3B82F6;
+    --secondaryHover: #60A5FA;
+    --accent: #10B981;
+    --accentHover: #34D399;
+    
+    --background: #0F172A;
+    --backgroundSecondary: #1E293B;
+    --backgroundTertiary: #334155;
+    
+    --surface: linear-gradient(to bottom right, #1E293B, #334155);
+    --surfaceHover: linear-gradient(to bottom right, #334155, #475569);
+    
+    --textPrimary: #F9FAFB;
+    --textSecondary: #E5E7EB;
+    --textTertiary: #9CA3AF;
+    
+    --border: #334155;
+    --borderHover: #475569;
+    
+    --cardBackground: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+    --cardHover: linear-gradient(135deg, #334155 0%, #1E293B 100%);
+    
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3), 0 1px 2px 0 rgba(0, 0, 0, 0.2);
+    --shadowMd: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    --shadowLg: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    
+    /* Manter variáveis originais para compatibilidade */
     --foreground: 0 0% 100%;        /* #ffffff */
     --card: 0 0% 10%;               /* #1a1a1a */
     --card-foreground: 0 0% 100%;   /* #ffffff */
     --popover: 0 0% 10%;            /* #1a1a1a */
     --popover-foreground: 0 0% 100%; /* #ffffff */
-    --primary: 271 91% 65%;         /* #7C3AED - Roxo/Lilás */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 18%;          /* #2d2d2d */
-    --secondary-foreground: 0 0% 100%;
     --muted: 0 0% 18%;              /* #2d2d2d */
     --muted-foreground: 220 9% 64%; /* #9ca3af */
-    --accent: 271 91% 65%;          /* #7C3AED */
-    --accent-foreground: 0 0% 100%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 18%;             /* #2d2d2d */
     --input: 0 0% 18%;              /* #2d2d2d */
     --ring: 271 91% 65%;            /* #7C3AED */
     --chart-1: 220 70% 50%;
@@ -77,11 +120,15 @@
 }
 
 @layer base {
+  /* Animações suaves para transições */
   * {
     @apply border-border;
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
   }
+  
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--background);
+    color: var(--textPrimary);
     font-feature-settings: "rlig" 1, "calt" 1;
     font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
   }
@@ -129,9 +176,27 @@
 }
 
 html {
-  @apply dark;
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+}
+
+/* Scrollbar customizada */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--backgroundSecondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primaryHover);
 }
 
 html::-webkit-scrollbar {
@@ -221,6 +286,20 @@ html::-webkit-scrollbar {
     display: none;  /* Chrome, Safari and Opera */
   }
   
+  /* Force dark theme for sidebar */
+  .sidebar-dark {
+    background-color: #111827 !important;
+    color: white !important;
+  }
+  
+  .sidebar-dark * {
+    color: white !important;
+  }
+  
+  .sidebar-dark [data-sidebar] {
+    background-color: #111827 !important;
+  }
+
   /* Custom scrollbar styling (optional fallback) */
   .custom-scrollbar::-webkit-scrollbar {
     width: 4px;

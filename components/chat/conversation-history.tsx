@@ -37,7 +37,9 @@ export default function ConversationHistory({
       const response = await fetch("/api/conversations")
       if (response.ok) {
         const data = await response.json()
-        setConversations(data.conversations.map((conv: any) => ({
+        // A API retorna um array diretamente, não um objeto com propriedade conversations
+        const conversationsArray = Array.isArray(data) ? data : (data.conversations || [])
+        setConversations(conversationsArray.map((conv: any) => ({
           ...conv,
           createdAt: new Date(conv.createdAt),
           updatedAt: new Date(conv.updatedAt)

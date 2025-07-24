@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
@@ -34,13 +34,33 @@ export default function OnboardingPage() {
     usageType: null,
     profession: null,
     profile: {
-      name: session?.user?.name?.split(' ')[0] || '',
-      lastName: session?.user?.name?.split(' ').slice(1).join(' ') || '',
+      name: '',
+      lastName: '',
       phone: '',
       organization: 'Organização Pessoal',
-      profileImage: session?.user?.image || undefined
+      profileImage: undefined
     }
   })
+
+  // Initialize profile data from session when available
+  useEffect(() => {
+    if (session?.user) {
+      const fullName = session.user.name || ''
+      const nameParts = fullName.split(' ')
+      const firstName = nameParts[0] || ''
+      const lastName = nameParts.slice(1).join(' ') || ''
+
+      setData(prev => ({
+        ...prev,
+        profile: {
+          ...prev.profile,
+          name: firstName,
+          lastName: lastName,
+          profileImage: session.user.image || undefined
+        }
+      }))
+    }
+  }, [session?.user?.name, session?.user?.image])
 
   const totalSteps = 3
 
@@ -129,27 +149,40 @@ export default function OnboardingPage() {
     }
   }
 
+  // Memoized callback functions to prevent infinite re-renders
+  const handleUsageTypeSelect = useCallback((type: string) => {
+    setData(prev => ({ ...prev, usageType: type }))
+  }, [])
+
+  const handleProfessionSelect = useCallback((profession: string) => {
+    setData(prev => ({ ...prev, profession }))
+  }, [])
+
+  const handleProfileUpdate = useCallback((profile: any) => {
+    setData(prev => ({ ...prev, profile }))
+  }, [])
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
           <UsageTypeStep
             selectedType={data.usageType}
-            onSelect={(type) => setData(prev => ({ ...prev, usageType: type }))}
+            onSelect={handleUsageTypeSelect}
           />
         )
       case 2:
         return (
           <ProfessionStep
             selectedProfession={data.profession}
-            onSelect={(profession) => setData(prev => ({ ...prev, profession }))}
+            onSelect={handleProfessionSelect}
           />
         )
       case 3:
         return (
           <ProfileStep
             profileData={data.profile}
-            onUpdate={(profile) => setData(prev => ({ ...prev, profile }))}
+            onUpdate={handleProfileUpdate}
           />
         )
       default:

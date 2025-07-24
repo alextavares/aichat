@@ -4,8 +4,13 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { aiService } from "@/lib/ai/ai-service"
 import { AIMessage } from "@/lib/ai/types"
-import { PLAN_LIMITS, getModelType } from "@/lib/usage-limits"
 import { CreditService } from "@/lib/credit-service"
+import { 
+  getModelById, 
+  calculateCreditsForTokens, 
+  modelRequiresCredits,
+  getModelsForPlan 
+} from "@/lib/ai/innerai-models-config"
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,59 +46,39 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se o modelo está disponível para o plano do usuário
-    const availableModels = aiService.getModelsForPlan(user.planType)
+    const availableModels = getModelsForPlan(user.planType as 'FREE' | 'LITE' | 'PRO' | 'ENTERPRISE')
     const modelAvailable = availableModels.some(m => m.id === model)
+    const modelConfig = getModelById(model)
 
-    if (!modelAvailable) {
+    if (!modelAvailable || !modelConfig) {
       return NextResponse.json(
-        { message: "Modelo não disponível para seu plano" },
+        { message: "Modelo não disponível para seu plano atual" },
         { status: 403 }
       )
     }
 
-    // Verificação simplificada de limites para usuários FREE com modelos avançados
-    const limits = PLAN_LIMITS[user.planType]
-    const modelType = getModelType(model)
-    
-    if (user.planType === 'FREE' && modelType === 'advanced') {
-      const startOfMonth = new Date()
-      startOfMonth.setDate(1)
-      startOfMonth.setHours(0, 0, 0, 0)
+    // Verificar se o modelo requer créditos e se o usuário tem créditos suficientes
+    if (modelRequiresCredits(model)) {
+      // Estimativa de créditos baseada no tamanho da mensagem (aproximação)
+      const userMessage = messages[messages.length - 1]?.content || ''
+      const estimatedInputTokens = Math.ceil(userMessage.length / 4) // Aproximação: 4 chars = 1 token
+      const estimatedOutputTokens = estimatedInputTokens // Estimativa: resposta similar ao input
       
-      // Buscar apenas uso de modelos avançados
-      const monthlyAdvancedUsage = await prisma.userUsage.aggregate({
-        where: {
-          userId: user.id,
-          date: {
-            gte: startOfMonth,
-          },
-          modelId: {
-            in: limits.modelsAllowed.advanced
-          }
-        },
-        _sum: {
-          messagesCount: true,
-        },
-      })
-
-      const advancedMessagesUsed = monthlyAdvancedUsage._sum.messagesCount || 0
-      const advancedLimit = limits.monthlyAdvancedMessages || 0
+      const estimatedCredits = calculateCreditsForTokens(model, estimatedInputTokens, estimatedOutputTokens)
+      const currentBalance = await CreditService.getUserBalance(user.id)
       
-      console.log(`[Chat API] Advanced usage check: ${advancedMessagesUsed}/${advancedLimit} for model ${model}`)
+      console.log(`[Chat API] Credit check: ${currentBalance} available, ${estimatedCredits} estimated needed for model ${model}`)
       
-      if (advancedMessagesUsed >= advancedLimit) {
+      if (currentBalance < estimatedCredits) {
         return NextResponse.json(
           { 
-            message: `Limite mensal de mensagens para modelos avançados atingido (${advancedMessagesUsed}/${advancedLimit}). Faça upgrade para o plano Pro para uso ilimitado.`,
-            usage: {
-              monthlyAdvancedMessages: {
-                used: advancedMessagesUsed,
-                limit: advancedLimit,
-              }
-            },
-            planType: user.planType
+            message: `Créditos insuficientes. Necessários: ${estimatedCredits}, Disponíveis: ${currentBalance}. Adicione créditos para continuar usando este modelo.`,
+            creditsNeeded: estimatedCredits,
+            creditsAvailable: currentBalance,
+            modelCategory: modelConfig.category,
+            requiresUpgrade: true
           },
-          { status: 429 }
+          { status: 402 } // Payment Required
         )
       }
     }
@@ -125,24 +110,14 @@ export async function POST(request: NextRequest) {
       console.log(`[Chat API] Using fallback response`)
     }
 
-    // Check if we have a model in the database to calculate credits
-    const modelConfig = await prisma.aIModel.findUnique({
-      where: { name: model },
-      select: { 
-        id: true,
-        creditsPerInputToken: true, 
-        creditsPerOutputToken: true 
-      }
-    })
+    // Calcular créditos necessários baseado nos tokens reais usados
+    const creditsNeeded = calculateCreditsForTokens(
+      model, 
+      aiResponse.tokensUsed.input, 
+      aiResponse.tokensUsed.output
+    )
 
-    // Calculate credits needed for this request
-    let creditsNeeded = 0
-    if (modelConfig) {
-      creditsNeeded = (aiResponse.tokensUsed.input * modelConfig.creditsPerInputToken) + 
-                      (aiResponse.tokensUsed.output * modelConfig.creditsPerOutputToken)
-    }
-
-    console.log(`[Chat API] Credits needed: ${creditsNeeded} for model ${model}`)
+    console.log(`[Chat API] Credits needed: ${creditsNeeded} for model ${model} (${aiResponse.tokensUsed.input}/${aiResponse.tokensUsed.output} tokens)`)
 
     // Criar ou atualizar conversa
     let conversation
@@ -188,21 +163,23 @@ export async function POST(request: NextRequest) {
       }
     })
 
-    // Consume credits if model configuration exists
+    // Consumir créditos se o modelo requer créditos
     let creditResult = null
-    if (modelConfig && creditsNeeded > 0) {
-      creditResult = await CreditService.consumeCreditsForModel(
+    if (modelRequiresCredits(model) && creditsNeeded > 0) {
+      creditResult = await CreditService.consumeCredits(
         user.id,
-        modelConfig.id,
-        aiResponse.tokensUsed.input,
-        aiResponse.tokensUsed.output,
-        conversation.id
+        creditsNeeded,
+        `Chat com ${modelConfig.name} (${aiResponse.tokensUsed.input} input + ${aiResponse.tokensUsed.output} output tokens)`,
+        conversation.id,
+        'chat'
       )
 
       if (!creditResult.success) {
-        console.warn(`[Chat API] Credit consumption failed: ${creditResult.message}`)
-        // For now, we'll log but not block the request
-        // In production, you might want to block or charge differently
+        console.error(`[Chat API] Credit consumption failed: ${creditResult.message}`)
+        // Se falhou a cobrança de créditos, devemos reverter ou alertar
+        // Por enquanto, vamos apenas logar mas não bloquear
+      } else {
+        console.log(`[Chat API] Successfully consumed ${creditsNeeded} credits`)
       }
     }
 
@@ -236,13 +213,25 @@ export async function POST(request: NextRequest) {
       },
     })
 
+    // Obter saldo atualizado de créditos
+    const finalCreditBalance = await CreditService.getUserBalance(user.id)
+
     return NextResponse.json({
       message: aiResponse.content,
       conversationId: conversation.id,
       tokensUsed: aiResponse.tokensUsed,
       cost: aiResponse.cost,
-      creditsConsumed: creditResult?.creditsConsumed || 0,
-      creditBalance: creditResult?.success ? await CreditService.getUserBalance(user.id) : undefined
+      model: {
+        id: model,
+        name: modelConfig.name,
+        category: modelConfig.category,
+        provider: modelConfig.provider
+      },
+      credits: {
+        consumed: creditResult?.success ? creditsNeeded : 0,
+        balance: finalCreditBalance,
+        required: modelRequiresCredits(model)
+      }
     })
 
   } catch (error: any) {

@@ -11,13 +11,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
-import { ChevronDown, Sparkles, Zap, Brain, Gauge } from "lucide-react"
+import { ChevronDown, Sparkles, Zap, Brain, Gauge, Globe, ImageIcon, Video, Mic } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { INNERAI_MODELS, type AIModel as InnerAIModel } from "@/lib/ai/innerai-models-config"
 
 export interface AIModel {
   id: string
   name: string
   provider: string
+  category: 'fast' | 'advanced' | 'reasoning'
   description: string
   icon: React.ReactNode
   badge?: string
@@ -26,94 +28,77 @@ export interface AIModel {
   intelligence: "basic" | "good" | "advanced" | "state-of-the-art"
   cost: "$" | "$$" | "$$$" | "$$$$"
   maxTokens: number
-  supportsImages?: boolean
-  supportsTools?: boolean
+  features: string[]
+  planRequired: 'FREE' | 'LITE' | 'PRO' | 'ENTERPRISE'
+  isAvailable: boolean
 }
 
-const models: AIModel[] = [
-  {
-    id: "gpt-4-turbo",
-    name: "GPT-4 Turbo",
-    provider: "OpenAI",
-    description: "Modelo mais inteligente e versátil",
-    icon: <Brain className="h-4 w-4" />,
-    badge: "Recomendado",
-    badgeVariant: "default",
-    speed: "medium",
-    intelligence: "state-of-the-art",
-    cost: "$$$",
-    maxTokens: 128000,
-    supportsImages: true,
-    supportsTools: true
-  },
-  {
-    id: "gpt-3.5-turbo",
-    name: "GPT-3.5 Turbo",
-    provider: "OpenAI",
-    description: "Rápido e eficiente para tarefas gerais",
-    icon: <Zap className="h-4 w-4" />,
-    badge: "Popular",
-    badgeVariant: "secondary",
-    speed: "fast",
-    intelligence: "good",
-    cost: "$",
-    maxTokens: 16384,
-    supportsTools: true
-  },
-  {
-    id: "claude-3-opus",
-    name: "Claude 3 Opus",
-    provider: "Anthropic",
-    description: "Excelente para análise e escrita",
-    icon: <Sparkles className="h-4 w-4" />,
-    badge: "Poderoso",
-    badgeVariant: "default",
-    speed: "medium",
-    intelligence: "state-of-the-art",
-    cost: "$$$$",
-    maxTokens: 200000,
-    supportsImages: true
-  },
-  {
-    id: "claude-3-sonnet",
-    name: "Claude 3 Sonnet",
-    provider: "Anthropic",
-    description: "Equilíbrio entre velocidade e inteligência",
-    icon: <Brain className="h-4 w-4" />,
-    speed: "fast",
-    intelligence: "advanced",
-    cost: "$$",
-    maxTokens: 200000,
-    supportsImages: true
-  },
-  {
-    id: "claude-3-haiku",
-    name: "Claude 3 Haiku",
-    provider: "Anthropic",
-    description: "Ultra rápido para tarefas simples",
-    icon: <Gauge className="h-4 w-4" />,
-    badge: "Mais rápido",
-    badgeVariant: "outline",
-    speed: "very-fast",
-    intelligence: "basic",
-    cost: "$",
-    maxTokens: 200000
-  },
-  {
-    id: "gemini-1.5-pro",
-    name: "Gemini 1.5 Pro",
-    provider: "Google",
-    description: "Contexto massivo de 2M tokens",
-    icon: <Sparkles className="h-4 w-4" />,
-    badge: "2M tokens",
-    badgeVariant: "destructive",
-    speed: "medium",
-    intelligence: "advanced",
-    cost: "$$",
-    maxTokens: 2097152,
-    supportsImages: true
+// Função para mapear modelos InnerAI para interface local
+const mapInnerAIModel = (model: InnerAIModel): AIModel => {
+  const getIcon = () => {
+    if (model.features.includes('Web Search')) return <Globe className="h-4 w-4" />
+    if (model.category === 'fast') return <Zap className="h-4 w-4" />
+    if (model.category === 'advanced') return <Brain className="h-4 w-4" />
+    if (model.category === 'reasoning') return <Gauge className="h-4 w-4" />
+    return <Sparkles className="h-4 w-4" />
   }
-]
+
+  const getBadge = () => {
+    if (model.id === 'gpt-4o-mini') return { text: 'Recomendado', variant: 'default' as const }
+    if (model.id === 'claude-3.5-haiku') return { text: 'Mais rápido', variant: 'outline' as const }
+    if (model.id === 'gemini-2.5-flash') return { text: '1M tokens', variant: 'secondary' as const }
+    if (model.id === 'deepseek-r1') return { text: 'Popular', variant: 'secondary' as const }
+    if (model.category === 'reasoning') return { text: 'Raciocínio', variant: 'destructive' as const }
+    if (model.planRequired === 'PRO') return { text: 'PRO', variant: 'default' as const }
+    if (model.planRequired === 'LITE') return { text: 'LITE', variant: 'outline' as const }
+    return null
+  }
+
+  const getCost = (): "$" | "$$" | "$$$" | "$$$$" => {
+    const inputCost = model.costPer1kTokens.input
+    if (inputCost === 0) return "$"
+    if (inputCost < 0.001) return "$"
+    if (inputCost < 0.005) return "$$"
+    if (inputCost < 0.01) return "$$$"
+    return "$$$$"
+  }
+
+  const getSpeed = (): "slow" | "medium" | "fast" | "very-fast" => {
+    if (model.performance.speed === 'fast') return 'very-fast'
+    return model.performance.speed as any
+  }
+
+  const getIntelligence = (): "basic" | "good" | "advanced" | "state-of-the-art" => {
+    if (model.performance.quality === 'superior') return 'state-of-the-art'
+    if (model.performance.quality === 'excellent') return 'advanced'
+    return 'good'
+  }
+
+  const badge = getBadge()
+
+  return {
+    id: model.id,
+    name: model.name,
+    provider: model.provider,
+    category: model.category,
+    description: model.description,
+    icon: getIcon(),
+    badge: badge?.text,
+    badgeVariant: badge?.variant,
+    speed: getSpeed(),
+    intelligence: getIntelligence(),
+    cost: getCost(),
+    maxTokens: model.contextWindow,
+    features: model.features,
+    planRequired: model.planRequired,
+    isAvailable: model.isAvailable
+  }
+}
+
+// Converter e filtrar apenas modelos disponíveis
+const models: AIModel[] = INNERAI_MODELS
+  .filter(model => model.isAvailable)
+  .map(mapInnerAIModel)
 
 export function ModelSelector() {
   const [selectedModel, setSelectedModel] = useState<AIModel>(models[0])
@@ -125,7 +110,7 @@ export function ModelSelector() {
       const model = models.find(m => m.id === savedModelId)
       if (model) setSelectedModel(model)
     }
-  }, [])
+  }, []) // Empty dependency array to run only once
 
   const handleModelSelect = (model: AIModel) => {
     setSelectedModel(model)
@@ -150,63 +135,128 @@ export function ModelSelector() {
     }
   }
 
+  // Agrupar modelos por categoria - EXATAMENTE como no InnerAI
+  const fastModels = models.filter(m => m.category === 'fast')
+  const advancedModels = models.filter(m => m.category === 'advanced')
+  const reasoningModels = models.filter(m => m.category === 'reasoning')
+
+  const getCategoryLabel = (category: string) => {
+    switch (category) {
+      case 'fast': return '⚡ Modelos Rápidos'
+      case 'advanced': return '🧠 Modelos Avançados'
+      case 'reasoning': return '🎯 Raciocínio Profundo'
+      case 'credit': return '💎 Modelos Premium (Créditos)'
+      default: return category
+    }
+  }
+
+  const renderModelGroup = (modelList: AIModel[], title: string) => (
+    <div key={title}>
+      <DropdownMenuLabel className="text-text-secondary text-xs font-semibold">
+        {title}
+      </DropdownMenuLabel>
+      {modelList.map((model) => (
+        <DropdownMenuItem
+          key={model.id}
+          onSelect={() => handleModelSelect(model)}
+          className={cn(
+            "flex flex-col items-start space-y-2 p-3 cursor-pointer transition-all duration-200",
+            "hover:bg-surface hover:shadow-soft rounded-md mx-1",
+            selectedModel.id === model.id && "bg-primary/10 border-l-2 border-primary"
+          )}
+        >
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center space-x-2">
+              <div className="text-primary">{model.icon}</div>
+              <div className="flex flex-col">
+                <span className="font-medium text-text-primary">{model.name}</span>
+                <span className="text-xs text-text-tertiary">{model.provider}</span>
+              </div>
+            </div>
+            <div className="flex items-center space-x-1">
+              {model.badge && (
+                <Badge 
+                  variant={model.badgeVariant} 
+                  className="ml-2 text-xs bg-primary/10 text-primary border-primary/20"
+                >
+                  {model.badge}
+                </Badge>
+              )}
+              {model.planRequired === 'PRO' && (
+                <Badge variant="outline" className="text-xs border-accent text-accent">
+                  PRO
+                </Badge>
+              )}
+            </div>
+          </div>
+          
+          <p className="text-xs text-text-secondary leading-relaxed">{model.description}</p>
+          
+          <div className="flex items-center justify-between w-full text-xs">
+            <div className="flex items-center space-x-3">
+              <span title="Velocidade" className="flex items-center space-x-1">
+                <span>{getSpeedIcon(model.speed)}</span>
+              </span>
+              <span title="Inteligência" className="flex items-center space-x-1">
+                <span>{getIntelligenceIcon(model.intelligence)}</span>
+              </span>
+              <span title="Custo" className="font-mono text-text-secondary">{model.cost}</span>
+            </div>
+            <div className="flex items-center space-x-2 text-text-tertiary">
+              <span className="text-xs">
+                {model.maxTokens >= 1000000 
+                  ? `${(model.maxTokens / 1000000).toFixed(1)}M`
+                  : model.maxTokens >= 1000 
+                  ? `${(model.maxTokens / 1000).toFixed(0)}K`
+                  : `${model.maxTokens}`
+                } tokens
+              </span>
+              {model.features.includes('Vision') && <span title="Suporta imagens">🖼️</span>}
+              {model.features.includes('Function Calling') && <span title="Suporta ferramentas">🔧</span>}
+              {model.planRequired !== 'FREE' && <span title="Consome créditos">💳</span>}
+            </div>
+          </div>
+        </DropdownMenuItem>
+      ))}
+      <DropdownMenuSeparator className="my-2" />
+    </div>
+  )
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button 
           variant="outline" 
-          className="min-w-[200px] justify-between"
+          className="min-w-[240px] justify-between bg-card hover:bg-card-hover 
+                     border-border hover:border-primary/50 shadow-soft hover:shadow-soft-md
+                     text-text-primary transition-all duration-300"
         >
-          <div className="flex items-center space-x-2">
-            {selectedModel.icon}
-            <span className="font-medium">{selectedModel.name}</span>
+          <div className="flex items-center space-x-3">
+            <div className="text-primary">{selectedModel.icon}</div>
+            <div className="flex flex-col items-start">
+              <span className="font-medium">{selectedModel.name}</span>
+              <span className="text-xs text-text-secondary">{selectedModel.provider}</span>
+            </div>
           </div>
-          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+          <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-60" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[380px]">
-        <DropdownMenuLabel>Selecione um Modelo de IA</DropdownMenuLabel>
-        <DropdownMenuSeparator />
+      <DropdownMenuContent align="end" className="w-[420px] bg-card border-border shadow-soft-lg">
+        <div className="p-2">
+          <DropdownMenuLabel className="text-text-primary font-semibold text-base">
+            🤖 Selecione um Modelo de IA
+          </DropdownMenuLabel>
+          <p className="text-xs text-text-secondary mt-1 mb-3">
+            Escolha o modelo ideal para sua tarefa
+          </p>
+          <DropdownMenuSeparator className="bg-border" />
+        </div>
         
-        {models.map((model) => (
-          <DropdownMenuItem
-            key={model.id}
-            onSelect={() => handleModelSelect(model)}
-            className={cn(
-              "flex flex-col items-start space-y-1 p-3 cursor-pointer",
-              selectedModel.id === model.id && "bg-accent"
-            )}
-          >
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center space-x-2">
-                {model.icon}
-                <span className="font-medium">{model.name}</span>
-                <span className="text-xs text-muted-foreground">• {model.provider}</span>
-              </div>
-              {model.badge && (
-                <Badge variant={model.badgeVariant} className="ml-2 text-xs">
-                  {model.badge}
-                </Badge>
-              )}
-            </div>
-            
-            <p className="text-xs text-muted-foreground">{model.description}</p>
-            
-            <div className="flex items-center space-x-4 text-xs">
-              <span title="Velocidade">{getSpeedIcon(model.speed)}</span>
-              <span title="Inteligência">{getIntelligenceIcon(model.intelligence)}</span>
-              <span title="Custo" className="font-mono">{model.cost}</span>
-              <span className="text-muted-foreground">
-                {model.maxTokens >= 1000000 
-                  ? `${(model.maxTokens / 1000000).toFixed(1)}M tokens`
-                  : `${(model.maxTokens / 1000).toFixed(0)}K tokens`
-                }
-              </span>
-              {model.supportsImages && <span title="Suporta imagens">🖼️</span>}
-              {model.supportsTools && <span title="Suporta ferramentas">🔧</span>}
-            </div>
-          </DropdownMenuItem>
-        ))}
+        <div className="max-h-96 overflow-y-auto">
+          {fastModels.length > 0 && renderModelGroup(fastModels, getCategoryLabel('fast'))}
+          {advancedModels.length > 0 && renderModelGroup(advancedModels, getCategoryLabel('advanced'))}
+          {reasoningModels.length > 0 && renderModelGroup(reasoningModels, getCategoryLabel('reasoning'))}
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   )

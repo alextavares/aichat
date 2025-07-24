@@ -141,10 +141,10 @@ export default async function DashboardPage() {
       {/* Header Section - InnerAI Style */}
       <div className="flex flex-col space-y-3">
         <div className="text-center lg:text-left">
-          <h1 className="text-2xl font-semibold text-white">
+          <h1 className="text-2xl font-semibold text-text-primary">
             Olá {user?.name || 'Alexandre'}
           </h1>
-          <p className="text-lg text-gray-400 mt-1">
+          <p className="text-lg text-text-secondary mt-1">
             Como posso ajudar hoje?
           </p>
         </div>

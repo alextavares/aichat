@@ -87,27 +87,33 @@ export function DashboardSidebar() {
   const [userPlan, setUserPlan] = useState('FREE')
   
   // Load user plan
-  const fetchUserPlan = useCallback(async () => {
-    if (session?.user) {
-      try {
-        const response = await fetch('/api/subscription')
-        if (response.ok) {
-          const data = await response.json()
-          setUserPlan(data.planType || 'FREE')
+  useEffect(() => {
+    const fetchUserPlan = async () => {
+      if (session?.user) {
+        try {
+          const response = await fetch('/api/subscription')
+          if (response.ok) {
+            const data = await response.json()
+            setUserPlan(data.planType || 'FREE')
+          }
+        } catch (error) {
+          console.error('Error fetching user plan:', error)
         }
-      } catch (error) {
-        console.error('Error fetching user plan:', error)
       }
     }
-  }, [session])
-
-  useEffect(() => {
     fetchUserPlan()
-  }, [fetchUserPlan])
+  }, [session?.user?.id])
 
   return (
-    <Sidebar className="w-[280px] border-r-0 bg-gray-900 text-white hide-scrollbar">
-      <SidebarHeader className="p-4">
+    <Sidebar 
+      className="w-[280px] border-r-0 hide-scrollbar sidebar-dark bg-gray-900 text-white"
+      style={{ 
+        backgroundColor: '#111827', 
+        color: 'white',
+        minHeight: '100vh'
+      }}
+    >
+      <SidebarHeader className="p-4" style={{ backgroundColor: '#111827' }}>
         <Link href="/dashboard" className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-purple-500/20 flex items-center justify-center">
             <span className="text-xl font-bold text-purple-400">AI</span>
@@ -116,7 +122,7 @@ export function DashboardSidebar() {
         </Link>
       </SidebarHeader>
       
-      <SidebarContent className="px-3 hide-scrollbar">
+      <SidebarContent className="px-3 hide-scrollbar" style={{ backgroundColor: '#111827', color: 'white' }}>
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -167,7 +173,10 @@ export function DashboardSidebar() {
         </div>
       </SidebarContent>
 
-      <SidebarFooter className="p-3 border-t border-gray-800">
+      <SidebarFooter 
+        className="p-3 border-t border-gray-800" 
+        style={{ backgroundColor: '#111827', color: 'white' }}
+      >
         <div className="space-y-2">
           <SidebarMenuButton 
             asChild

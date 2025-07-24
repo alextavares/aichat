@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -22,9 +22,21 @@ export default function ProfileStep({ profileData, onUpdate }: ProfileStepProps)
   const [formData, setFormData] = useState(profileData)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
 
+  // Use ref to avoid circular dependencies
+  const onUpdateRef = useRef(onUpdate)
+  onUpdateRef.current = onUpdate
+
+  // Update parent when formData changes
   useEffect(() => {
-    onUpdate(formData)
-  }, [formData, onUpdate])
+    onUpdateRef.current(formData)
+  }, [formData])
+
+  // Sync with profileData prop changes - only if different to avoid loops
+  useEffect(() => {
+    if (JSON.stringify(profileData) !== JSON.stringify(formData)) {
+      setFormData(profileData)
+    }
+  }, [profileData])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))

@@ -23,12 +23,14 @@ const plans = [
     features: [
       { text: 'Mensagens ilimitadas com modelos rápidos', included: true },
       { text: '120 mensagens/mês com modelos avançados', included: true },
-      { text: 'GPT-4o Mini, Deepseek 3.1, Claude 3.5 Haiku', included: true },
+      { text: 'GPT-4o Mini, DeepSeek 3.1, Claude 3.5 Haiku', included: true },
+      { text: 'Gemini 2.5 Flash, Llama 4.0', included: true },
       { text: 'Criação de 1 assistente personalizado', included: true },
       { text: 'Até 2 anexos por chat', included: true },
       { text: 'Geração de imagem/áudio/vídeo', included: false },
       { text: 'Assistentes ilimitados', included: false },
       { text: 'Anexos ilimitados', included: false },
+      { text: 'Modelos de crédito (Flux, DALL-E, etc)', included: false },
     ],
     buttonText: 'Começar Grátis',
     popular: false,
@@ -37,15 +39,17 @@ const plans = [
     id: 'pro',
     name: 'Pro',
     description: 'Para profissionais',
-    monthlyPrice: 49.90,  // Valor real
-    yearlyPrice: 19.96,   // 60% de desconto
-    yearlyTotal: 239.52,  // 19.96 * 12
+    monthlyPrice: 79.90,  // Alinhado com InnerAI
+    yearlyPrice: 31.96,   // 60% de desconto
+    yearlyTotal: 383.52,  // 31.96 * 12
     icon: Crown,
     features: [
       { text: 'Mensagens ilimitadas com modelos rápidos', included: true },
       { text: 'Mensagens ilimitadas com modelos avançados', included: true },
-      { text: 'GPT-4o, Claude 4 Sonnet, Gemini 2.5 Pro', included: true },
+      { text: 'GPT-4o, O3, Claude 4 Sonnet, Gemini 2.5 Pro', included: true },
+      { text: 'Perplexity, Grok 3.0, Mistral Large 2, Sabiá 3', included: true },
       { text: '7.000 créditos mensais para imagem/áudio/vídeo', included: true },
+      { text: 'Flux, DALL-E 3, Luma Labs, ElevenLabs, HeyGen', included: true },
       { text: 'Criação ilimitada de assistentes', included: true },
       { text: 'Anexos ilimitados nos chats', included: true },
       { text: 'Suporte prioritário', included: true },
@@ -57,9 +61,9 @@ const plans = [
     id: 'enterprise',
     name: 'Enterprise',
     description: 'Para empresas',
-    monthlyPrice: 199.90,  // Valor real
-    yearlyPrice: 79.96,    // 60% de desconto
-    yearlyTotal: 959.52,   // 79.96 * 12
+    monthlyPrice: 149.90,  // Mais competitivo
+    yearlyPrice: 59.96,    // 60% de desconto
+    yearlyTotal: 719.52,   // 59.96 * 12
     icon: Building2,
     features: [
       { text: 'Tudo do plano Pro', included: true },

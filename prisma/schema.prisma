@@ -1,11 +1,11 @@
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "windows"]
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -13,12 +13,12 @@ model User {
   email           String            @unique
   name            String?
   passwordHash    String?           @map("password_hash")
-  planType        PlanType          @default(FREE) @map("plan_type")
+  planType        String            @default("FREE") @map("plan_type")
   creditBalance   Int               @default(0) @map("credit_balance")
   profileImage    String?           @map("profile_image")
   profession      String?
   organization    String?
-  usageType       UsageType?        @map("usage_type")
+  usageType       String?           @map("usage_type")
   professionCategory String?        @map("profession_category")
   phone           String?
   onboardingCompleted Boolean       @default(false) @map("onboarding_completed")
@@ -47,12 +47,12 @@ model Account {
   type               String
   provider           String
   providerAccountId  String  @map("provider_account_id")
-  refresh_token      String? @db.Text
-  access_token       String? @db.Text
+  refresh_token      String?
+  access_token       String?
   expires_at         Int?
   token_type         String?
   scope              String?
-  id_token           String? @db.Text
+  id_token           String?
   session_state      String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -71,70 +71,6 @@ model Session {
   @@map("sessions")
 }
 
-model UserSession {
-  id        String   @id @default(cuid())
-  userId    String   @map("user_id")
-  token     String   @unique
-  expiresAt DateTime @map("expires_at")
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@map("user_sessions")
-}
-
-model AIModel {
-  id                 String            @id @default(cuid())
-  name               String            @unique
-  provider           AIProvider
-  costPerInputToken  Decimal           @map("cost_per_input_token") @db.Decimal(10, 6)
-  costPerOutputToken Decimal           @map("cost_per_output_token") @db.Decimal(10, 6)
-  creditsPerInputToken Int             @default(1) @map("credits_per_input_token")
-  creditsPerOutputToken Int            @default(1) @map("credits_per_output_token")
-  maxContextLength   Int               @map("max_context_length")
-  isActive           Boolean           @default(true) @map("is_active")
-  planRequired       PlanType          @map("plan_required")
-  createdAt          DateTime          @default(now()) @map("created_at")
-  errorLogs          AIErrorLog[]
-  responseCache      AIResponseCache[]
-  // Temporarily remove back-relations until we re-add foreign keys
-  // conversations      Conversation[]
-  // messages           Message[]
-  // userUsage          UserUsage[]
-
-  @@map("ai_models")
-}
-
-model UserUsage {
-  id               String   @id @default(cuid())
-  userId           String   @map("user_id")
-  modelId          String   @map("model_id")
-  date             DateTime @db.Date
-  messagesCount    Int      @default(0) @map("messages_count")
-  inputTokensUsed  Int      @default(0) @map("input_tokens_used")
-  outputTokensUsed Int      @default(0) @map("output_tokens_used")
-  costIncurred     Decimal  @default(0) @map("cost_incurred") @db.Decimal(10, 4)
-  createdAt        DateTime @default(now()) @map("created_at")
-  // Temporarily remove foreign key constraint to allow any model string
-  // model            AIModel  @relation(fields: [modelId], references: [id])
-  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, modelId, date])
-  @@index([userId, date]) // Novo índice para otimizar consultas de agregação por usuário e data
-  @@map("user_usage")
-}
-
-model PlanLimit {
-  id                 String   @id @default(cuid())
-  planType           PlanType @unique @map("plan_type")
-  dailyMessagesLimit Int?     @map("daily_messages_limit")
-  monthlyTokensLimit Int?     @map("monthly_tokens_limit")
-  modelsAllowed      Json     @map("models_allowed")
-  featuresEnabled    Json     @map("features_enabled")
-  createdAt          DateTime @default(now()) @map("created_at")
-  updatedAt          DateTime @updatedAt @map("updated_at")
-
-  @@map("plan_limits")
-}
-
 model Conversation {
   id         String    @id @default(cuid())
   userId     String    @map("user_id")
@@ -143,8 +79,6 @@ model Conversation {
   isArchived Boolean   @default(false) @map("is_archived")
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @updatedAt @map("updated_at")
-  // Temporarily remove foreign key constraint to allow any model string
-  // model      AIModel?  @relation(fields: [modelUsed], references: [id])
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages   Message[]
 
@@ -154,15 +88,13 @@ model Conversation {
 model Message {
   id              String            @id @default(cuid())
   conversationId  String            @map("conversation_id")
-  role            MessageRole
+  role            String            // "user", "assistant", "system"
   content         String
   tokensUsed      Int?              @map("tokens_used")
   modelUsed       String?           @map("model_used")
-  metadata        Json?
+  metadata        String?           // JSON as string
   createdAt       DateTime          @default(now()) @map("created_at")
   conversation    Conversation      @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  // Temporarily remove foreign key constraint to allow any model string
-  // model           AIModel?          @relation(fields: [modelUsed], references: [id])
   messageFeedback MessageFeedback[]
 
   @@map("messages")
@@ -172,12 +104,12 @@ model PromptTemplate {
   id              String         @id @default(cuid())
   name            String
   description     String?
-  category        PromptCategory
+  category        String         // "CODING", "WRITING", "BUSINESS", etc.
   templateContent String         @map("template_content")
-  variables       Json?
+  variables       String?        // JSON as string
   icon            String?
   gradient        String?
-  tags            String[]       @default([])
+  tags            String         @default("[]") // JSON array as string
   isPublic        Boolean        @default(true) @map("is_public")
   isFeatured      Boolean        @default(false) @map("is_featured")
   createdBy       String?        @map("created_by")
@@ -190,249 +122,116 @@ model PromptTemplate {
   @@map("prompt_templates")
 }
 
-model Tool {
-  id           String      @id @default(cuid())
-  name         String
-  type         ToolType
-  apiEndpoint  String?     @map("api_endpoint")
-  costPerUse   Decimal     @map("cost_per_use") @db.Decimal(8, 4)
-  creditsPerUse Int        @default(1) @map("credits_per_use")
-  planRequired PlanType    @map("plan_required")
-  isActive     Boolean     @default(true) @map("is_active")
-  createdAt    DateTime    @default(now()) @map("created_at")
-  toolUsage    ToolUsage[]
+model TemplateFavorite {
+  id         String         @id @default(cuid())
+  userId     String         @map("user_id")
+  templateId String         @map("template_id")
+  createdAt  DateTime       @default(now()) @map("created_at")
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  template   PromptTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
 
-  @@map("tools")
+  @@unique([userId, templateId])
+  @@map("template_favorites")
 }
 
-model ToolUsage {
-  id           String   @id @default(cuid())
-  userId       String   @map("user_id")
-  toolId       String   @map("tool_id")
-  date         DateTime @db.Date
-  usesCount    Int      @default(0) @map("uses_count")
-  costIncurred Decimal  @default(0) @map("cost_incurred") @db.Decimal(10, 4)
-  createdAt    DateTime @default(now()) @map("created_at")
-  tool         Tool     @relation(fields: [toolId], references: [id])
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+model UserUsage {
+  id               String   @id @default(cuid())
+  userId           String   @map("user_id")
+  modelId          String   @map("model_id")
+  date             DateTime
+  messagesCount    Int      @default(0) @map("messages_count")
+  inputTokensUsed  Int      @default(0) @map("input_tokens_used")
+  outputTokensUsed Int      @default(0) @map("output_tokens_used")
+  costIncurred     Float    @default(0) @map("cost_incurred")
+  createdAt        DateTime @default(now()) @map("created_at")
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, toolId, date])
-  @@map("tool_usage")
-}
-
-model Subscription {
-  id                   String             @id @default(cuid())
-  userId               String             @map("user_id")
-  planType             PlanType           @map("plan_type")
-  status               SubscriptionStatus
-  stripeSubscriptionId String?            @unique @map("stripe_subscription_id")
-  stripeCustomerId     String?            @map("stripe_customer_id")
-  mercadoPagoPaymentId String?            @map("mercado_pago_payment_id")
-  startedAt            DateTime           @map("started_at")
-  expiresAt            DateTime?          @map("expires_at")
-  createdAt            DateTime           @default(now()) @map("created_at")
-  updatedAt            DateTime           @updatedAt @map("updated_at")
-  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@map("subscriptions")
-}
-
-model MercadoPagoWebhookLog {
-  id        String   @id @default(cuid())
-  headers   Json
-  body      Json
-  createdAt DateTime @default(now()) @map("created_at")
-
-  @@map("mercadopago_webhook_logs")
+  @@unique([userId, modelId, date])
+  @@map("user_usage")
 }
 
 model Payment {
-  id                   String        @id @default(cuid())
-  userId               String        @map("user_id")
-  amount               Decimal       @db.Decimal(10, 2)
-  currency             String        @default("BRL") @db.VarChar(3)
-  status               PaymentStatus
-  stripePaymentId      String?       @unique @map("stripe_payment_id")
-  mercadoPagoPaymentId String?       @unique @map("mercado_pago_payment_id")
-  createdAt            DateTime      @default(now()) @map("created_at")
-  user                 User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  amount        Float
+  currency      String   @default("BRL")
+  status        String   // "PENDING", "COMPLETED", "FAILED", "REFUNDED"
+  paymentMethod String?  @map("payment_method")
+  transactionId String?  @map("transaction_id")
+  metadata      String?  // JSON as string
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("payments")
 }
 
-model AIResponseCache {
-  id              String   @id @default(cuid())
-  requestHash     String   @unique @map("request_hash")
-  responseContent String   @map("response_content")
-  modelId         String   @map("model_id")
-  createdAt       DateTime @default(now()) @map("created_at")
-  model           AIModel  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+model Subscription {
+  id                String   @id @default(cuid())
+  userId            String   @map("user_id")
+  planType          String   @map("plan_type")
+  status            String   // "ACTIVE", "CANCELLED", "EXPIRED", "PAST_DUE"
+  currentPeriodStart DateTime @map("current_period_start")
+  currentPeriodEnd   DateTime @map("current_period_end")
+  cancelAtPeriodEnd  Boolean  @default(false) @map("cancel_at_period_end")
+  stripeSubscriptionId String? @unique @map("stripe_subscription_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("ai_response_cache")
+  @@map("subscriptions")
 }
 
-model AIErrorLog {
-  id             String   @id @default(cuid())
-  userId         String   @map("user_id")
-  modelId        String   @map("model_id")
-  errorMessage   String   @map("error_message")
-  requestPayload Json?    @map("request_payload")
-  createdAt      DateTime @default(now()) @map("created_at")
-  model          AIModel  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+model ToolUsage {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  toolName  String   @map("tool_name")
+  usageData String?  @map("usage_data") // JSON as string
+  cost      Float    @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("ai_error_logs")
+  @@map("tool_usage")
 }
 
 model MessageFeedback {
   id        String   @id @default(cuid())
   messageId String   @map("message_id")
   userId    String   @map("user_id")
-  rating    Int?
-  comment   String?
+  rating    Int      // 1-5 stars
+  feedback  String?
   createdAt DateTime @default(now()) @map("created_at")
   message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([messageId, userId])
-  @@map("user_feedback")
-}
-
-enum PlanType {
-  FREE
-  LITE
-  PRO
-  ENTERPRISE
-}
-
-enum AIProvider {
-  OPENAI
-  OPENROUTER
-  ANTHROPIC
-}
-
-enum MessageRole {
-  USER
-  ASSISTANT
-  SYSTEM
-}
-
-enum PromptCategory {
-  TRABALHO
-  MARKETING
-  DESIGN
-  VENDAS
-  OPERACOES
-  FINANCAS
-  ENGENHARIA
-  CRIADOR_CONTEUDO
-  RECURSOS_HUMANOS
-}
-
-enum ToolType {
-  VOICE_GENERATION
-  TRANSCRIPTION
-  SOUND_EFFECTS
-  IMAGE_GENERATION
-  OTHER
-}
-
-enum SubscriptionStatus {
-  ACTIVE
-  CANCELLED
-  EXPIRED
-  PAST_DUE
-}
-
-enum PaymentStatus {
-  PENDING
-  COMPLETED
-  FAILED
-  REFUNDED
-}
-
-enum UsageType {
-  TRABALHO
-  USO_PESSOAL
-  ESCOLA
-}
-
-model TemplateFavorite {
-  id         String          @id @default(cuid())
-  userId     String          @map("user_id")
-  templateId String          @map("template_id")
-  createdAt  DateTime        @default(now()) @map("created_at")
-  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  template   PromptTemplate  @relation(fields: [templateId], references: [id], onDelete: Cascade)
-
-  @@unique([userId, templateId])
-  @@map("template_favorites")
+  @@map("message_feedback")
 }
 
 model KnowledgeBase {
-  id            String            @id @default(cuid())
-  userId        String            @map("user_id")
-  name          String
-  description   String?
-  type          KnowledgeBaseType
-  content       String            @db.Text
-  metadata      Json?
-  isActive      Boolean           @default(true) @map("is_active")
-  embeddingId   String?           @map("embedding_id")
-  fileSize      Int?              @map("file_size")
-  mimeType      String?           @map("mime_type")
-  originalName  String?           @map("original_name")
-  createdAt     DateTime          @default(now()) @map("created_at")
-  updatedAt     DateTime          @updatedAt @map("updated_at")
-  user          User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  userId      String   @map("user_id")
+  title       String
+  content     String
+  type        String   // "DOCUMENT", "WEBPAGE", "TEXT", "FAQ"
+  metadata    String?  // JSON as string
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId, isActive])
   @@map("knowledge_base")
 }
 
-enum KnowledgeBaseType {
-  DOCUMENT
-  WEBPAGE
-  TEXT
-  FAQ
-}
-
-model CreditPackage {
-  id                String             @id @default(cuid())
-  name              String
-  credits           Int
-  price             Decimal            @db.Decimal(10, 2)
-  currency          String             @default("BRL") @db.VarChar(3)
-  discountPercent   Int?               @map("discount_percent")
-  isActive          Boolean            @default(true) @map("is_active")
-  createdAt         DateTime           @default(now()) @map("created_at")
-  updatedAt         DateTime           @updatedAt @map("updated_at")
-  creditTransactions CreditTransaction[]
-
-  @@map("credit_packages")
-}
-
 model CreditTransaction {
-  id                String              @id @default(cuid())
-  userId            String              @map("user_id")
-  type              CreditTransactionType
-  amount            Int                 // positive for additions, negative for consumptions
-  description       String
-  referenceId       String?             @map("reference_id") // conversation_id, tool_usage_id, etc.
-  referenceType     String?             @map("reference_type") // conversation, tool_usage, purchase, etc.
-  packageId         String?             @map("package_id")
-  balanceBefore     Int                 @map("balance_before")
-  balanceAfter      Int                 @map("balance_after")
-  createdAt         DateTime            @default(now()) @map("created_at")
-  user              User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  package           CreditPackage?      @relation(fields: [packageId], references: [id])
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  type          String   // "PURCHASE", "CONSUMPTION", "BONUS", "REFUND"
+  amount        Int
+  description   String?
+  relatedId     String?  @map("related_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@index([userId, createdAt])
   @@map("credit_transactions")
-}
-
-enum CreditTransactionType {
-  PURCHASE
-  CONSUMPTION
-  BONUS
-  REFUND
 }

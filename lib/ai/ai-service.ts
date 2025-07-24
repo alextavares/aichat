@@ -1,6 +1,7 @@
 import { OpenAIProvider } from './openai-provider'
 import { OpenRouterProvider } from './openrouter-provider'
 import { AIProvider, AIMessage, AIResponse, AIModel } from './types'
+import { INNERAI_MODELS, getModelsForPlan, getModelById } from './innerai-models-config'
 
 class AIService {
   private providers: Map<string, AIProvider> = new Map()
@@ -123,88 +124,61 @@ class AIService {
   }
 
   getAllAvailableModels(): AIModel[] {
-    const models: AIModel[] = []
-    Array.from(this.providers.values()).forEach(provider => {
-      models.push(...provider.getAvailableModels())
-    })
-    return models
+    // Usar a configuração exata do InnerAI
+    return INNERAI_MODELS.filter(model => model.isAvailable).map(model => ({
+      id: model.id,
+      name: model.name,
+      provider: model.provider,
+      contextLength: model.contextWindow,
+      costPerInputToken: model.costPer1kTokens.input / 1000,
+      costPerOutputToken: model.costPer1kTokens.output / 1000,
+      features: model.features,
+      category: model.category,
+      planRequired: model.planRequired
+    }))
   }
 
   getModelsForPlan(planType: 'FREE' | 'LITE' | 'PRO' | 'ENTERPRISE'): AIModel[] {
-    const allModels = this.getAllAvailableModels()
-    
-    switch (planType) {
-      case 'FREE':
-        return allModels.filter(model => 
-          ['gpt-4o-mini', 'claude-3.5-haiku', 
-           'gemini-2-flash-free', 'mistral-7b', 'deepseek-r1-small', 'qwen-qwq'].includes(model.id)
-        )
-      case 'LITE':
-        return allModels.filter(model => 
-          ['gpt-4o-mini', 'claude-3.5-haiku', 'gemini-2-flash-free', 'mistral-7b', 'llama-2-13b', 'llama-3.3-70b', 
-           'deepseek-r1', 'deepseek-r1-small', 'grok-3-mini', 'perplexity-sonar', 'qwen-qwq', 'sabia-3.1',
-           'gpt-4o', 'gpt-3.5-turbo', 'claude-3.5-sonnet', 'claude-4-sonnet', 'gemini-2-pro', 'grok-3',
-           'perplexity-sonar-pro', 'perplexity-reasoning', 'mistral-large-2'].includes(model.id)
-        )
-      case 'PRO':
-        return allModels.filter(model => 
-          ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo', 'gpt-4o', 'gpt-4o-mini', 'gpt-4.1',
-           'claude-3-sonnet', 'claude-3.5-sonnet', 'claude-4-sonnet', 'claude-4-sonnet-thinking', 
-           'claude-3-haiku', 'claude-3.5-haiku',
-           'gemini-pro', 'gemini-2-flash', 'gemini-2-pro', 'gemini-2.5-pro',
-           'mixtral-8x7b', 'mistral-7b', 'mistral-large-2',
-           'llama-2-70b', 'llama-3.3-70b', 'llama-3.1-405b', 'llama-4-maverick',
-           'phind-codellama-34b', 'deepseek-coder', 'deepseek-r1', 'deepseek-r1-small', 'qwen-2.5-coder',
-           'grok-3', 'grok-3-mini', 'grok-2-vision',
-           'perplexity-sonar-pro', 'perplexity-sonar', 'perplexity-reasoning',
-           'qwen-qwq', 'qwen-2.5-72b', 'sabia-3.1', 'amazon-nova-premier',
-           'o3', 'o4-mini'].includes(model.id)
-        )
-      case 'ENTERPRISE':
-        return allModels
-      default:
-        return []
-    }
+    // Usar a função da configuração exata do InnerAI
+    return getModelsForPlan(planType).map(model => ({
+      id: model.id,
+      name: model.name,
+      provider: model.provider,
+      contextLength: model.contextWindow,
+      costPerInputToken: model.costPer1kTokens.input / 1000,
+      costPerOutputToken: model.costPer1kTokens.output / 1000,
+      features: model.features,
+      category: model.category,
+      planRequired: model.planRequired
+    }))
   }
 
   private getProviderForModel(model: string): AIProvider {
-    // Map models to providers
-    const openaiModels = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo']
-    const openRouterModels = [
-      'claude-3-opus', 'claude-3-sonnet', 'claude-3.5-sonnet', 'claude-4-sonnet', 'claude-4-sonnet-thinking',
-      'claude-3-haiku', 'claude-3.5-haiku', 'claude-2.1', 'claude-2',
-      'gemini-pro', 'gemini-pro-vision', 'gemini-2-flash', 'gemini-2-pro', 'gemini-2.5-pro', 'gemini-2-flash-free', 'palm-2',
-      'llama-2-70b', 'llama-2-13b', 'llama-3.3-70b', 'llama-3.1-405b', 'llama-4-maverick', 'codellama-70b',
-      'mixtral-8x7b', 'mistral-7b', 'mistral-large-2',
-      'nous-hermes-2', 'openhermes-2.5', 'zephyr-7b',
-      'phind-codellama-34b', 'deepseek-coder', 'deepseek-r1', 'deepseek-r1-small', 'wizardcoder-33b',
-      'mythomist-7b', 'cinematika-7b', 'neural-chat-7b',
-      'gpt-4o', 'gpt-4o-mini', 'gpt-4.1', 'o3', 'o4-mini',
-      'grok-3', 'grok-3-mini', 'grok-2-vision',
-      'perplexity-sonar-pro', 'perplexity-sonar', 'perplexity-reasoning',
-      'qwen-qwq', 'qwen-2.5-72b', 'qwen-2.5-coder',
-      'sabia-3.1', 'amazon-nova-premier'
-    ]
+    // Buscar modelo na configuração do InnerAI
+    const innerAIModel = getModelById(model)
     
-    // Primeiro tentar OpenRouter se configurado
-    if (openRouterModels.includes(model)) {
-      const provider = this.getProvider('openrouter')
-      if (provider.isConfigured()) {
-        return provider
-      }
+    if (!innerAIModel) {
+      throw new Error(`Model ${model} not found in InnerAI configuration`)
     }
     
-    // Fallback para OpenAI se disponível
-    if (openaiModels.includes(model)) {
+    if (!innerAIModel.isAvailable) {
+      throw new Error(`Model ${model} is not available`)
+    }
+    
+    // Usar OpenRouter para todos os modelos exceto modelos nativos da OpenAI
+    const nativeOpenAIModels = ['gpt-3.5-turbo', 'gpt-4', 'gpt-4-turbo']
+    
+    if (nativeOpenAIModels.includes(model)) {
+      // Tentar OpenAI primeiro, fallback para OpenRouter
       const openaiProvider = this.getProvider('openai')
       if (openaiProvider.isConfigured()) {
         return openaiProvider
       }
     }
     
-    // Se OpenRouter está configurado, usar como fallback para modelos OpenAI
+    // Usar OpenRouter para todos os outros modelos (incluindo fallback)
     const openRouterProvider = this.getProvider('openrouter')
-    if (openRouterProvider.isConfigured() && openaiModels.includes(model)) {
+    if (openRouterProvider.isConfigured()) {
       return openRouterProvider
     }
     

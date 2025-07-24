@@ -39,6 +39,16 @@ export function ChatInput() {
     e.preventDefault()
     if (!input.trim() || isLoading) return
 
+    // Verificar se usuário está logado
+    if (!session) {
+      toast({
+        title: "Erro de Autenticação",
+        description: "Você precisa estar logado para usar o chat.",
+        variant: "destructive",
+      })
+      return
+    }
+
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
@@ -63,16 +73,21 @@ export function ChatInput() {
             role: msg.role,
             content: msg.content
           })),
-          model: 'gpt-3.5-turbo'
+          model: 'gpt-4o-mini'
         }),
       })
 
       console.log('Resposta recebida:', response.status)
 
       if (!response.ok) {
-        const errorData = await response.json()
+        let errorData
+        try {
+          errorData = await response.json()
+        } catch {
+          errorData = { message: `HTTP ${response.status}: ${response.statusText}` }
+        }
         console.error('Erro na API:', errorData)
-        throw new Error(errorData.message || 'Falha na requisição')
+        throw new Error(errorData.message || errorData.error || 'Falha na requisição')
       }
 
       const data = await response.json()

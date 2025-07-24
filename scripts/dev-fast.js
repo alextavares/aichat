@@ -33,7 +33,7 @@ const commands = [
   {
     name: '🔥 Next.js Dev Server',
     command: 'next',
-    args: ['dev', '--turbo', '--port', '3000'],
+    args: ['dev', '--turbo', '--port', '3050'],
     color: chalk.cyan
   },
   {
