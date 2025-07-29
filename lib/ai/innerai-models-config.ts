@@ -97,6 +97,22 @@ export const INNERAI_MODELS: AIModel[] = [
   },
   
   {
+    id: 'glm-4.5',
+    name: 'GLM-4.5',
+    provider: 'Z.AI',
+    category: 'advanced',
+    description: 'Modelo GLM-4.5 avançado com excelente compreensão em português',
+    contextWindow: 128000,
+    costPer1kTokens: { input: 0.0003, output: 0.0015 },
+    creditsPerToken: { input: 0.003, output: 0.008 },
+    features: ['Chat', 'Português Nativo', 'Reasoning', 'Code', 'Analysis'],
+    planRequired: 'PRO',
+    isAvailable: true,
+    openRouterModel: 'z-ai/glm-4.5',
+    performance: { speed: 'medium', quality: 'excellent' },
+  },
+
+  {
     id: 'gemini-2.5-flash',
     name: 'Gemini 2.5 Flash',
     provider: 'Google',

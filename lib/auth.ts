@@ -1,59 +1,47 @@
 import { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
-import GitHubProvider from "next-auth/providers/github"
 import AzureADProvider from "next-auth/providers/azure-ad"
-import AppleProvider from "next-auth/providers/apple"
-import { PrismaAdapter } from "@next-auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import bcrypt from "bcryptjs"
 
-const providers = []
+export const authOptions: NextAuthOptions = {
+  providers: [
+    // Google OAuth provider (only if credentials are configured)
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && 
+        process.env.GOOGLE_CLIENT_ID !== "" && 
+        process.env.GOOGLE_CLIENT_SECRET !== "" ? 
+      [GoogleProvider({
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        authorization: {
+          params: {
+            prompt: "consent",
+            access_type: "offline",
+            response_type: "code"
+          }
+        }
+      })] : []),
 
-// Only add OAuth providers if credentials are configured
-if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET && 
-    process.env.GOOGLE_CLIENT_ID !== "your-google-client-id" &&
-    process.env.GOOGLE_CLIENT_ID !== "your_google_client_id_here") {
-  providers.push(GoogleProvider({
-    clientId: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  }))
-}
+    // Microsoft Azure AD provider (only if credentials are configured)
+    ...(process.env.AZURE_AD_CLIENT_ID && process.env.AZURE_AD_CLIENT_SECRET && 
+        process.env.AZURE_AD_TENANT_ID &&
+        process.env.AZURE_AD_CLIENT_ID !== "" && 
+        process.env.AZURE_AD_CLIENT_SECRET !== "" ? 
+      [AzureADProvider({
+        clientId: process.env.AZURE_AD_CLIENT_ID,
+        clientSecret: process.env.AZURE_AD_CLIENT_SECRET,
+        tenantId: process.env.AZURE_AD_TENANT_ID,
+      })] : []),
 
-if (process.env.GITHUB_ID && process.env.GITHUB_SECRET &&
-    process.env.GITHUB_ID !== "your-github-client-id") {
-  providers.push(GitHubProvider({
-    clientId: process.env.GITHUB_ID,
-    clientSecret: process.env.GITHUB_SECRET,
-  }))
-}
-
-// Microsoft/Azure AD provider
-if (process.env.AZURE_AD_CLIENT_ID && process.env.AZURE_AD_CLIENT_SECRET && 
-    process.env.AZURE_AD_TENANT_ID) {
-  providers.push(AzureADProvider({
-    clientId: process.env.AZURE_AD_CLIENT_ID,
-    clientSecret: process.env.AZURE_AD_CLIENT_SECRET,
-    tenantId: process.env.AZURE_AD_TENANT_ID,
-  }))
-}
-
-// Apple provider
-if (process.env.APPLE_ID && process.env.APPLE_SECRET) {
-  providers.push(AppleProvider({
-    clientId: process.env.APPLE_ID,
-    clientSecret: process.env.APPLE_SECRET,
-  }))
-}
-
-// Always include credentials provider
-providers.push(CredentialsProvider({
-  name: "credentials",
-  credentials: {
-    email: { label: "Email", type: "email" },
-    password: { label: "Password", type: "password" }
-  },
-  async authorize(credentials) {
+    // Credentials provider
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           return null
         }
@@ -89,22 +77,111 @@ providers.push(CredentialsProvider({
         }
       }
     })
-)
-
-export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
-  providers,
+  ],
   session: {
-    strategy: "jwt", // Use JWT strategy for compatibility with credentials provider
+    strategy: "jwt",
     maxAge: 7 * 24 * 60 * 60, // 7 days
-    updateAge: 24 * 60 * 60, // 24 hours
+  },
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === "production" ? `__Secure-next-auth.session-token` : `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === "production",
+        domain: process.env.NODE_ENV === "production" ? process.env.NEXTAUTH_URL?.replace(/https?:\/\//, '').replace(/:\d+/, '') : undefined
+      }
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === "production"
+      }
+    },
+    csrfToken: {
+      name: process.env.NODE_ENV === "production" ? `__Secure-next-auth.csrf-token` : `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === "production",
+        domain: process.env.NODE_ENV === "production" ? process.env.NEXTAUTH_URL?.replace(/https?:\/\//, '').replace(/:\d+/, '') : undefined
+      }
+    },
+    pkceCodeVerifier: {
+      name: `next-auth.pkce.code_verifier`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === "production"
+      }
+    },
+    state: {
+      name: `next-auth.state`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === "production"
+      }
+    },
+    nonce: {
+      name: `next-auth.nonce`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === "production"
+      }
+    }
   },
   pages: {
     signIn: "/auth/signin",
   },
   callbacks: {
+    async signIn({ user, account, profile }) {
+      if (account?.provider === "credentials") {
+        return true // Já validado no authorize
+      }
+
+      // Para OAuth providers (Google, Microsoft)
+      if (!user.email) {
+        return false // Email é obrigatório
+      }
+
+      try {
+        // Verificar se usuário já existe
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email }
+        })
+
+        if (!existingUser) {
+          // Criar novo usuário com dados do OAuth
+          await prisma.user.create({
+            data: {
+              email: user.email,
+              name: user.name || "",
+              profileImage: user.image || null,
+              planType: "FREE",
+              creditBalance: 100, // Créditos iniciais para novos usuários
+              onboardingCompleted: false,
+              isActive: true
+            }
+          })
+        }
+
+        return true
+      } catch (error) {
+        console.error("OAuth SignIn Error:", error)
+        return false
+      }
+    },
+    
     async session({ session, token }) {
-      // For JWT strategy, user info comes from token
       if (token) {
         session.user.id = token.id || token.sub!
         session.user.email = token.email!
@@ -112,34 +189,40 @@ export const authOptions: NextAuthOptions = {
       }
       return session
     },
-    async jwt({ token, user }) {
-      // Add user info to JWT token on sign in
+    
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id
         token.email = user.email
         token.name = user.name
       }
+
+      // Para OAuth, buscar dados atualizados do usuário
+      if (account?.provider !== "credentials" && token.email) {
+        try {
+          const dbUser = await prisma.user.findUnique({
+            where: { email: token.email }
+          })
+          if (dbUser) {
+            token.id = dbUser.id
+            token.name = dbUser.name
+          }
+        } catch (error) {
+          console.error("JWT callback error:", error)
+        }
+      }
+      
       return token
     },
-    async signIn({ user, account, profile, email, credentials }) {
-      try {
-        // Allow all sign-ins
-        return true
-      } catch (error) {
-        console.error('SignIn callback error:', error)
-        return false
-      }
-    },
+    
     async redirect({ url, baseUrl }) {
-      // Redirect to dashboard after successful login
-      if (url.startsWith(baseUrl)) {
-        // If the URL is internal, allow it
-        return url
+      // Redirecionar para página de migração se houver sessão anônima
+      if (url.includes("migrate=true")) {
+        return `${baseUrl}/auth/migrate-anonymous`
       }
-      // Default redirect to dashboard
       return `${baseUrl}/dashboard`
     }
   },
   secret: process.env.NEXTAUTH_SECRET,
-  debug: false
+  debug: process.env.NODE_ENV === "development"
 }
